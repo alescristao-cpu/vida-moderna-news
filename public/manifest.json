@@ -1,9 +1,8 @@
 {
-  "name": "Vida Moderna News - Mídia Indoor & Recados",
+  "name": "Vida Moderna News",
   "short_name": "Vida Moderna News",
-  "description": "Player Android Vida Moderna News (1280x720px | Cartelas 1280x520px + Recados Independentes) com sincronização automática via Wi-Fi.",
-  "start_url": "./index.html",
-  "scope": "./",
+  "description": "Player Android Vida Moderna News (1280x720px)",
+  "start_url": "index.html?fullscreen=1",
   "display": "fullscreen",
   "orientation": "landscape",
   "background_color": "#000000",
@@ -11,9 +10,13 @@
   "icons": [
     {
       "src": "assets/logo-modern-life.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "assets/logo-modern-life.png",
       "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
+      "type": "image/png"
     }
   ]
 }

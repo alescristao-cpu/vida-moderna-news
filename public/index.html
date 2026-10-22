@@ -8,11 +8,20 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="full-screen" content="yes">
+  <meta name="browsermode" content="application">
   <title>Vida Moderna News - Player Android (1280x720)</title>
   <link rel="manifest" href="manifest.json">
+  <link rel="icon" sizes="192x192" href="assets/logo-modern-life.png">
+  <link rel="apple-touch-icon" href="assets/logo-modern-life.png">
   <link rel="stylesheet" href="css/player.css">
 </head>
 <body>
+  <!-- Botão flutuante que some sozinho assim que entra em Modo Apresentação (Tela Cheia sem barra de endereços) -->
+  <div id="presentation-banner" title="Clique ou aperte OK no controle remoto para Modo Apresentação (Tela Cheia)">
+    ⛶ CLIQUE NA TELA OU APERTE "OK" NO CONTROLE PARA MODO APRESENTAÇÃO (ESCONDER BARRA DE ENDEREÇOS)
+  </div>
+
   <div id="viewport-wrapper">
     <!-- TELA PRINCIPAL: 1280 x 720 px (72dpi) -->
     <div id="fala-stage" aria-label="Tela Vida Moderna News 1280x720">

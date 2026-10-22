@@ -18,6 +18,35 @@ html, body {
   font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
 }
 
+body.hide-cursor,
+body.hide-cursor * {
+  cursor: none !important;
+}
+
+#presentation-banner {
+  position: fixed;
+  top: 10px;
+  left: 50%;
+  width: 760px;
+  margin-left: -380px;
+  max-width: 92%;
+  background: #2a5e35;
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 800;
+  text-align: center;
+  padding: 10px 18px;
+  border-radius: 30px;
+  border: 2px solid #ffffff;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.65);
+  z-index: 9000;
+  cursor: pointer;
+}
+
+#presentation-banner.hidden {
+  display: none !important;
+}
+
 /* ==========================================================================
    TELA PRINCIPAL DO VIDA MODERNA NEWS: 1280 x 720 px (72 dpi)
    Compatível com Navegadores Antigos (Android 4.0 / 4.4 / 5.1 / 7.1 Aquarius STV-Plus)

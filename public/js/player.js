@@ -7,6 +7,7 @@
   var stageEl = document.getElementById('fala-stage');
   var mediaStageEl = document.getElementById('media-stage');
   var progressBarEl = document.getElementById('media-progress-bar');
+  var presentationBannerEl = document.getElementById('presentation-banner');
 
   var noticeBadgeEl = document.getElementById('notice-badge');
   var noticeTextEl = document.getElementById('notice-text');
@@ -38,9 +39,64 @@
   var activeRecados = [];
   var currentRecadoIndex = -1;
   var recadoTimer = null;
+  var cursorTimer = null;
 
   function trimStr(str) {
     return (str || '').replace(/^\s+|\s+$/g, '');
+  }
+
+  function isCurrentlyFullscreen() {
+    if (window.AndroidNative) return true;
+    if (window.self !== window.top) return true;
+    if (document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement || document.webkitIsFullScreen) {
+      return true;
+    }
+    if (window.navigator && window.navigator.standalone) return true;
+    if (window.screen && window.innerHeight && (window.screen.height - window.innerHeight <= 25)) {
+      return true;
+    }
+    return false;
+  }
+
+  function updatePresentationBanner() {
+    if (!presentationBannerEl) return;
+    if (isCurrentlyFullscreen()) {
+      presentationBannerEl.className = 'hidden';
+    } else {
+      presentationBannerEl.className = '';
+    }
+    fitStageToScreen();
+  }
+
+  function enterPresentationFullscreen() {
+    try {
+      window.scrollTo(0, 1);
+    } catch (e) {}
+
+    var docEl = document.documentElement;
+    try {
+      if (docEl.requestFullscreen) {
+        docEl.requestFullscreen();
+      } else if (docEl.webkitRequestFullscreen) {
+        docEl.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
+      } else if (docEl.webkitRequestFullScreen) {
+        docEl.webkitRequestFullScreen(Element.ALLOW_KEYBOARD_INPUT);
+      } else if (docEl.mozRequestFullScreen) {
+        docEl.mozRequestFullScreen();
+      } else if (docEl.msRequestFullscreen) {
+        docEl.msRequestFullscreen();
+      }
+    } catch (err) {
+      try {
+        if (docEl.webkitRequestFullscreen) docEl.webkitRequestFullscreen();
+      } catch (e2) {}
+    }
+
+    if (presentationBannerEl) {
+      presentationBannerEl.className = 'hidden';
+    }
+    setTimeout(fitStageToScreen, 150);
+    setTimeout(fitStageToScreen, 500);
   }
 
   function fitStageToScreen() {
@@ -63,8 +119,50 @@
   }
 
   window.addEventListener('resize', fitStageToScreen);
+  document.addEventListener('fullscreenchange', updatePresentationBanner);
+  document.addEventListener('webkitfullscreenchange', updatePresentationBanner);
   fitStageToScreen();
-  setTimeout(fitStageToScreen, 300);
+  updatePresentationBanner();
+  setTimeout(function () {
+    enterPresentationFullscreen();
+    updatePresentationBanner();
+  }, 300);
+
+  // Qualquer clique na tela (exceto no logo de configuração) ou botão OK do controle remoto ativa o Modo Apresentação (Tela Cheia) no Chrome!
+  if (presentationBannerEl) {
+    presentationBannerEl.addEventListener('click', function (ev) {
+      ev.stopPropagation();
+      enterPresentationFullscreen();
+    });
+  }
+  if (mediaStageEl) {
+    mediaStageEl.addEventListener('click', function () {
+      if (!isCurrentlyFullscreen()) {
+        enterPresentationFullscreen();
+      }
+    });
+  }
+  var noticeCardEl = document.getElementById('notice-card');
+  if (noticeCardEl) {
+    noticeCardEl.addEventListener('click', function () {
+      if (!isCurrentlyFullscreen()) {
+        enterPresentationFullscreen();
+      }
+    });
+  }
+
+  // Esconde a seta do mouse automaticamente após 3 segundos sem mexer
+  function resetCursorTimer() {
+    document.body.className = '';
+    if (cursorTimer) clearTimeout(cursorTimer);
+    cursorTimer = setTimeout(function () {
+      if (deviceModalEl && deviceModalEl.className.indexOf('hidden') !== -1) {
+        document.body.className = 'hide-cursor';
+      }
+    }, 3000);
+  }
+  window.addEventListener('mousemove', resetCursorTimer);
+  resetCursorTimer();
 
   function buildTopPlaylist(state) {
     var devCfg = window.falaSync.getDeviceConfig();
@@ -417,8 +515,12 @@
 
   window.addEventListener('keydown', function (ev) {
     var isModalOpen = deviceModalEl.className.indexOf('hidden') === -1;
-    if (!isModalOpen && (ev.keyCode === 82 || ev.key === 'ContextMenu' || ev.key === 'F1')) {
-      openDeviceModal();
+    if (!isModalOpen) {
+      if (ev.keyCode === 82 || ev.key === 'ContextMenu' || ev.key === 'F1') {
+        openDeviceModal();
+      } else if (!isCurrentlyFullscreen()) {
+        enterPresentationFullscreen();
+      }
     } else if (isModalOpen && (ev.keyCode === 27 || ev.key === 'Escape' || ev.key === 'Back')) {
       deviceModalEl.className = 'hidden';
     }
@@ -449,12 +551,7 @@
   });
 
   btnFullscreen.addEventListener('click', function () {
-    var docEl = document.documentElement;
-    if (docEl.requestFullscreen) {
-      docEl.requestFullscreen();
-    } else if (docEl.webkitRequestFullscreen) {
-      docEl.webkitRequestFullscreen();
-    }
+    enterPresentationFullscreen();
     deviceModalEl.className = 'hidden';
   });
 
