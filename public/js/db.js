@@ -1,18 +1,107 @@
 /**
  * Vida Moderna News - Camada Offline-First & Sincronização 100% Automática via Nuvem (Supabase + GitHub Pages)
- *
- * Permite que o Painel Administrativo (hospedado gratuitamente no GitHub Pages) e o aparelho
- * Aquarius STV-Plus (no elevador do condomínio) funcionem em redes de internet totalmente diferentes!
- * - Sincroniza via Supabase REST API (gratuito) a cada 5 segundos quando há Wi-Fi
- * - Sincroniza via GitHub Pages (data/state.json) ou Servidor Local (opcional)
- * - Busca automática de notícias por Temas de Interesse com Filtro de Classificação Familiar [Livre]
+ * VERSÃO 100% COMPATÍVEL COM NAVEGADORES ANTIGOS (ES5 Puro + XMLHttpRequest - Android 4.0 / 4.4 / 5.1 / 7.1 Aquarius STV-Plus)
  */
 
 var FALA_STORAGE_KEY = 'vidamoderna_state_v3';
 var FALA_DEVICE_CFG_KEY = 'vidamoderna_device_cfg_v1';
-var FALA_MEDIA_CACHE = 'vidamoderna-media-cache-v1';
-var AUTO_SYNC_INTERVAL_MS = 5000;
+var AUTO_SYNC_INTERVAL_MS = 6000;
 var RSS_AUTO_REFRESH_MS = 5 * 60 * 1000;
+
+/**
+ * Mini-Promise compatível com ES5 (para navegadores antigos que não possuem window.Promise)
+ */
+function es5Resolve(val) {
+  if (typeof Promise !== 'undefined') {
+    return Promise.resolve(val);
+  }
+  return {
+    then: function (cb) {
+      if (cb) {
+        try { return es5Resolve(cb(val)); } catch (e) { return es5Resolve(null); }
+      }
+      return this;
+    },
+    'catch': function () { return this; }
+  };
+}
+
+function es5Async(executor) {
+  if (typeof Promise !== 'undefined') {
+    return new Promise(function (resolve) {
+      try {
+        executor(resolve);
+      } catch (e) {
+        resolve(null);
+      }
+    });
+  }
+  var callbacks = [];
+  var isDone = false;
+  var resultVal = null;
+
+  function resolve(val) {
+    if (isDone) return;
+    isDone = true;
+    resultVal = val;
+    for (var i = 0; i < callbacks.length; i++) {
+      try { callbacks[i](val); } catch (e) {}
+    }
+  }
+
+  var thenable = {
+    then: function (cb) {
+      if (!cb) return thenable;
+      if (isDone) {
+        try { cb(resultVal); } catch (e) {}
+      } else {
+        callbacks.push(cb);
+      }
+      return thenable;
+    },
+    'catch': function () { return thenable; }
+  };
+
+  try {
+    executor(resolve);
+  } catch (err) {
+    resolve(null);
+  }
+  return thenable;
+}
+
+/**
+ * Requisição HTTP/HTTPS universal via XMLHttpRequest (funciona desde o Android 2.3 / Chrome 1.0)
+ */
+function xhrRequest(method, url, headers, bodyStr, callback) {
+  try {
+    var xhr = new XMLHttpRequest();
+    xhr.open(method, url, true);
+    xhr.timeout = 8000;
+    if (headers) {
+      for (var k in headers) {
+        if (Object.prototype.hasOwnProperty.call(headers, k)) {
+          xhr.setRequestHeader(k, headers[k]);
+        }
+      }
+    }
+    xhr.onreadystatechange = function () {
+      if (xhr.readyState === 4) {
+        var ok = xhr.status >= 200 && xhr.status < 300;
+        callback(ok, xhr.status, xhr.responseText || '');
+      }
+    };
+    xhr.onerror = function () {
+      callback(false, 0, '');
+    };
+    xhr.ontimeout = function () {
+      callback(false, 0, '');
+    };
+    xhr.send(bodyStr || null);
+  } catch (e) {
+    callback(false, 0, '');
+  }
+}
 
 var NEWS_THEMES_CATALOG = {
   tecnologia: {
@@ -129,10 +218,10 @@ function isFamilySafeNews(title, description, filterLevel, customBlockedCsv) {
     if (text.indexOf(terms[i]) !== -1) return false;
   }
 
-  if (customBlockedCsv && customBlockedCsv.trim()) {
+  if (customBlockedCsv && customBlockedCsv.replace(/^\s+|\s+$/g, '')) {
     var customList = customBlockedCsv.split(/[,;\n]+/);
     for (var j = 0; j < customList.length; j++) {
-      var clean = customList[j].trim().toLowerCase();
+      var clean = customList[j].replace(/^\s+|\s+$/g, '').toLowerCase();
       if (clean.length >= 2 && text.indexOf(clean) !== -1) {
         return false;
       }
@@ -217,7 +306,7 @@ var DEFAULT_STATE = {
       fonte: 'G1 • TECNOLOGIA',
       corBarra: '#0d74b8',
       titulo: 'Celular, comparação e diálogo: os desafios de educar adolescentes em uma geração hiperconectada',
-      imagemUrl: 'https://s2-g1.glbimg.com/ffu1EwWcJ6skS_Y_mW4FUk5-Mno=/i.s3.glbimg.com/v1/AUTH_59edd422c0c84a879bd37670ae4f538a/internal_photos/bs/2026/8/Z/ISwY2KRVGdHAAlq1GAWg/sweetlouise-woman-3236059.jpg',
+      imagemUrl: 'http://s2-g1.glbimg.com/ffu1EwWcJ6skS_Y_mW4FUk5-Mno=/i.s3.glbimg.com/v1/AUTH_59edd422c0c84a879bd37670ae4f538a/internal_photos/bs/2026/8/Z/ISwY2KRVGdHAAlq1GAWg/sweetlouise-woman-3236059.jpg',
       publicadoEm: 'Thu, 22 Oct 2026 06:00:00 -0000',
       ativo: true
     },
@@ -226,7 +315,7 @@ var DEFAULT_STATE = {
       fonte: 'G1 • SAÚDE & CIÊNCIA',
       corBarra: '#2a5e35',
       titulo: "'Ciência Aberta': centro que abriga o Sirius recebe público para apresentar curiosidades e atrações da ciência",
-      imagemUrl: 'https://s2-g1.glbimg.com/kKUdrY29MpZWo_veboJUOdZ1dnM=/i.s3.glbimg.com/v1/AUTH_59edd422c0c84a879bd37670ae4f538a/internal_photos/bs/2020/0/Z/0MdzrrRtyHwZFyLq5f6g/fachadasirius.creditonelsonkon.jpg',
+      imagemUrl: 'http://s2-g1.glbimg.com/kKUdrY29MpZWo_veboJUOdZ1dnM=/i.s3.glbimg.com/v1/AUTH_59edd422c0c84a879bd37670ae4f538a/internal_photos/bs/2020/0/Z/0MdzrrRtyHwZFyLq5f6g/fachadasirius.creditonelsonkon.jpg',
       publicadoEm: 'Fri, 09 Aug 2024 09:49:43 -0000',
       ativo: true
     },
@@ -235,7 +324,7 @@ var DEFAULT_STATE = {
       fonte: 'G1 • CULTURA & ARTE',
       corBarra: '#9333ea',
       titulo: 'Atriz Judi Dench afirma que piora da visão a impede de continuar atuando',
-      imagemUrl: 'https://s2-g1.glbimg.com/E6w8SzaWelqOwm4zxccxCYoNdyE=/i.s3.glbimg.com/v1/AUTH_59edd422c0c84a879bd37670ae4f538a/internal_photos/bs/2022/s/i/g2BmTMQDO8nafBlXqMjA/judi-dench-the-crown-reuters.jpg',
+      imagemUrl: 'http://s2-g1.glbimg.com/E6w8SzaWelqOwm4zxccxCYoNdyE=/i.s3.glbimg.com/v1/AUTH_59edd422c0c84a879bd37670ae4f538a/internal_photos/bs/2022/s/i/g2BmTMQDO8nafBlXqMjA/judi-dench-the-crown-reuters.jpg',
       publicadoEm: 'Thu, 22 Oct 2026 12:48:56 -0000',
       ativo: true
     },
@@ -244,7 +333,7 @@ var DEFAULT_STATE = {
       fonte: 'G1 • CULTURA & ARTE',
       corBarra: '#9333ea',
       titulo: "Zélia Duncan oferece 'Pan y leche' em single no rastro do êxito da música de Maurício Pereira no show 'Agudo grave'",
-      imagemUrl: 'https://s2-g1.glbimg.com/5Ba0hDdEUqYwbJjVPQYmtwGPc34=/i.s3.glbimg.com/v1/AUTH_59edd422c0c84a879bd37670ae4f538a/internal_photos/bs/2026/8/P/s5NlwLSbGaKO0UqrjyFw/zeliapanlechefoto.jpg',
+      imagemUrl: 'http://s2-g1.glbimg.com/5Ba0hDdEUqYwbJjVPQYmtwGPc34=/i.s3.glbimg.com/v1/AUTH_59edd422c0c84a879bd37670ae4f538a/internal_photos/bs/2026/8/P/s5NlwLSbGaKO0UqrjyFw/zeliapanlechefoto.jpg',
       publicadoEm: 'Thu, 22 Oct 2026 10:58:05 -0000',
       ativo: true
     }
@@ -252,32 +341,31 @@ var DEFAULT_STATE = {
 };
 
 function VidaModernaSyncManager() {
-  var self = this;
   this.listeners = [];
   this.statusListeners = [];
   this.isSyncing = false;
-  this.wasOffline = !navigator.onLine;
+  this.wasOffline = false;
   this.autoSyncTimer = null;
   this.themesCatalog = NEWS_THEMES_CATALOG;
+  this.channel = null;
 
-  this.channel = typeof BroadcastChannel !== 'undefined'
-    ? new BroadcastChannel('vidamoderna_realtime_channel')
-    : null;
+  try {
+    if (typeof BroadcastChannel !== 'undefined') {
+      var self = this;
+      this.channel = new BroadcastChannel('vidamoderna_realtime_channel');
+      this.channel.onmessage = function (ev) {
+        if (ev && ev.data && ev.data.type === 'STATE_UPDATED') {
+          self.notifyListeners(self.getLocalState(), 'broadcast');
+        }
+      };
+    }
+  } catch (e) {}
 
-  if (this.channel) {
-    this.channel.onmessage = function (ev) {
-      if (ev.data && ev.data.type === 'STATE_UPDATED') {
-        var state = self.getLocalState();
-        self.notifyListeners(state, 'broadcast');
-      }
-    };
-  }
-
+  var selfRef = this;
   window.addEventListener('storage', function (ev) {
-    if (ev.key === FALA_STORAGE_KEY && ev.newValue) {
+    if (ev && ev.key === FALA_STORAGE_KEY && ev.newValue) {
       try {
-        var parsed = JSON.parse(ev.newValue);
-        self.notifyListeners(parsed, 'storage');
+        selfRef.notifyListeners(JSON.parse(ev.newValue), 'storage');
       } catch (e) {}
     }
   });
@@ -287,66 +375,13 @@ VidaModernaSyncManager.prototype.isFamilySafe = function (title, desc, level, cu
   return isFamilySafeNews(title, desc, level, customBlocked);
 };
 
-VidaModernaSyncManager.prototype.startAutoSyncDaemon = function () {
-  var self = this;
-  if (this.autoSyncTimer) clearInterval(this.autoSyncTimer);
-
-  this.syncFromServer(true);
-
-  this.autoSyncTimer = setInterval(function () {
-    var justReconnected = self.wasOffline && navigator.onLine;
-    self.wasOffline = !navigator.onLine;
-    self.syncFromServer(justReconnected);
-  }, AUTO_SYNC_INTERVAL_MS);
-
-  window.addEventListener('online', function () {
-    self.wasOffline = false;
-    self.updateServiceWorkerAutomatically();
-    self.syncFromServer(true);
-  });
-
-  window.addEventListener('offline', function () {
-    self.wasOffline = true;
-    self.notifyStatus('offline', 'Elevador Offline (Cache Ativo)');
-  });
-
-  var conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
-  if (conn && typeof conn.addEventListener === 'function') {
-    conn.addEventListener('change', function () {
-      if (navigator.onLine) {
-        self.updateServiceWorkerAutomatically();
-        self.syncFromServer(true);
-      }
-    });
-  }
-
-  document.addEventListener('visibilitychange', function () {
-    if (document.visibilityState === 'visible') {
-      self.syncFromServer(true);
-    }
-  });
-
-  window.triggerWifiSync = function () {
-    self.updateServiceWorkerAutomatically();
-    return self.syncFromServer(true);
-  };
-};
-
-VidaModernaSyncManager.prototype.updateServiceWorkerAutomatically = function () {
-  if ('serviceWorker' in navigator && navigator.serviceWorker.getRegistration) {
-    navigator.serviceWorker.getRegistration().then(function (reg) {
-      if (reg && reg.update) reg.update();
-    }).catch(function () {});
-  }
-};
-
 VidaModernaSyncManager.prototype.getDeviceConfig = function () {
   var cloudDefaults = window.VIDA_MODERNA_CLOUD || {};
   var def = {
-    serverUrl: (window.location.origin && window.location.origin.indexOf('http') === 0) ? window.location.origin : '',
-    supabaseUrl: cloudDefaults.supabaseUrl || '',
-    supabaseAnonKey: cloudDefaults.supabaseAnonKey || '',
-    githubPagesUrl: cloudDefaults.githubPagesUrl || '',
+    serverUrl: (window.location && window.location.origin && window.location.origin.indexOf('http') === 0) ? window.location.origin : '',
+    supabaseUrl: cloudDefaults.supabaseUrl || 'https://buzjnfppicexlpgyllvp.supabase.co',
+    supabaseAnonKey: cloudDefaults.supabaseAnonKey || 'sb_publishable_0bT5VXIuYk2XomaxkrO_hA_AoD-DcFO',
+    githubPagesUrl: cloudDefaults.githubPagesUrl || 'https://alescristao-cpu.github.io/vida-moderna-news',
     condominioFilter: 'TODOS',
     lastWifiSync: null
   };
@@ -378,7 +413,9 @@ VidaModernaSyncManager.prototype.saveDeviceConfig = function (cfg) {
     condominioFilter: cfg.condominioFilter !== undefined ? cfg.condominioFilter : current.condominioFilter,
     lastWifiSync: cfg.lastWifiSync !== undefined ? cfg.lastWifiSync : current.lastWifiSync
   };
-  localStorage.setItem(FALA_DEVICE_CFG_KEY, JSON.stringify(merged));
+  try {
+    localStorage.setItem(FALA_DEVICE_CFG_KEY, JSON.stringify(merged));
+  } catch (e) {}
   return merged;
 };
 
@@ -387,13 +424,15 @@ VidaModernaSyncManager.prototype.getLocalState = function () {
     var raw = localStorage.getItem(FALA_STORAGE_KEY);
     if (raw) {
       var parsed = JSON.parse(raw);
-      if (parsed.config && !Array.isArray(parsed.config.rssTemas)) {
-        parsed.config.rssTemas = ['tecnologia', 'ciencia_saude', 'turismo', 'cultura'];
+      if (parsed && parsed.config) {
+        if (!parsed.config.rssTemas || !parsed.config.rssTemas.length) {
+          parsed.config.rssTemas = ['tecnologia', 'ciencia_saude', 'turismo', 'cultura'];
+        }
+        if (!parsed.config.filtroFamiliarNivel) {
+          parsed.config.filtroFamiliarNivel = 'rigoroso';
+        }
+        return parsed;
       }
-      if (parsed.config && !parsed.config.filtroFamiliarNivel) {
-        parsed.config.filtroFamiliarNivel = 'rigoroso';
-      }
-      return parsed;
     }
   } catch (e) {}
   this.saveLocalState(DEFAULT_STATE, false);
@@ -417,9 +456,9 @@ VidaModernaSyncManager.prototype.onSyncStatus = function (cb) {
   this.statusListeners.push(cb);
 };
 
-VidaModernaSyncManager.prototype.notifyListeners = function (state, origin) {
+VidaModernaSyncManager.prototype.notifyListeners = function (state, source) {
   for (var i = 0; i < this.listeners.length; i++) {
-    try { this.listeners[i](state, origin); } catch (e) {}
+    try { this.listeners[i](state, source); } catch (e) {}
   }
 };
 
@@ -429,141 +468,121 @@ VidaModernaSyncManager.prototype.notifyStatus = function (status, detail) {
   }
 };
 
-VidaModernaSyncManager.prototype.cacheMediaAssetsOffline = async function (state) {
-  if (!('caches' in window)) return;
-  try {
-    var cache = await caches.open(FALA_MEDIA_CACHE);
-    var urlsToCache = [];
-
-    var midias = state.midias || [];
-    for (var i = 0; i < midias.length; i++) {
-      if (midias[i].ativo && midias[i].url && midias[i].url.indexOf('data:') !== 0) {
-        urlsToCache.push(midias[i].url);
-      }
+/**
+ * Busca estado no Supabase via XMLHttpRequest ou Ponte Nativa Java (100% compatível com navegadores antigos)
+ */
+VidaModernaSyncManager.prototype.fetchFromSupabase = function (sbUrl, sbKey) {
+  var self = this;
+  return es5Async(function (resolve) {
+    var cfg = self.getDeviceConfig();
+    var cleanUrl = ((sbUrl || cfg.supabaseUrl) || '').replace(/\/+$/, '');
+    var keyToUse = sbKey || cfg.supabaseAnonKey || '';
+    if (!cleanUrl || !keyToUse) {
+      resolve(null);
+      return;
     }
 
-    var noticias = state.noticias || [];
-    for (var j = 0; j < noticias.length; j++) {
-      if (noticias[j].ativo && noticias[j].imagemUrl && noticias[j].imagemUrl.indexOf('data:') !== 0) {
-        urlsToCache.push(noticias[j].imagemUrl);
-      }
-    }
+    var endpoint = cleanUrl + '/rest/v1/vidamoderna_sync?id=eq.main&select=payload&t=' + new Date().getTime();
 
-    for (var k = 0; k < urlsToCache.length; k++) {
+    if (window.AndroidNative && typeof window.AndroidNative.fetchSupabaseState === 'function') {
       try {
-        var rawUrl = urlsToCache[k];
-        var cached = await cache.match(rawUrl);
-        if (!cached) {
-          var response = await fetch(rawUrl, { mode: 'no-cors', cache: 'reload' });
-          if (response) await cache.put(rawUrl, response);
+        var rawResp = window.AndroidNative.fetchSupabaseState(endpoint, keyToUse);
+        if (rawResp && rawResp.indexOf('[') === 0) {
+          var rows = JSON.parse(rawResp);
+          if (rows && rows.length > 0 && rows[0].payload) {
+            resolve(rows[0].payload);
+            return;
+          }
         }
-      } catch (err) {}
+      } catch (e) {}
     }
-  } catch (e) {}
-};
 
-/**
- * Busca estado no Supabase via REST API (Redes Separadas / Nuvem Gratuita)
- */
-VidaModernaSyncManager.prototype.fetchFromSupabase = async function (sbUrl, sbKey) {
-  var cfg = this.getDeviceConfig();
-  var cleanUrl = ((sbUrl || cfg.supabaseUrl) || '').replace(/\/+$/, '');
-  var keyToUse = sbKey || cfg.supabaseAnonKey || '';
-  if (!cleanUrl || !keyToUse) return null;
+    var headers = {
+      'apikey': keyToUse,
+      'Accept': 'application/json'
+    };
+    if (keyToUse.indexOf('eyJ') === 0) {
+      headers['Authorization'] = 'Bearer ' + keyToUse;
+    }
 
-  var endpoint = cleanUrl + '/rest/v1/vidamoderna_sync?id=eq.main&select=payload';
-
-  if (window.AndroidNative && typeof window.AndroidNative.fetchSupabaseState === 'function') {
-    var rawResp = window.AndroidNative.fetchSupabaseState(endpoint, keyToUse);
-    if (rawResp && rawResp.indexOf('[') === 0) {
-      var rows = JSON.parse(rawResp);
-      if (rows && rows.length > 0 && rows[0].payload) {
-        return rows[0].payload;
+    xhrRequest('GET', endpoint, headers, null, function (ok, status, text) {
+      if (ok && text && text.indexOf('[') === 0) {
+        try {
+          var data = JSON.parse(text);
+          if (data && data.length > 0 && data[0].payload) {
+            resolve(data[0].payload);
+            return;
+          }
+        } catch (err) {}
       }
-    }
-  }
-
-  var headers = {
-    'apikey': keyToUse,
-    'Accept': 'application/json'
-  };
-  if (keyToUse.indexOf('eyJ') === 0) {
-    headers['Authorization'] = 'Bearer ' + keyToUse;
-  }
-
-  var res = await fetch(endpoint, {
-    method: 'GET',
-    headers: headers,
-    cache: 'no-store'
+      resolve(null);
+    });
   });
-
-  if (res.ok) {
-    var data = await res.json();
-    if (Array.isArray(data) && data.length > 0 && data[0].payload) {
-      return data[0].payload;
-    }
-  }
-  return null;
 };
 
 /**
- * Envia o estado atualizado do Painel Administrativo para o Supabase (Redes Separadas / Nuvem)
+ * Envia estado do Painel Administrativo para o Supabase via XMLHttpRequest
  */
-VidaModernaSyncManager.prototype.pushToSupabase = async function (sbUrlOrState, sbKey, stateObj) {
-  var cfg = this.getDeviceConfig();
-  var cleanUrl = '';
-  var keyToUse = '';
-  var payloadObj = null;
+VidaModernaSyncManager.prototype.pushToSupabase = function (sbUrlOrState, sbKey, stateObj) {
+  var self = this;
+  return es5Async(function (resolve) {
+    var cfg = self.getDeviceConfig();
+    var cleanUrl = '';
+    var keyToUse = '';
+    var payloadObj = null;
 
-  if (typeof sbUrlOrState === 'object' && sbUrlOrState !== null) {
-    cleanUrl = (cfg.supabaseUrl || '').replace(/\/+$/, '');
-    keyToUse = cfg.supabaseAnonKey || '';
-    payloadObj = sbUrlOrState;
-  } else {
-    cleanUrl = ((sbUrlOrState || cfg.supabaseUrl) || '').replace(/\/+$/, '');
-    keyToUse = sbKey || cfg.supabaseAnonKey || '';
-    payloadObj = stateObj;
-  }
+    if (typeof sbUrlOrState === 'object' && sbUrlOrState !== null) {
+      cleanUrl = (cfg.supabaseUrl || '').replace(/\/+$/, '');
+      keyToUse = cfg.supabaseAnonKey || '';
+      payloadObj = sbUrlOrState;
+    } else {
+      cleanUrl = ((sbUrlOrState || cfg.supabaseUrl) || '').replace(/\/+$/, '');
+      keyToUse = sbKey || cfg.supabaseAnonKey || '';
+      payloadObj = stateObj;
+    }
 
-  if (!cleanUrl || !keyToUse || !payloadObj) return false;
-  var endpoint = cleanUrl + '/rest/v1/vidamoderna_sync?on_conflict=id';
+    if (!cleanUrl || !keyToUse || !payloadObj) {
+      resolve(false);
+      return;
+    }
 
-  var headers = {
-    'apikey': keyToUse,
-    'Content-Type': 'application/json',
-    'Prefer': 'resolution=merge-duplicates,return=minimal'
-  };
-  if (keyToUse.indexOf('eyJ') === 0) {
-    headers['Authorization'] = 'Bearer ' + keyToUse;
-  }
+    var endpoint = cleanUrl + '/rest/v1/vidamoderna_sync?on_conflict=id';
+    var headers = {
+      'apikey': keyToUse,
+      'Content-Type': 'application/json',
+      'Prefer': 'resolution=merge-duplicates,return=minimal'
+    };
+    if (keyToUse.indexOf('eyJ') === 0) {
+      headers['Authorization'] = 'Bearer ' + keyToUse;
+    }
 
-  var res = await fetch(endpoint, {
-    method: 'POST',
-    headers: headers,
-    body: JSON.stringify({
+    var body = JSON.stringify({
       id: 'main',
       payload: payloadObj,
       updated_at: new Date().toISOString()
-    })
-  });
+    });
 
-  return res.ok;
+    xhrRequest('POST', endpoint, headers, body, function (ok) {
+      resolve(ok);
+    });
+  });
 };
 
-/**
- * Aplica e salva um estado remoto caso haja novidade
- */
-VidaModernaSyncManager.prototype.processIncomingRemoteState = async function (remoteState, sourceLabel) {
+VidaModernaSyncManager.prototype.processIncomingRemoteState = function (remoteState, sourceLabel) {
   var localState = this.getLocalState();
-  var now = Date.now();
-  remoteState.lastRssSyncAt = now;
+  remoteState.lastRssSyncAt = new Date().getTime();
 
-  if (Array.isArray(remoteState.noticias)) {
+  if (remoteState.noticias && remoteState.noticias.length) {
     var nivel = (remoteState.config && remoteState.config.filtroFamiliarNivel) ? remoteState.config.filtroFamiliarNivel : 'rigoroso';
     var customBlk = (remoteState.config && remoteState.config.palavrasBloqueadas) ? remoteState.config.palavrasBloqueadas : '';
-    remoteState.noticias = remoteState.noticias.filter(function (n) {
-      return isFamilySafeNews(n.titulo, '', nivel, customBlk);
-    });
+    var filtered = [];
+    for (var i = 0; i < remoteState.noticias.length; i++) {
+      var n = remoteState.noticias[i];
+      if (isFamilySafeNews(n.titulo, '', nivel, customBlk)) {
+        filtered.push(n);
+      }
+    }
+    remoteState.noticias = filtered;
   }
 
   var hasChanges = !localState ||
@@ -574,9 +593,8 @@ VidaModernaSyncManager.prototype.processIncomingRemoteState = async function (re
     JSON.stringify(remoteState.noticias) !== JSON.stringify(localState.noticias);
 
   if (hasChanges) {
-    this.notifyStatus('syncing', 'Baixando atualização (' + sourceLabel + ')...');
+    this.notifyStatus('syncing', 'Atualizando (' + sourceLabel + ')...');
     this.saveLocalState(remoteState, false);
-    await this.cacheMediaAssetsOffline(remoteState);
     this.notifyListeners(remoteState, 'cloud-sync');
   }
 
@@ -588,301 +606,339 @@ VidaModernaSyncManager.prototype.processIncomingRemoteState = async function (re
 };
 
 /**
- * Sincronização 100% automática:
- * 1. Nuvem Supabase (Redes diferentes entre PC/Celular e Aquarius STV-Plus!)
- * 2. Nuvem GitHub Pages (data/state.json)
- * 3. Servidor Local (opcional)
- * 4. Busca Direta de Notícias G1 com Filtro Familiar
+ * Sincronização Automática (Supabase -> GitHub Pages -> RSS G1) sem usar async/await!
  */
-VidaModernaSyncManager.prototype.syncFromServer = async function (forceRssCheck) {
-  if (this.isSyncing) return { synced: false, reason: 'busy' };
-
-  if (!navigator.onLine) {
-    this.notifyStatus('offline', 'Elevador Offline (Cache Local)');
-    return { synced: false, reason: 'offline' };
-  }
-
-  this.isSyncing = true;
-  var deviceCfg = this.getDeviceConfig();
-  var localState = this.getLocalState();
-  var now = Date.now();
-  var rssNeedsRefresh = forceRssCheck || !localState.lastRssSyncAt || (now - Number(localState.lastRssSyncAt) > RSS_AUTO_REFRESH_MS);
-
-  // 1. PRIORIDADE MÁXIMA: Sincronização via Nuvem SUPABASE (Funciona em redes diferentes!)
-  if (deviceCfg.supabaseUrl && deviceCfg.supabaseAnonKey) {
-    try {
-      var sbState = await this.fetchFromSupabase(deviceCfg.supabaseUrl, deviceCfg.supabaseAnonKey);
-      if (sbState && sbState.config) {
-        var updatedSb = await this.processIncomingRemoteState(sbState, 'Supabase Cloud');
-        // Se também já passou de 5 minutos, renova as notícias do G1 direto da internet no aparelho
-        if (rssNeedsRefresh) {
-          try { await this.fetchPublicRssFallback(); } catch (e) {}
-        }
-        this.isSyncing = false;
-        return { synced: true, updated: updatedSb, state: this.getLocalState() };
-      }
-    } catch (sbErr) {}
-  }
-
-  // 2. SEGUNDA PRIORIDADE: GitHub Pages URL (Ex: https://usuario.github.io/repo)
-  var ghUrl = (deviceCfg.githubPagesUrl || '').replace(/\/+$/, '');
-  if (ghUrl && ghUrl.indexOf('http') === 0) {
-    try {
-      var ghStateUrl = ghUrl + '/data/state.json?t=' + now;
-      var ghText = null;
-      if (window.AndroidNative && typeof window.AndroidNative.fetchUrl === 'function') {
-        ghText = window.AndroidNative.fetchUrl(ghStateUrl);
-      } else {
-        var ghRes = await fetch(ghStateUrl, { cache: 'no-store' });
-        if (ghRes.ok) ghText = await ghRes.text();
-      }
-      if (ghText && ghText.indexOf('{') === 0) {
-        var ghState = JSON.parse(ghText);
-        var updatedGh = await this.processIncomingRemoteState(ghState, 'GitHub Pages');
-        if (rssNeedsRefresh) {
-          try { await this.fetchPublicRssFallback(); } catch (e) {}
-        }
-        this.isSyncing = false;
-        return { synced: true, updated: updatedGh, state: this.getLocalState() };
-      }
-    } catch (ghErr) {}
-  }
-
-  // 3. TERCEIRA PRIORIDADE: Servidor HTTP (caso esteja usando servidor local ou VPS)
-  var baseUrl = (deviceCfg.serverUrl || '').replace(/\/+$/, '');
-  if (baseUrl && baseUrl.indexOf('http') === 0 && baseUrl.indexOf('github.io') === -1) {
-    try {
-      var syncUrl = baseUrl + '/api/state?clientVersion=' + encodeURIComponent(localState.version || 0) + '&autoRss=' + (rssNeedsRefresh ? '1' : '0') + '&t=' + now;
-      var remoteJsonText = null;
-
-      if (window.AndroidNative && typeof window.AndroidNative.fetchUrl === 'function') {
-        remoteJsonText = window.AndroidNative.fetchUrl(syncUrl);
-      } else {
-        var res = await fetch(syncUrl, { method: 'GET', cache: 'no-store' });
-        if (res.ok) remoteJsonText = await res.text();
-      }
-
-      if (remoteJsonText && remoteJsonText.indexOf('{') === 0) {
-        var remoteState = JSON.parse(remoteJsonText);
-        var updatedSrv = await this.processIncomingRemoteState(remoteState, 'Auto-Sync Wi-Fi');
-        this.isSyncing = false;
-        return { synced: true, updated: updatedSrv, state: this.getLocalState() };
-      }
-    } catch (srvErr) {}
-  }
-
-  // 4. BUSCA AUTOMÁTICA DIRETA DE NOTÍCIAS DO G1 PELA INTERNET COM FILTRO FAMILIAR
-  if (rssNeedsRefresh) {
-    try {
-      var rssUpdated = await this.fetchPublicRssFallback();
-      var d2 = new Date();
-      var nowStr2 = ('0' + d2.getHours()).slice(-2) + ':' + ('0' + d2.getMinutes()).slice(-2);
-      this.saveDeviceConfig({ lastWifiSync: d2.toISOString() });
-      this.notifyStatus('online', 'Auto-Sync Internet (' + nowStr2 + ')');
-      if (rssUpdated) {
-        this.notifyListeners(this.getLocalState(), 'auto-rss-fallback');
-      }
-      this.isSyncing = false;
-      return { synced: true, updated: rssUpdated, state: this.getLocalState() };
-    } catch (fallbackErr) {}
-  }
-
-  var d3 = new Date();
-  var nowStr3 = ('0' + d3.getHours()).slice(-2) + ':' + ('0' + d3.getMinutes()).slice(-2);
-  this.notifyStatus('online', 'Auto-Sync Ativo (' + nowStr3 + ')');
-  this.isSyncing = false;
-  return { synced: false };
-};
-
-/**
- * Salva alterações do Painel Administrativo no Supabase (Nuvem) + Servidor Local
- */
-VidaModernaSyncManager.prototype.pushStateToServer = async function (newState, refreshRssNow) {
-  newState.version = (Number(newState.version) || 1) + 1;
-  newState.updatedAt = new Date().toISOString();
-  this.saveLocalState(newState, true);
-
-  if (refreshRssNow) {
-    try {
-      await this.fetchPublicRssFallback();
-      newState = this.getLocalState();
-    } catch (e) {}
-  }
-
-  var deviceCfg = this.getDeviceConfig();
-
-  // 1. Salva no Supabase Cloud (para atualizar o Aquarius STV-Plus em qualquer outra rede de internet!)
-  if (deviceCfg.supabaseUrl && deviceCfg.supabaseAnonKey) {
-    try {
-      var sbOk = await this.pushToSupabase(deviceCfg.supabaseUrl, deviceCfg.supabaseAnonKey, newState);
-      if (sbOk) {
-        return { ok: true, mode: 'supabase-cloud', state: newState };
-      }
-    } catch (sbErr) {
-      console.warn('Falha ao gravar no Supabase:', sbErr);
+VidaModernaSyncManager.prototype.syncFromServer = function (forceRssCheck) {
+  var self = this;
+  return es5Async(function (resolve) {
+    if (self.isSyncing) {
+      resolve({ synced: false, reason: 'busy' });
+      return;
     }
-  }
 
-  // 2. Salva no servidor local caso esteja rodando iniciar_sistema.bat
-  var baseUrl = (deviceCfg.serverUrl || '').replace(/\/+$/, '');
-  if (baseUrl.indexOf('http') === 0 && baseUrl.indexOf('github.io') === -1) {
-    try {
-      var endpoint = baseUrl + '/api/state' + (refreshRssNow ? '?refreshRss=1' : '');
-      var res = await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newState)
-      });
-      if (res.ok) {
-        var updatedFromServer = await res.json();
-        if (updatedFromServer && updatedFromServer.noticias) {
-          this.saveLocalState(updatedFromServer, true);
-          this.notifyListeners(updatedFromServer, 'server-rss-refresh');
-        }
-        return { ok: true, mode: 'server+local', state: updatedFromServer };
+    if (navigator.onLine === false) {
+      self.notifyStatus('offline', 'Offline (Cache Local)');
+      resolve({ synced: false, reason: 'offline' });
+      return;
+    }
+
+    self.isSyncing = true;
+    var deviceCfg = self.getDeviceConfig();
+    var localState = self.getLocalState();
+    var now = new Date().getTime();
+    var rssNeedsRefresh = forceRssCheck || !localState.lastRssSyncAt || (now - Number(localState.lastRssSyncAt) > RSS_AUTO_REFRESH_MS);
+
+    function finishSync(synced, updated) {
+      self.isSyncing = false;
+      resolve({ synced: synced, updated: updated, state: self.getLocalState() });
+    }
+
+    function stepRssFallback() {
+      if (!rssNeedsRefresh) {
+        var d3 = new Date();
+        var nowStr3 = ('0' + d3.getHours()).slice(-2) + ':' + ('0' + d3.getMinutes()).slice(-2);
+        self.notifyStatus('online', 'Auto-Sync (' + nowStr3 + ')');
+        finishSync(false, false);
+        return;
       }
-    } catch (e) {}
-  }
+      self.fetchPublicRssFallback().then(function (rssUpdated) {
+        var d2 = new Date();
+        var nowStr2 = ('0' + d2.getHours()).slice(-2) + ':' + ('0' + d2.getMinutes()).slice(-2);
+        self.saveDeviceConfig({ lastWifiSync: d2.toISOString() });
+        self.notifyStatus('online', 'Sincronizado (' + nowStr2 + ')');
+        if (rssUpdated) {
+          self.notifyListeners(self.getLocalState(), 'auto-rss-fallback');
+        }
+        finishSync(true, rssUpdated);
+      });
+    }
 
-  return { ok: true, mode: 'local', state: this.getLocalState() };
+    function stepGithubPages() {
+      var ghUrl = (deviceCfg.githubPagesUrl || '').replace(/\/+$/, '');
+      if (!ghUrl || ghUrl.indexOf('http') !== 0) {
+        stepRssFallback();
+        return;
+      }
+      var ghStateUrl = ghUrl + '/data/state.json?t=' + now;
+      if (window.AndroidNative && typeof window.AndroidNative.fetchUrl === 'function') {
+        try {
+          var ghNative = window.AndroidNative.fetchUrl(ghStateUrl);
+          if (ghNative && ghNative.indexOf('{') === 0) {
+            var ghState = JSON.parse(ghNative);
+            var up = self.processIncomingRemoteState(ghState, 'GitHub Nuvem');
+            if (rssNeedsRefresh) {
+              self.fetchPublicRssFallback().then(function () { finishSync(true, up); });
+            } else {
+              finishSync(true, up);
+            }
+            return;
+          }
+        } catch (e) {}
+      }
+
+      xhrRequest('GET', ghStateUrl, null, null, function (ok, status, text) {
+        if (ok && text && text.indexOf('{') === 0) {
+          try {
+            var parsedGh = JSON.parse(text);
+            var up2 = self.processIncomingRemoteState(parsedGh, 'GitHub Nuvem');
+            if (rssNeedsRefresh) {
+              self.fetchPublicRssFallback().then(function () { finishSync(true, up2); });
+            } else {
+              finishSync(true, up2);
+            }
+            return;
+          } catch (e) {}
+        }
+        stepRssFallback();
+      });
+    }
+
+    // 1. Tenta Supabase Nuvem primeiro
+    if (deviceCfg.supabaseUrl && deviceCfg.supabaseAnonKey) {
+      self.fetchFromSupabase(deviceCfg.supabaseUrl, deviceCfg.supabaseAnonKey).then(function (sbState) {
+        if (sbState && sbState.config) {
+          var updatedSb = self.processIncomingRemoteState(sbState, 'Supabase Nuvem');
+          if (rssNeedsRefresh) {
+            self.fetchPublicRssFallback().then(function () {
+              finishSync(true, updatedSb);
+            });
+          } else {
+            finishSync(true, updatedSb);
+          }
+        } else {
+          stepGithubPages();
+        }
+      });
+    } else {
+      stepGithubPages();
+    }
+  });
 };
 
-VidaModernaSyncManager.prototype.fetchPublicRssFallback = async function () {
-  var state = this.getLocalState();
-  if (!state.config || !state.config.rssAtivo) return false;
+VidaModernaSyncManager.prototype.pushStateToServer = function (newState, refreshRssNow) {
+  var self = this;
+  return es5Async(function (resolve) {
+    newState.version = (Number(newState.version) || 1) + 1;
+    newState.updatedAt = new Date().toISOString();
+    self.saveLocalState(newState, true);
 
-  var temas = Array.isArray(state.config.rssTemas) && state.config.rssTemas.length > 0
-    ? state.config.rssTemas
-    : ['tecnologia', 'ciencia_saude', 'turismo', 'cultura'];
+    function sendToCloud(stateToSend) {
+      var deviceCfg = self.getDeviceConfig();
+      if (deviceCfg.supabaseUrl && deviceCfg.supabaseAnonKey) {
+        self.pushToSupabase(deviceCfg.supabaseUrl, deviceCfg.supabaseAnonKey, stateToSend).then(function (sbOk) {
+          resolve({ ok: true, mode: sbOk ? 'supabase-cloud' : 'local', state: stateToSend });
+        });
+      } else {
+        resolve({ ok: true, mode: 'local', state: stateToSend });
+      }
+    }
 
-  var filtroNivel = state.config.filtroFamiliarNivel || 'rigoroso';
-  var customBlocked = state.config.palavrasBloqueadas || '';
-  var maxNoticias = Number(state.config.limiteNoticias) || 10;
+    if (refreshRssNow) {
+      self.fetchPublicRssFallback().then(function () {
+        sendToCloud(self.getLocalState());
+      });
+    } else {
+      sendToCloud(newState);
+    }
+  });
+};
 
-  var totalAnalisadas = 0;
-  var totalBloqueadas = 0;
-  var collectedByFeed = [];
+VidaModernaSyncManager.prototype.fetchPublicRssFallback = function () {
+  var self = this;
+  return es5Async(function (resolve) {
+    var state = self.getLocalState();
+    if (!state.config || !state.config.rssAtivo) {
+      resolve(false);
+      return;
+    }
 
-  for (var tIdx = 0; tIdx < temas.length; tIdx++) {
-    var temaId = temas[tIdx];
-    var temaInfo = NEWS_THEMES_CATALOG[temaId];
-    if (!temaInfo) continue;
+    var temas = (state.config.rssTemas && state.config.rssTemas.length > 0)
+      ? state.config.rssTemas
+      : ['tecnologia', 'ciencia_saude', 'turismo', 'cultura'];
 
-    try {
+    var filtroNivel = state.config.filtroFamiliarNivel || 'rigoroso';
+    var customBlocked = state.config.palavrasBloqueadas || '';
+    var maxNoticias = Number(state.config.limiteNoticias) || 10;
+
+    var totalAnalisadas = 0;
+    var totalBloqueadas = 0;
+    var collectedByFeed = [];
+    var currentIdx = 0;
+
+    function normalizeImgUrlForLegacy(url) {
+      if (!url) return 'assets/news-bg-default.svg';
+      // s2-g1.glbimg.com aceita HTTP puro (evita erro de certificado SSL em Android 4.4/5.1/7.1 antigo)
+      if (window.location && window.location.protocol !== 'https:' && url.indexOf('https://s2-g1.glbimg.com/') === 0) {
+        return url.replace('https://', 'http://');
+      }
+      return url;
+    }
+
+    function finalizeRss() {
+      var finalNoticias = [];
+      var seen = {};
+      for (var r = 0; r < 5; r++) {
+        for (var f = 0; f < collectedByFeed.length; f++) {
+          var list = collectedByFeed[f];
+          if (r < list.length && !seen[list[r].titulo]) {
+            seen[list[r].titulo] = true;
+            finalNoticias.push(list[r]);
+            if (finalNoticias.length >= maxNoticias) break;
+          }
+        }
+        if (finalNoticias.length >= maxNoticias) break;
+      }
+
+      if (finalNoticias.length > 0) {
+        state.config.ultimoFiltroStats = {
+          analisadas: totalAnalisadas,
+          bloqueadas: totalBloqueadas,
+          aprovadas: finalNoticias.length,
+          atualizadoEm: new Date().toLocaleTimeString ? new Date().toLocaleTimeString() : 'Automático'
+        };
+        state.noticias = finalNoticias;
+        state.lastRssSyncAt = new Date().getTime();
+        state.version = (Number(state.version) || 1) + 1;
+        state.updatedAt = new Date().toISOString();
+        self.saveLocalState(state, true);
+        resolve(true);
+      } else {
+        resolve(false);
+      }
+    }
+
+    function processNextTheme() {
+      if (currentIdx >= temas.length) {
+        finalizeRss();
+        return;
+      }
+
+      var temaId = temas[currentIdx++];
+      var temaInfo = NEWS_THEMES_CATALOG[temaId];
+      if (!temaInfo) {
+        processNextTheme();
+        return;
+      }
+
       var feedList = [];
 
       if (window.AndroidNative && typeof window.AndroidNative.fetchUrl === 'function') {
-        var xmlText = window.AndroidNative.fetchUrl(temaInfo.url);
-        if (xmlText && xmlText.indexOf('<item>') !== -1) {
-          var itemRegex = /<item>([\s\S]*?)<\/item>/g;
-          var match;
-          while ((match = itemRegex.exec(xmlText)) !== null && feedList.length < 5) {
-            totalAnalisadas++;
-            var block = match[1];
-            var titleMatch = block.match(/<title><!\[CDATA\[([\s\S]*?)\]\]><\/title>|<title>([\s\S]*?)<\/title>/);
-            var descMatch = block.match(/<description><!\[CDATA\[([\s\S]*?)\]\]><\/description>|<description>([\s\S]*?)<\/description>/);
-            var mediaMatch = block.match(/<media:content[^>]+url="([^"]+)"/i) || block.match(/<img[^>]+src="([^"]+)"/i);
-
-            var title = titleMatch ? (titleMatch[1] || titleMatch[2] || '').trim() : '';
-            var desc = descMatch ? (descMatch[1] || descMatch[2] || '') : '';
-            if (!title) continue;
-
-            if (!isFamilySafeNews(title, desc, filtroNivel, customBlocked)) {
-              totalBloqueadas++;
-              continue;
-            }
-
-            var imgUrl = mediaMatch ? mediaMatch[1] : '';
-            if (state.config.apenasComFoto && !imgUrl) continue;
-
-            feedList.push({
-              id: 'rss-' + temaId + '-' + feedList.length + '-' + Date.now(),
-              fonte: temaInfo.fonte,
-              corBarra: temaInfo.cor,
-              titulo: title,
-              imagemUrl: imgUrl || 'assets/news-bg-default.svg',
-              publicadoEm: new Date().toISOString(),
-              ativo: true
-            });
-          }
-        }
-      } else {
-        var apiUrl = 'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(temaInfo.url);
-        var res = await fetch(apiUrl);
-        if (res.ok) {
-          var data = await res.json();
-          if (data && Array.isArray(data.items)) {
-            for (var i = 0; i < data.items.length; i++) {
-              var item = data.items[i];
+        try {
+          var xmlText = window.AndroidNative.fetchUrl(temaInfo.url);
+          if (xmlText && xmlText.indexOf('<item>') !== -1) {
+            var itemRegex = /<item>([\s\S]*?)<\/item>/g;
+            var match;
+            while ((match = itemRegex.exec(xmlText)) !== null && feedList.length < 5) {
               totalAnalisadas++;
-              var tTitle = (item.title || '').replace(/&amp;/g, '&').replace(/&quot;/g, '"').trim();
-              var tDesc = item.description || '';
-              if (!tTitle) continue;
+              var block = match[1];
+              var titleMatch = block.match(/<title><!\[CDATA\[([\s\S]*?)\]\]><\/title>|<title>([\s\S]*?)<\/title>/);
+              var descMatch = block.match(/<description><!\[CDATA\[([\s\S]*?)\]\]><\/description>|<description>([\s\S]*?)<\/description>/);
+              var mediaMatch = block.match(/<media:content[^>]+url="([^"]+)"/i) || block.match(/<img[^>]+src="([^"]+)"/i);
 
-              if (!isFamilySafeNews(tTitle, tDesc, filtroNivel, customBlocked)) {
+              var title = titleMatch ? (titleMatch[1] || titleMatch[2] || '').replace(/^\s+|\s+$/g, '') : '';
+              var desc = descMatch ? (descMatch[1] || descMatch[2] || '') : '';
+              if (!title) continue;
+
+              if (!isFamilySafeNews(title, desc, filtroNivel, customBlocked)) {
                 totalBloqueadas++;
                 continue;
               }
 
-              var img = (item.enclosure && item.enclosure.link) ? item.enclosure.link : (item.thumbnail || '');
-              if (!img && tDesc) {
-                var m = tDesc.match(/<img[^>]+src="([^">]+)"/i);
-                if (m && m[1]) img = m[1];
-              }
-
-              if (state.config.apenasComFoto && !img) continue;
+              var imgUrl = mediaMatch ? mediaMatch[1] : '';
+              if (state.config.apenasComFoto && !imgUrl) continue;
 
               feedList.push({
-                id: 'rss-' + temaId + '-' + feedList.length + '-' + Date.now(),
+                id: 'rss-' + temaId + '-' + feedList.length + '-' + new Date().getTime(),
                 fonte: temaInfo.fonte,
                 corBarra: temaInfo.cor,
-                titulo: tTitle,
-                imagemUrl: img || 'assets/news-bg-default.svg',
-                publicadoEm: item.pubDate || new Date().toISOString(),
+                titulo: title,
+                imagemUrl: normalizeImgUrlForLegacy(imgUrl),
+                publicadoEm: new Date().toISOString(),
                 ativo: true
               });
-
-              if (feedList.length >= 5) break;
             }
           }
+        } catch (e) {}
+
+        if (feedList.length > 0) collectedByFeed.push(feedList);
+        processNextTheme();
+        return;
+      }
+
+      var apiUrl = 'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(temaInfo.url);
+      xhrRequest('GET', apiUrl, null, null, function (ok, status, text) {
+        if (ok && text && text.indexOf('{') === 0) {
+          try {
+            var data = JSON.parse(text);
+            if (data && data.items && data.items.length) {
+              for (var i = 0; i < data.items.length; i++) {
+                var item = data.items[i];
+                totalAnalisadas++;
+                var tTitle = (item.title || '').replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/^\s+|\s+$/g, '');
+                var tDesc = item.description || '';
+                if (!tTitle) continue;
+
+                if (!isFamilySafeNews(tTitle, tDesc, filtroNivel, customBlocked)) {
+                  totalBloqueadas++;
+                  continue;
+                }
+
+                var img = (item.enclosure && item.enclosure.link) ? item.enclosure.link : (item.thumbnail || '');
+                if (!img && tDesc) {
+                  var m = tDesc.match(/<img[^>]+src="([^">]+)"/i);
+                  if (m && m[1]) img = m[1];
+                }
+
+                if (state.config.apenasComFoto && !img) continue;
+
+                feedList.push({
+                  id: 'rss-' + temaId + '-' + feedList.length + '-' + new Date().getTime(),
+                  fonte: temaInfo.fonte,
+                  corBarra: temaInfo.cor,
+                  titulo: tTitle,
+                  imagemUrl: normalizeImgUrlForLegacy(img),
+                  publicadoEm: item.pubDate || new Date().toISOString(),
+                  ativo: true
+                });
+
+                if (feedList.length >= 5) break;
+              }
+            }
+          } catch (e) {}
         }
-      }
-
-      if (feedList.length > 0) collectedByFeed.push(feedList);
-    } catch (e) {}
-  }
-
-  var finalNoticias = [];
-  var seen = {};
-  for (var r = 0; r < 5; r++) {
-    for (var f = 0; f < collectedByFeed.length; f++) {
-      var list = collectedByFeed[f];
-      if (r < list.length && !seen[list[r].titulo]) {
-        seen[list[r].titulo] = true;
-        finalNoticias.push(list[r]);
-        if (finalNoticias.length >= maxNoticias) break;
-      }
+        if (feedList.length > 0) collectedByFeed.push(feedList);
+        processNextTheme();
+      });
     }
-    if (finalNoticias.length >= maxNoticias) break;
-  }
 
-  state.config.ultimoFiltroStats = {
-    analisadas: totalAnalisadas,
-    bloqueadas: totalBloqueadas,
-    aprovadas: finalNoticias.length,
-    atualizadoEm: new Date().toLocaleString('pt-BR')
+    processNextTheme();
+  });
+};
+
+VidaModernaSyncManager.prototype.startAutoSyncDaemon = function () {
+  var self = this;
+  window.triggerWifiSync = function () {
+    self.notifyStatus('syncing', 'Wi-Fi Conectado...');
+    self.syncFromServer(true);
   };
 
-  if (finalNoticias.length > 0) {
-    state.noticias = finalNoticias;
-    state.lastRssSyncAt = Date.now();
-    state.version = (Number(state.version) || 1) + 1;
-    state.updatedAt = new Date().toISOString();
-    this.saveLocalState(state, true);
-    await this.cacheMediaAssetsOffline(state);
-    return true;
-  }
-  return false;
+  window.addEventListener('online', function () {
+    self.wasOffline = false;
+    self.notifyStatus('syncing', 'Sinal Wi-Fi Detectado...');
+    self.syncFromServer(true);
+  });
+
+  window.addEventListener('offline', function () {
+    self.wasOffline = true;
+    self.notifyStatus('offline', 'Offline (Cache Local)');
+  });
+
+  this.syncFromServer(true);
+
+  if (this.autoSyncTimer) clearInterval(this.autoSyncTimer);
+  this.autoSyncTimer = setInterval(function () {
+    self.syncFromServer(false);
+  }, AUTO_SYNC_INTERVAL_MS);
 };
 
 window.falaSync = new VidaModernaSyncManager();

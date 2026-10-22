@@ -2,6 +2,7 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="theme-color" content="#2a5e35">
   <meta name="mobile-web-app-capable" content="yes">
@@ -14,18 +15,31 @@
 <body>
   <div id="viewport-wrapper">
     <!-- TELA PRINCIPAL: 1280 x 720 px (72dpi) -->
-    <main id="fala-stage" aria-label="Tela Vida Moderna News 1280x720">
+    <div id="fala-stage" aria-label="Tela Vida Moderna News 1280x720">
       
       <!-- ÁREA SUPERIOR DESTINADA À PUBLICIDADE / CARTELAS / VÍDEOS / NOTÍCIAS: 1280 x 520 px -->
-      <section id="media-stage" aria-label="Área de Publicidade e Notícias 1280x520">
-        <!-- Os slides de 1280x520px são injetados dinamicamente pelo player.js -->
+      <div id="media-stage" aria-label="Área de Publicidade e Notícias 1280x520">
+        <!-- Slide inicial pré-renderizado para carregamento instantâneo em navegadores antigos -->
+        <div class="media-slide active">
+          <div class="news-slide-container">
+            <img class="news-bg-image" src="assets/news-bg-default.svg" alt="Vida Moderna News">
+            <div class="news-gradient-overlay">
+              <div class="news-source-tag" style="border-left-color: #2a5e35;">
+                <span>VIDA MODERNA NEWS</span>
+              </div>
+              <div class="news-headline">
+                Bem-vindo ao sistema de comunicação e notícias do Modern Life Residence.
+              </div>
+            </div>
+          </div>
+        </div>
         <div id="media-progress-track">
           <div id="media-progress-bar"></div>
         </div>
-      </section>
+      </div>
 
       <!-- ÁREA INFERIOR: RECADOS INDEPENDENTES DO CONDOMÍNIO + ASSINATURA VIDA MODERNA NEWS (1280 x 200 px) -->
-      <footer id="footer-stage" aria-label="Recados do Condomínio e Assinatura Vida Moderna News">
+      <div id="footer-stage" aria-label="Recados do Condomínio e Assinatura Vida Moderna News">
         
         <!-- Quadro de Recados Independentes da Arte -->
         <div id="notice-card">
@@ -50,11 +64,11 @@
           </div>
         </div>
 
-      </footer>
-    </main>
+      </div>
+    </div>
   </div>
 
-  <!-- MODAL DE CONFIGURAÇÃO DO APARELHO ANDROID & SINCRONIZAÇÃO WI-FI -->
+  <!-- MODAL DE CONFIGURAÇÃO DO APARELHO ANDROID & SINCRONIZAÇÃO NUVEM -->
   <div id="device-modal" class="hidden" role="dialog" aria-modal="true">
     <div class="device-modal-card">
       <div class="device-modal-header">
@@ -66,17 +80,17 @@
 
       <div class="device-field">
         <label for="input-supabase-url">☁️ Supabase Project URL (Sincronização via Internet Gratuita)</label>
-        <input type="text" id="input-supabase-url" placeholder="Ex: https://seu-projeto.supabase.co">
+        <input type="text" id="input-supabase-url" placeholder="Ex: https://buzjnfppicexlpgyllvp.supabase.co">
       </div>
 
       <div class="device-field">
-        <label for="input-supabase-key">🔑 Supabase Anon Public Key</label>
-        <input type="text" id="input-supabase-key" placeholder="Ex: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...">
+        <label for="input-supabase-key">🔑 Supabase Anon / Publishable Key</label>
+        <input type="text" id="input-supabase-key" placeholder="Ex: sb_publishable_...">
       </div>
 
       <div class="device-field">
         <label for="input-github-url">🌐 URL do GitHub Pages (Opcional)</label>
-        <input type="text" id="input-github-url" placeholder="Ex: https://seu-usuario.github.io/vida-moderna-news">
+        <input type="text" id="input-github-url" placeholder="Ex: https://alescristao-cpu.github.io/vida-moderna-news">
       </div>
 
       <div class="device-field">
@@ -103,12 +117,5 @@
   <script src="js/cloud-config.js"></script>
   <script src="js/db.js"></script>
   <script src="js/player.js"></script>
-  <script>
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js').catch(() => {});
-      });
-    }
-  </script>
 </body>
 </html>

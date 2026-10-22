@@ -48,10 +48,10 @@ $RJava = Join-Path $BuildWork "gen\br\com\falasindico\player\R.java"
   "$JavaSrcDir\BootReceiver.java" `
   "$RJava"
 
-# 5. Converte bytecode Java para DEX (classes.dex) com d8 (min-api 21 para Android 5.0 / 7.1 Aquarius STV-Plus)
-Write-Host "[3/5] Gerando classes.dex (d8 --min-api 21)..." -ForegroundColor Cyan
+# 5. Converte bytecode Java para DEX (classes.dex) com d8 (min-api 19 para Android 4.4 / 5.1 / 7.1 Aquarius STV-Plus)
+Write-Host "[3/5] Gerando classes.dex (d8 --min-api 19)..." -ForegroundColor Cyan
 $ClassFiles = Get-ChildItem "$BuildWork\classes" -Recurse -Filter "*.class" | Select-Object -ExpandProperty FullName
-& "$BuildTools\d8.bat" --min-api 21 --lib "$AndroidJar" --output "$BuildWork\dex" $ClassFiles
+& "$BuildTools\d8.bat" --min-api 19 --lib "$AndroidJar" --output "$BuildWork\dex" $ClassFiles
 
 # Insere classes.dex e a pasta assets/ (com barras normais '/' padrão Android) dentro do unaligned.apk usando jar.exe
 & "$JavaBin\jar.exe" uf "$BuildWork\unaligned.apk" -C "$BuildWork\dex" classes.dex

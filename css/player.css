@@ -1,4 +1,6 @@
 * {
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
   box-sizing: border-box;
   margin: 0;
   padding: 0;
@@ -7,52 +9,56 @@
 }
 
 html, body {
-  width: 100vw;
-  height: 100vh;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
   overflow: hidden;
   background-color: #000000;
   font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
 /* ==========================================================================
    TELA PRINCIPAL DO VIDA MODERNA NEWS: 1280 x 720 px (72 dpi)
-   Escalonada automaticamente para qualquer tela Android mantendo 1280x720
+   Compatível com Navegadores Antigos (Android 4.0 / 4.4 / 5.1 / 7.1 Aquarius STV-Plus)
    ========================================================================== */
 #viewport-wrapper {
-  width: 100vw;
-  height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #000;
-  position: relative;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+  background: #000000;
+  overflow: hidden;
 }
 
 #fala-stage {
   width: 1280px;
   height: 720px;
-  position: relative;
+  position: absolute;
+  top: 0;
+  left: 0;
   overflow: hidden;
   background: #ffffff;
-  transform-origin: center center;
+  -webkit-transform-origin: 0 0;
+  -ms-transform-origin: 0 0;
+  transform-origin: 0 0;
   box-shadow: 0 0 40px rgba(0, 0, 0, 0.9);
-  display: flex;
-  flex-direction: column;
 }
 
 /* ==========================================================================
    ÁREA SUPERIOR: PUBLICIDADE / CARTELA / VÍDEO / NOTÍCIAS (1280 x 520 px)
    ========================================================================== */
 #media-stage {
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 1280px;
   height: 520px;
-  position: relative;
   overflow: hidden;
   background-color: #0b131e;
-  flex-shrink: 0;
 }
 
 .media-slide {
@@ -62,15 +68,16 @@ html, body {
   width: 1280px;
   height: 520px;
   opacity: 0;
+  filter: alpha(opacity=0);
+  -webkit-transition: opacity 0.65s ease-in-out;
   transition: opacity 0.65s ease-in-out;
   pointer-events: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  overflow: hidden;
 }
 
 .media-slide.active {
   opacity: 1;
+  filter: alpha(opacity=100);
   z-index: 2;
 }
 
@@ -78,17 +85,16 @@ html, body {
 .media-slide img.cartela-img {
   width: 1280px;
   height: 520px;
-  object-fit: fill;
   display: block;
+  border: 0;
 }
 
 /* Vídeo 1280x520px (15 segundos) */
 .media-slide video.cartela-video {
   width: 1280px;
   height: 520px;
-  object-fit: fill;
   display: block;
-  background: #000;
+  background: #000000;
 }
 
 /* Layout de Notícia estilo G1 (idêntico à foto de referência) */
@@ -97,15 +103,14 @@ html, body {
   height: 520px;
   position: relative;
   overflow: hidden;
-  background: #111;
+  background: #111827;
 }
 
 .news-bg-image {
   width: 1280px;
   height: 520px;
-  object-fit: cover;
   display: block;
-  transform: scale(1.01);
+  border: 0;
 }
 
 .news-gradient-overlay {
@@ -113,27 +118,31 @@ html, body {
   left: 0;
   right: 0;
   bottom: 0;
-  height: 250px;
+  width: 1280px;
+  height: 260px;
+  background: -webkit-linear-gradient(
+    top,
+    rgba(0, 0, 0, 0) 0%,
+    rgba(0, 0, 0, 0.6) 38%,
+    rgba(0, 0, 0, 0.9) 75%,
+    rgba(0, 0, 0, 0.96) 100%
+  );
   background: linear-gradient(
     180deg,
     rgba(0, 0, 0, 0) 0%,
-    rgba(0, 0, 0, 0.55) 38%,
-    rgba(0, 0, 0, 0.88) 75%,
+    rgba(0, 0, 0, 0.6) 38%,
+    rgba(0, 0, 0, 0.9) 75%,
     rgba(0, 0, 0, 0.96) 100%
   );
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  padding: 0 28px 22px 20px;
+  padding: 75px 28px 22px 20px;
 }
 
 .news-source-tag {
-  display: inline-flex;
-  align-items: center;
-  width: fit-content;
+  display: inline-block;
   min-width: 190px;
-  max-width: 560px;
+  max-width: 650px;
   height: 36px;
+  line-height: 36px;
   background: #ffffff;
   border-left: 12px solid #5bb75b;
   padding: 0 16px 0 12px;
@@ -152,14 +161,12 @@ html, body {
 
 .news-headline {
   font-family: 'Segoe UI', Roboto, Arial, sans-serif;
-  font-size: 43px;
+  font-size: 42px;
   font-weight: 600;
   line-height: 1.16;
+  max-height: 100px;
   color: #ffffff;
   text-shadow: 0 2px 6px rgba(0, 0, 0, 0.85);
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
   overflow: hidden;
   max-width: 1225px;
 }
@@ -179,6 +186,7 @@ html, body {
   height: 100%;
   width: 0%;
   background: #2a5e35;
+  -webkit-transition: width 0.1s linear;
   transition: width 0.1s linear;
 }
 
@@ -187,36 +195,35 @@ html, body {
    720px total - 520px publicidade = 200px exatos
    ========================================================================== */
 #footer-stage {
+  position: absolute;
+  top: 520px;
+  left: 0;
   width: 1280px;
   height: 200px;
+  background: #edf2f7;
+  background: -webkit-linear-gradient(top, #f3f6f9 0%, #e6ecf2 100%);
   background: linear-gradient(180deg, #f3f6f9 0%, #e6ecf2 100%);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 13px 16px 13px 16px;
-  flex-shrink: 0;
-  position: relative;
+  overflow: hidden;
 }
 
-/* Card de Recados do Condomínio (Esquerda) */
+/* Card de Recados do Condomínio (Esquerda: 1020 x 174 px) */
 #notice-card {
+  position: absolute;
+  top: 13px;
+  left: 16px;
   width: 1020px;
   height: 174px;
   background: #ffffff;
   border: 1.5px solid #cbd5e1;
   border-radius: 10px;
   box-shadow: 0 3px 8px rgba(15, 23, 42, 0.08);
-  position: relative;
-  display: flex;
-  flex-direction: column;
   overflow: hidden;
 }
 
 #notice-header-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding-right: 16px;
+  position: relative;
+  width: 100%;
+  height: 36px;
 }
 
 #notice-badge {
@@ -234,16 +241,20 @@ html, body {
 }
 
 #notice-dots {
-  display: flex;
-  gap: 6px;
-  align-items: center;
+  position: absolute;
+  top: 12px;
+  right: 16px;
+  height: 12px;
 }
 
 .notice-dot {
+  display: inline-block;
   width: 8px;
   height: 8px;
+  margin-left: 6px;
   border-radius: 50%;
   background: #cbd5e1;
+  -webkit-transition: all 0.25s ease;
   transition: all 0.25s ease;
 }
 
@@ -254,50 +265,50 @@ html, body {
 }
 
 #notice-body {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  padding: 6px 24px 12px 18px;
+  position: absolute;
+  top: 38px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 8px 24px 12px 18px;
+  overflow: hidden;
 }
 
 #notice-text {
   font-family: 'Segoe UI', Roboto, Arial, sans-serif;
-  font-size: 32px;
+  font-size: 31px;
   font-weight: 500;
   color: #333333;
-  line-height: 1.26;
+  line-height: 1.25;
   letter-spacing: -0.2px;
-  transition: opacity 0.35s ease, transform 0.35s ease;
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
+  max-height: 120px;
   overflow: hidden;
+  -webkit-transition: opacity 0.35s ease;
+  transition: opacity 0.35s ease;
 }
 
 #notice-text.fade-out {
   opacity: 0;
-  transform: translateY(4px);
+  filter: alpha(opacity=0);
 }
 
 /* Coluna Direita: Logo Modern Life Residence + Vida Moderna News + Status Wi-Fi */
 #brand-column {
+  position: absolute;
+  top: 13px;
+  right: 16px;
   width: 216px;
   height: 174px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  position: relative;
+  text-align: center;
   cursor: pointer;
 }
 
 #brand-logo {
-  width: 118px;
-  height: 118px;
-  object-fit: contain;
+  width: 116px;
+  height: 116px;
   display: block;
-  margin-top: -10px;
-  filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.12));
+  margin: 2px auto 0 auto;
+  border: 0;
 }
 
 #brand-phone {
@@ -313,40 +324,34 @@ html, body {
 /* Indicador discreto de Wi-Fi / Sincronização Automática */
 #sync-status-pill {
   position: absolute;
-  bottom: -2px;
+  bottom: 0px;
   right: 4px;
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
   font-size: 10.5px;
   font-weight: 600;
   color: #64748b;
-  background: rgba(255, 255, 255, 0.85);
+  background: rgba(255, 255, 255, 0.9);
   padding: 2px 8px;
   border-radius: 12px;
   border: 1px solid #e2e8f0;
+  white-space: nowrap;
 }
 
 .wifi-dot {
+  display: inline-block;
   width: 7px;
   height: 7px;
+  margin-right: 4px;
   border-radius: 50%;
   background: #22c55e;
+  vertical-align: middle;
 }
 
 .wifi-dot.syncing {
   background: #3b82f6;
-  animation: pulseSync 1s infinite;
 }
 
 .wifi-dot.offline {
   background: #f59e0b;
-}
-
-@keyframes pulseSync {
-  0% { transform: scale(1); opacity: 1; }
-  50% { transform: scale(1.4); opacity: 0.5; }
-  100% { transform: scale(1); opacity: 1; }
 }
 
 /* ==========================================================================
@@ -354,95 +359,102 @@ html, body {
    ========================================================================== */
 #device-modal {
   position: fixed;
-  inset: 0;
-  background: rgba(15, 23, 42, 0.78);
-  backdrop-filter: blur(4px);
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(15, 23, 42, 0.85);
   z-index: 9999;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  overflow-y: auto;
+  padding: 20px;
 }
 
 #device-modal.hidden {
-  display: none;
+  display: none !important;
 }
 
 .device-modal-card {
   background: #ffffff;
-  width: 520px;
-  max-width: 92vw;
+  width: 540px;
+  max-width: 94%;
+  margin: 20px auto;
   border-radius: 16px;
-  padding: 24px;
+  padding: 22px;
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
   color: #0f172a;
 }
 
 .device-modal-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 16px;
-  padding-bottom: 12px;
+  position: relative;
+  margin-bottom: 14px;
+  padding-bottom: 10px;
   border-bottom: 1px solid #e2e8f0;
 }
 
 .device-modal-header h2 {
-  font-size: 20px;
+  font-size: 19px;
   color: #2a5e35;
+  padding-right: 32px;
 }
 
 .device-modal-close {
+  position: absolute;
+  top: -4px;
+  right: 0;
   background: none;
   border: none;
-  font-size: 24px;
+  font-size: 26px;
   cursor: pointer;
   color: #64748b;
 }
 
 .device-field {
-  margin-bottom: 14px;
+  margin-bottom: 10px;
 }
 
 .device-field label {
   display: block;
-  font-size: 13px;
+  font-size: 12.5px;
   font-weight: 600;
   color: #475569;
-  margin-bottom: 5px;
+  margin-bottom: 4px;
 }
 
 .device-field input {
   width: 100%;
-  padding: 10px 12px;
+  padding: 8px 10px;
   border: 1px solid #cbd5e1;
   border-radius: 8px;
-  font-size: 15px;
+  font-size: 14px;
 }
 
 .device-stats {
   background: #f8fafc;
   border: 1px solid #e2e8f0;
   border-radius: 10px;
-  padding: 12px;
-  font-size: 13px;
+  padding: 10px;
+  font-size: 12.5px;
   color: #334155;
-  margin-bottom: 16px;
-  line-height: 1.6;
+  margin-bottom: 12px;
+  line-height: 1.5;
 }
 
 .device-actions {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
+  width: 100%;
+  overflow: hidden;
 }
 
 .btn-device {
-  flex: 1;
-  padding: 11px 14px;
+  display: inline-block;
+  width: 48%;
+  margin-right: 1%;
+  padding: 10px 12px;
   border-radius: 8px;
   border: none;
   font-weight: 700;
-  font-size: 14px;
+  font-size: 13.5px;
   cursor: pointer;
   text-align: center;
   text-decoration: none;
@@ -450,7 +462,7 @@ html, body {
 
 .btn-primary {
   background: #2a5e35;
-  color: #fff;
+  color: #ffffff;
 }
 
 .btn-secondary {
@@ -460,5 +472,5 @@ html, body {
 
 .btn-success {
   background: #16a34a;
-  color: #fff;
+  color: #ffffff;
 }

@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="br.com.falasindico.player"
-    android:versionCode="2"
-    android:versionName="2.0.0">
+    android:versionCode="3"
+    android:versionName="3.0.0">
 
-    <!-- Compatível com TV Box Aquarius STV-Plus (Android 5.0 / 5.1 / 6.0 / 7.1+) até Android 15 -->
-    <uses-sdk android:minSdkVersion="21" android:targetSdkVersion="34" />
+    <!-- Compatível com TV Box Aquarius STV-Plus (Android 4.4 / 5.1 / 6.0 / 7.1+) até Android 15 -->
+    <uses-sdk android:minSdkVersion="19" android:targetSdkVersion="34" />
 
     <!-- TV Box não possui touchscreen, portanto touchscreen não é obrigatório -->
     <uses-feature android:name="android.hardware.touchscreen" android:required="false" />

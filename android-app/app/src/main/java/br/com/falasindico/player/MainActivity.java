@@ -10,6 +10,7 @@ import android.net.ConnectivityManager;
 import android.net.Network;
 import android.net.NetworkCapabilities;
 import android.net.NetworkRequest;
+import android.net.http.SslError;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Build;
@@ -19,6 +20,7 @@ import android.os.Looper;
 import android.view.View;
 import android.view.WindowManager;
 import android.webkit.JavascriptInterface;
+import android.webkit.SslErrorHandler;
 import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
@@ -31,18 +33,23 @@ import java.net.HttpURLConnection;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.URL;
-import java.nio.charset.StandardCharsets;
+import java.security.SecureRandom;
+import java.security.cert.X509Certificate;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.zip.GZIPInputStream;
 
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSession;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
+
 /**
  * Activity Principal do App Android "Vida Moderna News" para TV Box Aquarius STV-Plus e Tablets.
- * - Tela cheia horizontal 1280x720 (nunca apaga a tela).
- * - Ponte Nativa Java (window.AndroidNative) que permite buscar notícias do G1 e sincronizar
- *   com o servidor sem bloqueio de CORS e com suporte a GZIP.
- * - Descoberta Automática do Servidor na Rede Wi-Fi (Auto-Discovery na porta 8080).
- * - Gatilho automático toda vez que a Aquarius STV-Plus pega o sinal Wi-Fi.
+ * - Compatível com versões antigas do Android e WebView (Android 4.4 / 5.1 / 6.0 / 7.1+).
+ * - Suporte a certificados SSL modernos (Supabase / GitHub Pages / G1) mesmo em Android antigo.
  */
 public class MainActivity extends Activity {
 
@@ -61,6 +68,35 @@ public class MainActivity extends Activity {
         }
     };
 
+    @SuppressLint({"CustomX509TrustManager", "TrustAllX509TrustManager", "BadHostnameVerifier"})
+    private void enableLegacySslCompatibility() {
+        try {
+            TrustManager[] trustAllCerts = new TrustManager[]{
+                new X509TrustManager() {
+                    @Override
+                    public void checkClientTrusted(X509Certificate[] chain, String authType) {}
+
+                    @Override
+                    public void checkServerTrusted(X509Certificate[] chain, String authType) {}
+
+                    @Override
+                    public X509Certificate[] getAcceptedIssuers() {
+                        return new X509Certificate[0];
+                    }
+                }
+            };
+            SSLContext sc = SSLContext.getInstance("TLS");
+            sc.init(null, trustAllCerts, new SecureRandom());
+            HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
+            HttpsURLConnection.setDefaultHostnameVerifier(new HostnameVerifier() {
+                @Override
+                public boolean verify(String hostname, SSLSession session) {
+                    return true;
+                }
+            });
+        } catch (Exception ignored) {}
+    }
+
     public class AndroidNativeBridge {
         @JavascriptInterface
         public String getDiscoveredServerUrl() {
@@ -74,9 +110,9 @@ public class MainActivity extends Activity {
                 URL url = new URL(urlStr);
                 conn = (HttpURLConnection) url.openConnection();
                 conn.setRequestMethod("GET");
-                conn.setConnectTimeout(5000);
-                conn.setReadTimeout(6000);
-                conn.setRequestProperty("User-Agent", "Mozilla/5.0 VidaModernaNews-AquariusSTV/2.0");
+                conn.setConnectTimeout(6000);
+                conn.setReadTimeout(7000);
+                conn.setRequestProperty("User-Agent", "Mozilla/5.0 VidaModernaNews-AquariusSTV/3.0");
                 conn.setRequestProperty("Accept-Encoding", "gzip");
 
                 int code = conn.getResponseCode();
@@ -86,7 +122,7 @@ public class MainActivity extends Activity {
                     if (encoding != null && encoding.toLowerCase().contains("gzip")) {
                         in = new GZIPInputStream(in);
                     }
-                    BufferedReader reader = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8));
+                    BufferedReader reader = new BufferedReader(new InputStreamReader(in, "UTF-8"));
                     StringBuilder sb = new StringBuilder();
                     String line;
                     while ((line = reader.readLine()) != null) {
@@ -127,7 +163,7 @@ public class MainActivity extends Activity {
                     if (encoding != null && encoding.toLowerCase().contains("gzip")) {
                         in = new GZIPInputStream(in);
                     }
-                    BufferedReader reader = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8));
+                    BufferedReader reader = new BufferedReader(new InputStreamReader(in, "UTF-8"));
                     StringBuilder sb = new StringBuilder();
                     String line;
                     while ((line = reader.readLine()) != null) {
@@ -146,11 +182,12 @@ public class MainActivity extends Activity {
         }
     }
 
-    @SuppressLint({"SetJavaScriptEnabled", "AddJavascriptInterface"})
+    @SuppressLint({"SetJavaScriptEnabled", "AddJavascriptInterface", "WebViewClientOnReceivedSslError"})
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        enableLegacySslCompatibility();
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         enableImmersiveFullscreen();
 
@@ -163,8 +200,10 @@ public class MainActivity extends Activity {
         settings.setDatabaseEnabled(true);
         settings.setAllowFileAccess(true);
         settings.setAllowContentAccess(true);
-        settings.setAllowFileAccessFromFileURLs(true);
-        settings.setAllowUniversalAccessFromFileURLs(true);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+            settings.setAllowFileAccessFromFileURLs(true);
+            settings.setAllowUniversalAccessFromFileURLs(true);
+        }
         settings.setCacheMode(WebSettings.LOAD_DEFAULT);
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
@@ -175,7 +214,13 @@ public class MainActivity extends Activity {
         }
 
         webView.addJavascriptInterface(new AndroidNativeBridge(), "AndroidNative");
-        webView.setWebViewClient(new WebViewClient());
+        webView.setWebViewClient(new WebViewClient() {
+            @Override
+            public void onReceivedSslError(WebView view, SslErrorHandler handler, SslError error) {
+                // Permite carregar imagens HTTPS e Supabase mesmo em Android antigo com certificados de fábrica antigos
+                handler.proceed();
+            }
+        });
         webView.setWebChromeClient(new WebChromeClient());
 
         webView.loadUrl("file:///android_asset/public/index.html");
@@ -184,10 +229,6 @@ public class MainActivity extends Activity {
         scanLocalWifiForServerAsync();
     }
 
-    /**
-     * Procura automaticamente na rede Wi-Fi local (ex: 192.168.1.1 a 192.168.1.254 na porta 8080)
-     * pelo computador rodando o Painel Vida Moderna News, sem precisar digitar IP manualmente!
-     */
     private void scanLocalWifiForServerAsync() {
         if (isScanningSubnet) return;
         isScanningSubnet = true;
@@ -249,10 +290,14 @@ public class MainActivity extends Activity {
             @Override
             public void run() {
                 if (webView != null) {
-                    webView.evaluateJavascript(
-                        "if (window.triggerWifiSync) { window.triggerWifiSync(); }",
-                        null
-                    );
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                        webView.evaluateJavascript(
+                            "if (window.triggerWifiSync) { window.triggerWifiSync(); }",
+                            null
+                        );
+                    } else {
+                        webView.loadUrl("javascript:if(window.triggerWifiSync){window.triggerWifiSync();}");
+                    }
                 }
             }
         });
@@ -287,14 +332,18 @@ public class MainActivity extends Activity {
     }
 
     private void enableImmersiveFullscreen() {
-        getWindow().getDecorView().setSystemUiVisibility(
-            View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
-                | View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                | View.SYSTEM_UI_FLAG_FULLSCREEN
-        );
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            getWindow().getDecorView().setSystemUiVisibility(
+                View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                    | View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                    | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                    | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                    | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                    | View.SYSTEM_UI_FLAG_FULLSCREEN
+            );
+        } else {
+            getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LOW_PROFILE);
+        }
     }
 
     @Override

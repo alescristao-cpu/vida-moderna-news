@@ -1,6 +1,6 @@
 /**
  * Vida Moderna News - Motor do Player Android (1280x720px total | 1280x520px publicidade/notícias)
- * Compatível com TV Box Aquarius STV-Plus (Android 5.1 / 7.1+), Controle Remoto e Tablets Android.
+ * VERSÃO 100% COMPATÍVEL COM NAVEGADORES ANTIGOS (ES5 Puro - Android 4.0 / 4.4 / 5.1 / 7.1 Aquarius STV-Plus)
  */
 
 (function () {
@@ -39,47 +39,60 @@
   var currentRecadoIndex = -1;
   var recadoTimer = null;
 
+  function trimStr(str) {
+    return (str || '').replace(/^\s+|\s+$/g, '');
+  }
+
   function fitStageToScreen() {
-    var vw = window.innerWidth;
-    var vh = window.innerHeight;
+    if (!stageEl) return;
+    var vw = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth || 1280;
+    var vh = window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight || 720;
     var scaleX = vw / 1280;
     var scaleY = vh / 720;
     var scale = Math.min(scaleX, scaleY);
+    var scaledW = 1280 * scale;
+    var scaledH = 720 * scale;
+    var leftPx = Math.max(0, Math.floor((vw - scaledW) / 2));
+    var topPx = Math.max(0, Math.floor((vh - scaledH) / 2));
+
+    stageEl.style.left = leftPx + 'px';
+    stageEl.style.top = topPx + 'px';
+    stageEl.style.webkitTransform = 'scale(' + scale + ')';
+    stageEl.style.msTransform = 'scale(' + scale + ')';
     stageEl.style.transform = 'scale(' + scale + ')';
   }
 
   window.addEventListener('resize', fitStageToScreen);
   fitStageToScreen();
-
-  function requestScreenWakeLock() {
-    if ('wakeLock' in navigator && navigator.wakeLock && navigator.wakeLock.request) {
-      navigator.wakeLock.request('screen').catch(function () {});
-    }
-  }
-  document.addEventListener('visibilitychange', function () {
-    if (document.visibilityState === 'visible') {
-      requestScreenWakeLock();
-    }
-  });
-  requestScreenWakeLock();
+  setTimeout(fitStageToScreen, 300);
 
   function buildTopPlaylist(state) {
     var devCfg = window.falaSync.getDeviceConfig();
-    var condFilter = (devCfg.condominioFilter || 'TODOS').trim().toUpperCase();
+    var condFilter = trimStr(devCfg.condominioFilter || 'TODOS').toUpperCase();
 
-    var midiasAtivas = (state.midias || []).filter(function (m) {
-      if (!m.ativo) return false;
-      var mCond = (m.condominio || 'TODOS').trim().toUpperCase();
-      return condFilter === 'TODOS' || mCond === 'TODOS' || mCond === condFilter;
-    });
+    var midiasOrig = (state && state.midias) ? state.midias : [];
+    var midiasAtivas = [];
+    for (var mIdx = 0; mIdx < midiasOrig.length; mIdx++) {
+      var m = midiasOrig[mIdx];
+      if (!m || !m.ativo) continue;
+      var mCond = trimStr(m.condominio || 'TODOS').toUpperCase();
+      if (condFilter === 'TODOS' || mCond === 'TODOS' || mCond === condFilter) {
+        midiasAtivas.push(m);
+      }
+    }
 
-    var noticiasAtivas = (state.config && state.config.rssAtivo)
-      ? (state.noticias || []).filter(function (n) { return n.ativo !== false; })
-      : [];
+    var noticiasOrig = (state && state.config && state.config.rssAtivo && state.noticias) ? state.noticias : [];
+    var noticiasAtivas = [];
+    for (var nIdx = 0; nIdx < noticiasOrig.length; nIdx++) {
+      var n = noticiasOrig[nIdx];
+      if (n && n.ativo !== false) {
+        noticiasAtivas.push(n);
+      }
+    }
 
     var combined = [];
 
-    if (state.config && state.config.intercalarNoticias && midiasAtivas.length > 0 && noticiasAtivas.length > 0) {
+    if (state && state.config && state.config.intercalarNoticias && midiasAtivas.length > 0 && noticiasAtivas.length > 0) {
       var maxLen = Math.max(midiasAtivas.length, noticiasAtivas.length);
       for (var i = 0; i < maxLen; i++) {
         if (i < midiasAtivas.length) {
@@ -105,7 +118,7 @@
           id: 'fallback-news',
           fonte: 'G1 • CULTURA & ARTE',
           corBarra: '#5bb75b',
-          titulo: '‘The Voice Brasil’ terá nova fase e técnicos revelam nome dos assistentes.',
+          titulo: 'Vida Moderna News — Informação em tempo real e avisos do Modern Life Residence.',
           imagemUrl: 'assets/news-bg-default.svg'
         }
       });
@@ -125,7 +138,9 @@
         video.className = 'cartela-video';
         video.src = m.url;
         video.muted = true;
-        video.playsInline = true;
+        video.setAttribute('muted', 'muted');
+        video.setAttribute('playsinline', 'playsinline');
+        video.setAttribute('webkit-playsinline', 'webkit-playsinline');
         video.preload = 'auto';
         slide.appendChild(video);
       } else {
@@ -134,7 +149,9 @@
         img.src = m.url;
         img.alt = m.titulo || 'Cartela 1280x520';
         img.onerror = function () {
-          img.src = 'assets/cartela-exemplo-1.svg';
+          if (img.src.indexOf('cartela-exemplo-1.svg') === -1) {
+            img.src = 'assets/cartela-exemplo-1.svg';
+          }
         };
         slide.appendChild(img);
       }
@@ -148,7 +165,12 @@
       bgImg.src = n.imagemUrl || 'assets/news-bg-default.svg';
       bgImg.alt = n.fonte || 'G1';
       bgImg.onerror = function () {
-        bgImg.src = 'assets/news-bg-default.svg';
+        if (bgImg.src.indexOf('https://s2-g1.glbimg.com/') === 0 && !bgImg.getAttribute('data-tried-http')) {
+          bgImg.setAttribute('data-tried-http', '1');
+          bgImg.src = bgImg.src.replace('https://', 'http://');
+        } else if (bgImg.src.indexOf('news-bg-default.svg') === -1) {
+          bgImg.src = 'assets/news-bg-default.svg';
+        }
       };
 
       var overlay = document.createElement('div');
@@ -179,22 +201,22 @@
     if (progressInterval) clearInterval(progressInterval);
     var totalMs = durationSeconds * 1000;
     var sigMs = (signatureSeconds || 5) * 1000;
-    var startTime = Date.now();
+    var startTime = new Date().getTime();
     progressBarEl.style.width = '0%';
-    progressBarEl.style.background = '#2a5e35';
+    progressBarEl.style.backgroundColor = '#2a5e35';
 
     progressInterval = setInterval(function () {
-      var elapsed = Date.now() - startTime;
+      var elapsed = new Date().getTime() - startTime;
       var pct = Math.min(100, (elapsed / totalMs) * 100);
       progressBarEl.style.width = pct + '%';
 
       if (totalMs - elapsed <= sigMs) {
-        progressBarEl.style.background = '#f59e0b';
+        progressBarEl.style.backgroundColor = '#f59e0b';
       }
       if (elapsed >= totalMs) {
         clearInterval(progressInterval);
       }
-    }, 80);
+    }, 100);
   }
 
   function showNextSlide() {
@@ -216,13 +238,13 @@
     mediaStageEl.insertBefore(newSlideEl, document.getElementById('media-progress-track'));
 
     void newSlideEl.offsetWidth;
-    newSlideEl.classList.add('active');
+    newSlideEl.className = 'media-slide active';
 
     for (var i = 0; i < oldSlides.length; i++) {
       (function (old) {
-        old.classList.remove('active');
+        old.className = 'media-slide';
         setTimeout(function () {
-          if (old.parentNode === mediaStageEl) {
+          if (old && old.parentNode === mediaStageEl) {
             mediaStageEl.removeChild(old);
           }
         }, 700);
@@ -232,8 +254,10 @@
     var videoEl = newSlideEl.querySelector('video');
     if (videoEl) {
       startProgressBar(durationSec, sigDur);
-      var playPromise = videoEl.play();
-      if (playPromise && playPromise.catch) playPromise.catch(function () {});
+      try {
+        var playPromise = videoEl.play();
+        if (playPromise && playPromise['catch']) playPromise['catch'](function () {});
+      } catch (e) {}
       videoEl.onended = function () {
         showNextSlide();
       };
@@ -246,13 +270,18 @@
 
   function updateRecadosList(state) {
     var devCfg = window.falaSync.getDeviceConfig();
-    var condFilter = (devCfg.condominioFilter || 'TODOS').trim().toUpperCase();
+    var condFilter = trimStr(devCfg.condominioFilter || 'TODOS').toUpperCase();
 
-    activeRecados = (state.recados || []).filter(function (r) {
-      if (!r.ativo) return false;
-      var rCond = (r.condominio || 'TODOS').trim().toUpperCase();
-      return condFilter === 'TODOS' || rCond === 'TODOS' || rCond === condFilter;
-    });
+    var orig = (state && state.recados) ? state.recados : [];
+    activeRecados = [];
+    for (var i = 0; i < orig.length; i++) {
+      var r = orig[i];
+      if (!r || !r.ativo) continue;
+      var rCond = trimStr(r.condominio || 'TODOS').toUpperCase();
+      if (condFilter === 'TODOS' || rCond === 'TODOS' || rCond === condFilter) {
+        activeRecados.push(r);
+      }
+    }
 
     if (activeRecados.length === 0) {
       activeRecados = [
@@ -292,13 +321,13 @@
       noticeBadgeEl.style.backgroundColor = recado.corEtiqueta || '#2a5e35';
       noticeTextEl.textContent = recado.texto || '';
       renderNoticeDots();
-      noticeTextEl.classList.remove('fade-out');
+      noticeTextEl.className = '';
     };
 
     if (immediate) {
       applyRecadoContent();
     } else {
-      noticeTextEl.classList.add('fade-out');
+      noticeTextEl.className = 'fade-out';
       setTimeout(applyRecadoContent, 320);
     }
 
@@ -360,73 +389,73 @@
     if (inputSupabaseUrl) inputSupabaseUrl.value = devCfg.supabaseUrl || '';
     if (inputSupabaseKey) inputSupabaseKey.value = devCfg.supabaseAnonKey || '';
     if (inputGithubUrl) inputGithubUrl.value = devCfg.githubPagesUrl || '';
-    inputServerUrl.value = devCfg.serverUrl || '';
-    inputCondominioFilter.value = devCfg.condominioFilter || 'TODOS';
+    if (inputServerUrl) inputServerUrl.value = devCfg.serverUrl || '';
+    if (inputCondominioFilter) inputCondominioFilter.value = devCfg.condominioFilter || 'TODOS';
 
     var lastSync = devCfg.lastWifiSync
-      ? new Date(devCfg.lastWifiSync).toLocaleString('pt-BR')
+      ? devCfg.lastWifiSync
       : 'Sincronizando...';
 
     var cloudMode = (devCfg.supabaseUrl && devCfg.supabaseAnonKey)
-      ? '☁️ Supabase Nuvem Ativo (Redes Diferentes / Internet)'
-      : (devCfg.githubPagesUrl ? '🌐 GitHub Pages Ativo' : '📡 G1 Internet Direto / Auto-Sync');
+      ? 'Supabase Nuvem Ativo (Redes Diferentes / Internet)'
+      : (devCfg.githubPagesUrl ? 'GitHub Pages Ativo' : 'G1 Internet Direto');
 
     var cfg = currentState.config || {};
     deviceStatsBox.innerHTML =
-      '<strong>Sistema:</strong> Vida Moderna News — Modern Life Residence (Aquarius STV-Plus Ready)<br>' +
+      '<strong>Sistema:</strong> Vida Moderna News — Modern Life Residence (Aquarius STV-Plus)<br>' +
       '<strong>Modo de Sincronização:</strong> ' + cloudMode + '<br>' +
-      '<strong>Resolução Padrão:</strong> 1280x720px (Área de Arte/Cartela: 1280x520px @ 72dpi)<br>' +
+      '<strong>Resolução Padrão:</strong> 1280x720px (Área Superior: 1280x520px @ 72dpi)<br>' +
       '<strong>Condomínio Atual:</strong> ' + (cfg.condominioNome || 'Modern Life Residence') + '<br>' +
       '<strong>Recados Ativos:</strong> ' + activeRecados.length + ' recado(s) independente(s)<br>' +
       '<strong>Itens na Grade (1280x520):</strong> ' + playlist.length + ' item(ns) (' + (cfg.duracaoPadraoSegundos || 15) + 's cada)<br>' +
-      '<strong>Última Sincronização Automática:</strong> ' + lastSync;
-    deviceModalEl.classList.remove('hidden');
-    if (inputSupabaseUrl) inputSupabaseUrl.focus();
+      '<strong>Última Sincronização:</strong> ' + lastSync;
+    deviceModalEl.className = '';
   }
 
   brandColumnEl.addEventListener('click', openDeviceModal);
-  closeDeviceModalBtn.addEventListener('click', function () { deviceModalEl.classList.add('hidden'); });
+  closeDeviceModalBtn.addEventListener('click', function () { deviceModalEl.className = 'hidden'; });
 
-  // Suporte ao Controle Remoto da TV Box Aquarius STV-Plus (Tecla Menu / Enter quando modal fechado)
   window.addEventListener('keydown', function (ev) {
-    var isModalOpen = !deviceModalEl.classList.contains('hidden');
+    var isModalOpen = deviceModalEl.className.indexOf('hidden') === -1;
     if (!isModalOpen && (ev.keyCode === 82 || ev.key === 'ContextMenu' || ev.key === 'F1')) {
       openDeviceModal();
     } else if (isModalOpen && (ev.keyCode === 27 || ev.key === 'Escape' || ev.key === 'Back')) {
-      deviceModalEl.classList.add('hidden');
+      deviceModalEl.className = 'hidden';
     }
   });
 
   btnSaveDevice.addEventListener('click', function () {
     window.falaSync.saveDeviceConfig({
-      supabaseUrl: inputSupabaseUrl ? inputSupabaseUrl.value.trim() : '',
-      supabaseAnonKey: inputSupabaseKey ? inputSupabaseKey.value.trim() : '',
-      githubPagesUrl: inputGithubUrl ? inputGithubUrl.value.trim() : '',
-      serverUrl: inputServerUrl.value.trim(),
-      condominioFilter: inputCondominioFilter.value.trim() || 'TODOS'
+      supabaseUrl: inputSupabaseUrl ? trimStr(inputSupabaseUrl.value) : '',
+      supabaseAnonKey: inputSupabaseKey ? trimStr(inputSupabaseKey.value) : '',
+      githubPagesUrl: inputGithubUrl ? trimStr(inputGithubUrl.value) : '',
+      serverUrl: inputServerUrl ? trimStr(inputServerUrl.value) : '',
+      condominioFilter: (inputCondominioFilter && trimStr(inputCondominioFilter.value)) ? trimStr(inputCondominioFilter.value) : 'TODOS'
     });
     playlist = buildTopPlaylist(currentState);
     updateRecadosList(currentState);
     currentRecadoIndex = -1;
     showNextRecado(true);
     window.falaSync.syncFromServer(true);
-    deviceModalEl.classList.add('hidden');
+    deviceModalEl.className = 'hidden';
   });
 
-  btnForceSync.addEventListener('click', async function () {
+  btnForceSync.addEventListener('click', function () {
     btnForceSync.textContent = 'Sincronizando...';
-    await window.falaSync.syncFromServer(true);
-    btnForceSync.textContent = 'Sincronizar Nuvem Agora';
-    openDeviceModal();
+    window.falaSync.syncFromServer(true).then(function () {
+      btnForceSync.textContent = 'Sincronizar Nuvem Agora';
+      openDeviceModal();
+    });
   });
 
   btnFullscreen.addEventListener('click', function () {
-    if (!document.fullscreenElement && document.documentElement.requestFullscreen) {
-      document.documentElement.requestFullscreen().catch(function () {});
-    } else if (document.exitFullscreen) {
-      document.exitFullscreen().catch(function () {});
+    var docEl = document.documentElement;
+    if (docEl.requestFullscreen) {
+      docEl.requestFullscreen();
+    } else if (docEl.webkitRequestFullscreen) {
+      docEl.webkitRequestFullscreen();
     }
-    deviceModalEl.classList.add('hidden');
+    deviceModalEl.className = 'hidden';
   });
 
   if (currentState.config && currentState.config.telefoneSuporte) {
