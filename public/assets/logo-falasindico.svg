@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 150" width="260" height="150">
+  <defs>
+    <linearGradient id="bubbleGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1992d4"/>
+      <stop offset="100%" stop-color="#0b69a3"/>
+    </linearGradient>
+    <filter id="softShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#000000" flood-opacity="0.12"/>
+    </filter>
+  </defs>
+
+  <!-- Outer speech bubble outline -->
+  <g filter="url(#softShadow)">
+    <rect x="65" y="10" width="130" height="58" rx="26" ry="26" fill="#ffffff" stroke="#1683c5" stroke-width="3"/>
+    <polygon points="160,66 178,66 184,78" fill="#ffffff" stroke="#1683c5" stroke-width="3" stroke-linejoin="round"/>
+    <!-- Inner blue speech bubble -->
+    <rect x="71" y="15" width="118" height="48" rx="21" ry="21" fill="url(#bubbleGrad)"/>
+    <polygon points="158,61 174,61 179,72" fill="#0b69a3"/>
+  </g>
+
+  <!-- "Fala" inside bubble -->
+  <text x="130" y="49" text-anchor="middle" font-family="'Segoe UI', 'Arial Rounded MT Bold', Arial, sans-serif" font-weight="800" font-size="33" fill="#ffffff" letter-spacing="0.5">Fala</text>
+
+  <!-- "Síndico" below bubble -->
+  <text x="130" y="108" text-anchor="middle" font-family="'Segoe UI', 'Arial Rounded MT Bold', Arial, sans-serif" font-weight="900" font-size="42" fill="#0d74b8" letter-spacing="-0.5">Síndico</text>
+</svg>

@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 520" width="1280" height="520">
+  <defs>
+    <linearGradient id="studioBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1a090d"/>
+      <stop offset="45%" stop-color="#3c1118"/>
+      <stop offset="100%" stop-color="#12161f"/>
+    </linearGradient>
+    <radialGradient id="spot1" cx="25%" cy="20%" r="60%">
+      <stop offset="0%" stop-color="#c4170c" stop-opacity="0.45"/>
+      <stop offset="100%" stop-color="#c4170c" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="spot2" cx="80%" cy="30%" r="55%">
+      <stop offset="0%" stop-color="#3b82f6" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#3b82f6" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1280" height="520" fill="url(#studioBg)"/>
+  <rect width="1280" height="520" fill="url(#spot1)"/>
+  <rect width="1280" height="520" fill="url(#spot2)"/>
+  <!-- Stage light beams -->
+  <polygon points="180,0 240,0 520,520 80,520" fill="#ffffff" fill-opacity="0.05"/>
+  <polygon points="880,0 940,0 1200,520 720,520" fill="#ffffff" fill-opacity="0.05"/>
+  <polygon points="560,0 610,0 420,520 220,520" fill="#ffffff" fill-opacity="0.04"/>
+  <!-- Subtle grid/stage graphics -->
+  <rect x="820" y="60" width="260" height="140" rx="8" fill="#c4170c" fill-opacity="0.18" stroke="#ef4444" stroke-opacity="0.35" stroke-width="2" transform="skewX(-12)"/>
+  <rect x="440" y="30" width="300" height="160" rx="8" fill="#c4170c" fill-opacity="0.14" stroke="#ef4444" stroke-opacity="0.3" stroke-width="2" transform="skewX(-12)"/>
+</svg>

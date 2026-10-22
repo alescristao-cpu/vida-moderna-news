@@ -1,0 +1,11 @@
+{
+  "appId": "br.com.vidamodernanews.player",
+  "appName": "Vida Moderna News",
+  "webDir": "public",
+  "bundledWebRuntime": false,
+  "android": {
+    "allowMixedContent": true,
+    "captureInput": true,
+    "webContentsDebuggingEnabled": true
+  }
+}

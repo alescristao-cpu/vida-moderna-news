@@ -1,0 +1,166 @@
+﻿{
+    "version":  3,
+    "updatedAt":  "2026-10-22T10:52:06.4071640-03:00",
+    "lastRssSyncAt":  0,
+    "config":  {
+                   "condominioNome":  "Modern Life Residence",
+                   "condominioCodigo":  "MODERN-LIFE",
+                   "telefoneSuporte":  "Vida Moderna News",
+                   "duracaoPadraoSegundos":  15,
+                   "tempoAssinaturaSegundos":  5,
+                   "intervaloRecadosSegundos":  10,
+                   "rssAtivo":  true,
+                   "rssUrl":  "https://g1.globo.com/rss/g1/",
+                   "rssFonteNome":  "G1",
+                   "intercalarNoticias":  true,
+                   "rssTemas":  [
+                                    "tecnologia",
+                                    "ciencia_saude",
+                                    "turismo",
+                                    "cultura"
+                                ],
+                   "filtroFamiliarNivel":  "rigoroso",
+                   "ultimoFiltroStats":  {
+                                             "analisadas":  31,
+                                             "bloqueadas":  7,
+                                             "aprovadas":  10,
+                                             "atualizadoEm":  "22/10/2026 10:52:06"
+                                         }
+               },
+    "recados":  [
+                    {
+                        "id":  "rec-1",
+                        "titulo":  "INFORMAÇÕES DO CONDOMÍNIO",
+                        "corEtiqueta":  "#2a5e35",
+                        "texto":  "Pedimos a atenção de todos com suas crianças para não lançarem brinquedos e objetos pelas janelas e varandas, evitando acidentes.",
+                        "ativo":  true,
+                        "condominio":  "TODOS",
+                        "criadoEm":  "2026-10-22T08:30:00-03:00"
+                    },
+                    {
+                        "id":  "rec-2",
+                        "titulo":  "INFORMAÇÕES DO CONDOMÍNIO",
+                        "corEtiqueta":  "#2a5e35",
+                        "texto":  "Lembramos aos moradores que o horário permitido para mudanças e entregas de grande porte é de segunda a sexta, das 08h às 17h, e aos sábados das 08h às 12h.",
+                        "ativo":  true,
+                        "condominio":  "TODOS",
+                        "criadoEm":  "2026-10-22T08:35:00-03:00"
+                    },
+                    {
+                        "id":  "rec-3",
+                        "titulo":  "MANUTENÇÃO PREVENTIVA",
+                        "corEtiqueta":  "#1468b3",
+                        "texto":  "Nesta quinta-feira (das 09h às 11h) será realizada a limpeza periódica dos reservatórios superiores. Recomendamos economia de água durante o período.",
+                        "ativo":  true,
+                        "condominio":  "TODOS",
+                        "criadoEm":  "2026-10-22T08:40:00-03:00"
+                    }
+                ],
+    "midias":  [
+                   {
+                       "id":  "mid-1",
+                       "tipo":  "cartela",
+                       "titulo":  "Vida Moderna News - Modern Life Residence (Cartela 1280x520)",
+                       "cliente":  "Vida Moderna News",
+                       "url":  "assets/cartela-exemplo-1.svg",
+                       "duracao":  15,
+                       "assinaturaSegundos":  5,
+                       "dimensoes":  "1280x520px (72dpi)",
+                       "ativo":  true,
+                       "condominio":  "TODOS",
+                       "criadoEm":  "2026-10-22T08:00:00-03:00"
+                   }
+               ],
+    "noticias":  [
+                     {
+                         "id":  "not-e3ffce97",
+                         "fonte":  "G1 • TECNOLOGIA",
+                         "corBarra":  "#0d74b8",
+                         "titulo":  "Celular, comparação e diálogo: os desafios de educar adolescentes em uma geração hiperconectada",
+                         "imagemUrl":  "https://s2-g1.glbimg.com/ffu1EwWcJ6skS_Y_mW4FUk5-Mno=/i.s3.glbimg.com/v1/AUTH_59edd422c0c84a879bd37670ae4f538a/internal_photos/bs/2026/8/Z/ISwY2KRVGdHAAlq1GAWg/sweetlouise-woman-3236059.jpg",
+                         "publicadoEm":  "Thu, 22 Oct 2026 06:00:00 -0000",
+                         "ativo":  true
+                     },
+                     {
+                         "id":  "not-3d455dc0",
+                         "fonte":  "G1 • SAÚDE \u0026 CIÊNCIA",
+                         "corBarra":  "#2a5e35",
+                         "titulo":  "\u0027Ciência Aberta\u0027: centro que abriga o Sirius recebe público para apresentar curiosidades e atrações da ciência",
+                         "imagemUrl":  "https://s2-g1.glbimg.com/kKUdrY29MpZWo_veboJUOdZ1dnM=/i.s3.glbimg.com/v1/AUTH_59edd422c0c84a879bd37670ae4f538a/internal_photos/bs/2020/0/Z/0MdzrrRtyHwZFyLq5f6g/fachadasirius.creditonelsonkon.jpg",
+                         "publicadoEm":  "Fri, 09 Aug 2024 09:49:43 -0000",
+                         "ativo":  true
+                     },
+                     {
+                         "id":  "not-fbc6f6b1",
+                         "fonte":  "G1 • TURISMO",
+                         "corBarra":  "#0284c7",
+                         "titulo":  "Governo Trump diz ter revogado mais de 300 mil vistos",
+                         "imagemUrl":  "https://s2-g1.glbimg.com/kdoxkPU3NOd6RfZxJHaqACl7gzg=/i.s3.glbimg.com/v1/AUTH_59edd422c0c84a879bd37670ae4f538a/internal_photos/bs/2026/A/A/P9J2u0S2qlMQ9qkV62oA/2026-10-13t154604z-775478900-rc2f2oaif0hr-rtrmadp-3-usa-trump.jpg",
+                         "publicadoEm":  "Wed, 21 Oct 2026 12:03:31 -0000",
+                         "ativo":  true
+                     },
+                     {
+                         "id":  "not-5473ffee",
+                         "fonte":  "G1 • CULTURA \u0026 ARTE",
+                         "corBarra":  "#9333ea",
+                         "titulo":  "Atriz Judi Dench afirma que piora da visão a impede de continuar atuando",
+                         "imagemUrl":  "https://s2-g1.glbimg.com/E6w8SzaWelqOwm4zxccxCYoNdyE=/i.s3.glbimg.com/v1/AUTH_59edd422c0c84a879bd37670ae4f538a/internal_photos/bs/2022/s/i/g2BmTMQDO8nafBlXqMjA/judi-dench-the-crown-reuters.jpg",
+                         "publicadoEm":  "Thu, 22 Oct 2026 12:48:56 -0000",
+                         "ativo":  true
+                     },
+                     {
+                         "id":  "not-3085748f",
+                         "fonte":  "G1 • TECNOLOGIA",
+                         "corBarra":  "#0d74b8",
+                         "titulo":  "Quem inventou o nome \u0027inteligência artificial\u0027 e por que Trump quer mudá-lo",
+                         "imagemUrl":  "https://s2-g1.glbimg.com/ajFiDOtxqlmRDbyaLvUS9cKVJ-I=/i.s3.glbimg.com/v1/AUTH_59edd422c0c84a879bd37670ae4f538a/internal_photos/bs/2026/5/0/R0FtpjRqyzYE1egU6tQA/2026-10-19t192831z-1341398837-rc2j6oamtpid-rtrmadp-3-usa-trump.jpg",
+                         "publicadoEm":  "Thu, 22 Oct 2026 06:00:00 -0000",
+                         "ativo":  true
+                     },
+                     {
+                         "id":  "not-d4dd28ee",
+                         "fonte":  "G1 • SAÚDE \u0026 CIÊNCIA",
+                         "corBarra":  "#2a5e35",
+                         "titulo":  "Mayaro e o que mais? Unicamp aponta possível transmissão urbana do vírus em Roraima e vê indícios de novas ameaças",
+                         "imagemUrl":  "https://s2-g1.glbimg.com/PjB2HAkBB0kNXtrQBimTDDxyBUc=/i.s3.glbimg.com/v1/AUTH_59edd422c0c84a879bd37670ae4f538a/internal_photos/bs/2024/x/8/Y5UI1gQV6ir2FlFMvEQg/ifa-mayv-rr.png",
+                         "publicadoEm":  "Sun, 12 May 2024 06:46:09 -0000",
+                         "ativo":  true
+                     },
+                     {
+                         "id":  "not-bfb390e3",
+                         "fonte":  "G1 • TURISMO",
+                         "corBarra":  "#0284c7",
+                         "titulo":  "Museu do Louvre é bloqueado por protesto de estudantes em Paris",
+                         "imagemUrl":  "https://s2-g1.glbimg.com/Xgu7Pnr8lSHQMPNAMuGe72QyXhc=/i.s3.glbimg.com/v1/AUTH_59edd422c0c84a879bd37670ae4f538a/internal_photos/bs/2026/I/P/eeaRYXQjyjDJfA5ceC0A/2026-10-19t084121z-1040104409-rc286oamsqhy-rtrmadp-3-france-protest.jpg",
+                         "publicadoEm":  "Mon, 19 Oct 2026 09:50:31 -0000",
+                         "ativo":  true
+                     },
+                     {
+                         "id":  "not-2d8f6670",
+                         "fonte":  "G1 • CULTURA \u0026 ARTE",
+                         "corBarra":  "#9333ea",
+                         "titulo":  "Zélia Duncan oferece \u0027Pan y leche\u0027 em single no rastro do êxito da música de Maurício Pereira no show \u0027Agudo grave\u0027",
+                         "imagemUrl":  "https://s2-g1.glbimg.com/5Ba0hDdEUqYwbJjVPQYmtwGPc34=/i.s3.glbimg.com/v1/AUTH_59edd422c0c84a879bd37670ae4f538a/internal_photos/bs/2026/8/P/s5NlwLSbGaKO0UqrjyFw/zeliapanlechefoto.jpg",
+                         "publicadoEm":  "Thu, 22 Oct 2026 10:58:05 -0000",
+                         "ativo":  true
+                     },
+                     {
+                         "id":  "not-702ae7ef",
+                         "fonte":  "G1 • TECNOLOGIA",
+                         "corBarra":  "#0d74b8",
+                         "titulo":  "Austrália abre ação coletiva contra Meta por danos a crianças",
+                         "imagemUrl":  "https://s2-g1.glbimg.com/qw6m7dBu5wIMC4MPttTJAa11eOU=/i.s3.glbimg.com/v1/AUTH_59edd422c0c84a879bd37670ae4f538a/internal_photos/bs/2024/T/i/iXg3Y9TqaS6P5MM4Cqug/facebook-instagram.jpg",
+                         "publicadoEm":  "Thu, 22 Oct 2026 05:12:04 -0000",
+                         "ativo":  true
+                     },
+                     {
+                         "id":  "not-7c440426",
+                         "fonte":  "G1 • SAÚDE \u0026 CIÊNCIA",
+                         "corBarra":  "#2a5e35",
+                         "titulo":  "\u0027Ciência Aberta\u0027: centro que abriga o Sirius terá dia exclusivo para receber escolas e grupos de alunos; saiba como se inscrever",
+                         "imagemUrl":  "https://s2-g1.glbimg.com/kKUdrY29MpZWo_veboJUOdZ1dnM=/i.s3.glbimg.com/v1/AUTH_59edd422c0c84a879bd37670ae4f538a/internal_photos/bs/2020/0/Z/0MdzrrRtyHwZFyLq5f6g/fachadasirius.creditonelsonkon.jpg",
+                         "publicadoEm":  "Thu, 09 May 2024 20:47:41 -0000",
+                         "ativo":  true
+                     }
+                 ]
+}

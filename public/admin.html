@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vida Moderna News - Painel Administrativo & Gestão de Recados</title>
+  <link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+  <header class="admin-header">
+    <div class="brand-area">
+      <img src="assets/logo-modern-life.png" alt="Modern Life Residence - Vida Moderna News">
+      <div>
+        <h1>Vida Moderna News — Central de Gestão & Mídia Indoor</h1>
+        <p>Modern Life Residence • Busca Automática por Temas • Filtro Classificação Familiar • Tela 1280x720px</p>
+      </div>
+    </div>
+    <div class="header-actions">
+      <a href="VidaModernaNews.apk" download="VidaModernaNews.apk" class="btn btn-warning">📲 Baixar APK (Aquarius STV-Plus)</a>
+      <button id="btn-sync-now" class="btn btn-success">🔄 Sincronizar Aparelhos / RSS</button>
+      <a href="index.html" target="_blank" class="btn btn-outline">📺 Abrir Tela Player (1280x720)</a>
+    </div>
+  </header>
+
+  <div class="admin-container">
+    <!-- COLUNA PRINCIPAL DE GESTÃO -->
+    <main>
+      <div class="spec-banner">
+        <div>
+          <strong>📐 Especificação Técnica Vida Moderna News Ativa:</strong>
+          Tela Total: <strong>1280x720px</strong> | Área de Publicidade/Cartela: <strong>1280x520px (72dpi)</strong> | Tempo padrão: <strong>15"</strong> (3" a 5" para assinatura) | Rodapé de Recados Independente: <strong>1280x200px</strong> | <strong>Filtro Familiar Ativo [L]</strong>.
+        </div>
+      </div>
+
+      <!-- NAVEGAÇÃO POR ABAS -->
+      <nav class="tabs-nav">
+        <button class="tab-btn active" data-tab="tab-recados">📋 Recados do Condomínio (Independente)</button>
+        <button class="tab-btn" data-tab="tab-noticias">📰 Notícias Automáticas & Filtro Familiar</button>
+        <button class="tab-btn" data-tab="tab-midias">🖼️ Cartelas & Vídeos (1280x520px)</button>
+        <button class="tab-btn" data-tab="tab-criador">🎨 Criador Rápido de Cartela 1280x520</button>
+        <button class="tab-btn" data-tab="tab-config">☁️ Nuvem (Supabase + GitHub) & Config</button>
+      </nav>
+
+      <!-- ABA 1: RECADOS DO CONDOMÍNIO (POSTADOS DE FORMA INDEPENDENTE DA ARTE) -->
+      <section id="tab-recados" class="tab-panel active">
+        <div class="card">
+          <h2>Postar Novo Recado do Condomínio</h2>
+          <p class="subtitle">
+            Os recados são exibidos no quadro inferior (1280x200px) de forma <strong>totalmente independente da arte/publicidade</strong> (1280x520px) e sincronizam automaticamente quando o aparelho pega Wi-Fi.
+          </p>
+
+          <form id="form-recado">
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="recado-titulo">Etiqueta Superior do Quadro</label>
+                <input type="text" id="recado-titulo" value="INFORMAÇÕES DO CONDOMÍNIO" required>
+              </div>
+              <div class="form-group">
+                <label for="recado-cor">Cor da Etiqueta</label>
+                <select id="recado-cor">
+                  <option value="#2a5e35">Verde Modern Life Residence (#2a5e35)</option>
+                  <option value="#1468b3">Azul Informativo (#1468b3)</option>
+                  <option value="#dc2626">Vermelho Urgente / Aviso (#dc2626)</option>
+                  <option value="#d97706">Laranja Manutenção (#d97706)</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="recado-condominio">Condomínio Alvo</label>
+                <input type="text" id="recado-condominio" value="TODOS" placeholder="TODOS ou MODERN-LIFE">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="recado-texto">Texto do Recado (Exibido em destaque para leitura rápida no elevador)</label>
+              <textarea id="recado-texto" maxlength="240" placeholder="Ex: Pedimos a atenção de todos com suas crianças para não lançarem brinquedos e objetos pelas janelas e varandas, evitando acidentes." required></textarea>
+            </div>
+
+            <button type="submit" class="btn btn-primary">✅ Publicar Recado Independente</button>
+          </form>
+        </div>
+
+        <div class="card">
+          <h2>Recados Cadastrados</h2>
+          <p class="subtitle">Ative, desative ou exclua recados a qualquer momento sem alterar as artes de 1280x520px.</p>
+          <div id="lista-recados" class="item-list"></div>
+        </div>
+      </section>
+
+      <!-- ABA 2: NOTÍCIAS AUTOMÁTICAS POR TEMAS DE INTERESSE + FILTRO DE CLASSIFICAÇÃO FAMILIAR -->
+      <section id="tab-noticias" class="tab-panel">
+        <div class="card">
+          <h2>
+            <span>🎯 Escolha os Temas de Interesse (Busca 100% Automática)</span>
+            <span class="family-badge-libre">🛡️ Classificação Familiar Ativa (Livre)</span>
+          </h2>
+          <p class="subtitle">
+            Selecione os assuntos que deseja exibir no elevador. O sistema busca automaticamente as últimas notícias na internet sempre que há Wi-Fi e aplica o <strong>Filtro de Classificação Familiar</strong> antes de exibir.
+          </p>
+
+          <!-- Grade de Chips dos Temas de Interesse -->
+          <div id="themes-selector-grid" class="themes-grid"></div>
+
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="input-tema-personalizado">🔍 Tema ou Assunto Personalizado adicional (Opcional)</label>
+              <input type="text" id="input-tema-personalizado" placeholder="Ex: Arquitetura, Gastronomia, Esportes, Natal RN...">
+            </div>
+            <div class="form-group">
+              <label for="input-limite-noticias">Quantidade de Notícias na Rotação Automática</label>
+              <select id="input-limite-noticias">
+                <option value="6">6 notícias (mais rápido)</option>
+                <option value="10" selected>10 notícias (equilibrado)</option>
+                <option value="15">15 notícias (maior variedade)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- BLOCO DE CONFIGURAÇÃO DO FILTRO DE CLASSIFICAÇÃO FAMILIAR -->
+          <div class="family-filter-box">
+            <div class="family-filter-header">
+              <div>
+                <strong style="color:#14532d; font-size:15px;">👨‍👩‍👧‍👦 Filtro de Classificação Familiar (Ambiente Residencial / Elevador)</strong>
+                <div style="font-size:12.5px; color:#166534;">
+                  Bloqueia automaticamente notícias policiais, crimes, violência, mortes, tragédias, drogas e conteúdo adulto/impróprio para crianças.
+                </div>
+              </div>
+              <span class="family-badge-libre">[ L ] LIVRE PARA TODOS OS PÚBLICOS</span>
+            </div>
+
+            <div class="form-grid" style="margin-bottom:8px;">
+              <div class="form-group" style="margin-bottom:0;">
+                <label for="select-filtro-familiar">Nível do Filtro Familiar</label>
+                <select id="select-filtro-familiar">
+                  <option value="rigoroso">🛡️ Rigoroso — Livre p/ Crianças e Família (Bloqueia violência, policial, tragédias e adulto)</option>
+                  <option value="moderado">⚖️ Moderado — Bloqueia crimes graves, violência explícita e conteúdo adulto</option>
+                  <option value="desativado">⚠️ Desativado (Sem filtragem de palavras)</option>
+                </select>
+              </div>
+              <div class="form-group" style="margin-bottom:0;">
+                <label for="input-palavras-bloqueadas">Palavras Bloqueadas Extras (separadas por vírgula)</label>
+                <input type="text" id="input-palavras-bloqueadas" placeholder="Ex: política, eleição, imposto...">
+              </div>
+            </div>
+
+            <label style="display:inline-flex; align-items:center; gap:8px; font-size:13px; font-weight:700; color:#14532d; cursor:pointer; margin-top:6px;">
+              <input type="checkbox" id="check-apenas-foto" checked style="width:16px; height:16px; accent-color:#2a5e35;">
+              Exibir apenas notícias que possuam fotografia de capa em alta resolução (1280x520px)
+            </label>
+
+            <div id="family-filter-stats" class="filter-stats-bar">
+              <span><strong>Status:</strong> Busca Automática Ativa</span>
+            </div>
+          </div>
+
+          <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            <button type="button" id="btn-save-themes-and-fetch" class="btn btn-primary">
+              ✅ Salvar Temas & Atualizar Notícias Automaticamente
+            </button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Adicionar Comunicado ou Notícia Manual (Opcional)</h2>
+          <form id="form-noticia">
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="noticia-fonte">Fonte / Editoria (Ex: VIDA MODERNA NEWS, G1)</label>
+                <input type="text" id="noticia-fonte" value="VIDA MODERNA NEWS" required>
+              </div>
+              <div class="form-group">
+                <label for="noticia-cor">Cor da Barra Lateral da Etiqueta</label>
+                <select id="noticia-cor">
+                  <option value="#2a5e35">Verde Modern Life (#2a5e35)</option>
+                  <option value="#5bb75b">Verde Claro (#5bb75b)</option>
+                  <option value="#0d74b8">Azul (#0d74b8)</option>
+                  <option value="#c4170c">Vermelho (#c4170c)</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="noticia-img-file">Foto de Fundo (Ajustada p/ 1280x520px)</label>
+                <input type="file" id="noticia-img-file" accept="image/*">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="noticia-titulo">Manchete da Notícia</label>
+              <input type="text" id="noticia-titulo" placeholder="Digite a manchete..." required>
+            </div>
+
+            <button type="submit" class="btn btn-primary">➕ Adicionar Notícia à Grade</button>
+          </form>
+        </div>
+
+        <div class="card">
+          <h2>Notícias Aprovadas pelo Filtro Familiar (Em Exibição no Player)</h2>
+          <p class="subtitle">Lista atualizada automaticamente de acordo com os temas de interesse selecionados acima.</p>
+          <div id="lista-noticias" class="item-list"></div>
+        </div>
+      </section>
+
+      <!-- ABA 3: CARTELAS E VÍDEOS (1280x520px) -->
+      <section id="tab-midias" class="tab-panel">
+        <div class="card">
+          <h2>Adicionar Cartela ou Vídeo Publicitário (1280x520px)</h2>
+          <p class="subtitle">
+            Envie imagens (ajustadas automaticamente para <strong>1280x520px @ 72dpi</strong>) ou vídeos de <strong>15 segundos</strong> (com 3" a 5" para assinatura). Os arquivos ficam salvos em cache no aparelho Android ao conectar no Wi-Fi.
+          </p>
+
+          <form id="form-midia">
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="midia-titulo">Título / Campanha</label>
+                <input type="text" id="midia-titulo" placeholder="Ex: Comunicado / Parceiro Vida Moderna News" required>
+              </div>
+              <div class="form-group">
+                <label for="midia-cliente">Nome do Cliente / Anunciante</label>
+                <input type="text" id="midia-cliente" placeholder="Ex: Modern Life Residence">
+              </div>
+              <div class="form-group">
+                <label for="midia-tipo">Formato da Mídia</label>
+                <select id="midia-tipo">
+                  <option value="cartela">Cartela Estática (Imagem 1280x520px - 72dpi)</option>
+                  <option value="video">Vídeo Publicitário (MP4/WebM 1280x520px)</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="midia-arquivo">Upload de Arquivo (Imagem ou Vídeo)</label>
+                <input type="file" id="midia-arquivo" accept="image/*,video/mp4,video/webm">
+              </div>
+              <div class="form-group">
+                <label for="midia-url">Ou URL Direta da Mídia (opcional)</label>
+                <input type="text" id="midia-url" placeholder="Ex: https://.../cartela-1280x520.png">
+              </div>
+            </div>
+
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="midia-duracao">Duração Total (Padrão: 15 segundos)</label>
+                <input type="number" id="midia-duracao" value="15" min="5" max="120" required>
+              </div>
+              <div class="form-group">
+                <label for="midia-assinatura">Tempo de Assinatura (Mín: 3", Ideal: 5")</label>
+                <input type="number" id="midia-assinatura" value="5" min="3" max="10" required>
+              </div>
+              <div class="form-group">
+                <label for="midia-condominio">Condomínio Alvo</label>
+                <input type="text" id="midia-condominio" value="TODOS">
+              </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary">📤 Publicar Cartela / Vídeo (1280x520px)</button>
+          </form>
+        </div>
+
+        <div class="card">
+          <h2>Grade de Cartelas & Vídeos (1280x520px)</h2>
+          <p class="subtitle">Itens exibidos na parte superior (1280x520px) da tela do elevador.</p>
+          <div id="lista-midias" class="item-list"></div>
+        </div>
+      </section>
+
+      <!-- ABA 4: CRIADOR RÁPIDO DE CARTELA 1280x520px (72dpi) -->
+      <section id="tab-criador" class="tab-panel">
+        <div class="card">
+          <h2>Gerador de Cartela Vida Moderna News (1280x520px • 72dpi)</h2>
+          <p class="subtitle">
+            Cria automaticamente uma cartela no tamanho exato de <strong>1280x520px (72dpi)</strong> destacando produto oferecido, telefone, site, e-mail e endereço para absorção rápida do térreo ao último andar.
+          </p>
+
+          <form id="form-gerador-cartela">
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="gen-cliente">Nome do Cliente / Assinatura</label>
+                <input type="text" id="gen-cliente" value="Modern Life Residence" required>
+              </div>
+              <div class="form-group">
+                <label for="gen-categoria">Etiqueta de Destaque</label>
+                <input type="text" id="gen-categoria" value="VIDA MODERNA NEWS" required>
+              </div>
+              <div class="form-group">
+                <label for="gen-tema">Tema Visual</label>
+                <select id="gen-tema">
+                  <option value="green">Verde Modern Life Residence (#2a5e35)</option>
+                  <option value="blue">Azul Corporativo</option>
+                  <option value="dark">Grafite Premium & Dourado</option>
+                  <option value="red">Vermelho Gastronomia & Ofertas</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="gen-produto">Produto / Serviço Principal (Frase de Absorção Rápida)</label>
+              <input type="text" id="gen-produto" value="Anuncie sua marca ou serviço para todos os moradores" required>
+            </div>
+
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="gen-telefone">Telefone / WhatsApp</label>
+                <input type="text" id="gen-telefone" value="(84) 99999-0000" required>
+              </div>
+              <div class="form-group">
+                <label for="gen-site">Site ou Instagram / E-mail</label>
+                <input type="text" id="gen-site" value="Vida Moderna News | Modern Life Residence">
+              </div>
+              <div class="form-group">
+                <label for="gen-endereco">Endereço / Localização</label>
+                <input type="text" id="gen-endereco" value="Modern Life Residence - Administração">
+              </div>
+            </div>
+
+            <div style="margin-bottom: 14px;">
+              <label style="display:block; font-size:13px; font-weight:700; margin-bottom:6px;">Prévia da Cartela Gerada (1280x520px):</label>
+              <canvas id="canvas-cartela" width="1280" height="520" style="width:100%; height:auto; border-radius:8px; border:1px solid #cbd5e1;"></canvas>
+            </div>
+
+            <div style="display:flex; gap:10px; flex-wrap:wrap;">
+              <button type="button" id="btn-preview-cartela" class="btn btn-warning">🔄 Atualizar Prévia 1280x520</button>
+              <button type="submit" class="btn btn-primary">✅ Publicar Cartela na Programação (15s)</button>
+              <button type="button" id="btn-download-cartela" class="btn btn-success">💾 Baixar PNG (1280x520px)</button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <!-- ABA 5: CONFIGURAÇÕES DO SISTEMA, NUVEM (SUPABASE + GITHUB PAGES) & ANDROID -->
+      <section id="tab-config" class="tab-panel">
+        <div class="card" style="border: 2px solid #16a34a; background: #f0fdf4;">
+          <h2>
+            <span>☁️ Sincronização via Internet Gratuita (Supabase + GitHub Pages)</span>
+            <span class="family-badge-libre" id="cloud-status-badge">Redes Diferentes (Internet)</span>
+          </h2>
+          <p class="subtitle" style="color:#14532d;">
+            Ideal quando o <strong>seu computador e o aparelho Aquarius STV-Plus NÃO estão no mesmo Wi-Fi</strong>. Você abre o painel pelo link gratuito do <strong>GitHub Pages</strong> (de casa, do celular ou do escritório), publica um recado ou cartela, o painel grava no <strong>Supabase Gratuito</strong> e o Aquarius STV-Plus no elevador baixa automaticamente pela internet!
+          </p>
+
+          <form id="form-cloud-config">
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="cloud-supabase-url">1. Supabase Project URL (Grátis em supabase.com)</label>
+                <input type="text" id="cloud-supabase-url" placeholder="Ex: https://xyzcompany.supabase.co">
+              </div>
+              <div class="form-group">
+                <label for="cloud-supabase-key">2. Supabase Anon Public Key (Project Settings → API)</label>
+                <input type="text" id="cloud-supabase-key" placeholder="Ex: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...">
+              </div>
+            </div>
+
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="cloud-github-url">3. URL da sua Página no GitHub Pages (Opcional)</label>
+                <input type="text" id="cloud-github-url" placeholder="Ex: https://seu-usuario.github.io/vida-moderna-news">
+              </div>
+            </div>
+
+            <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:6px;">
+              <button type="submit" class="btn btn-primary">☁️ Salvar Nuvem & Enviar Dados p/ Supabase Agora</button>
+              <button type="button" id="btn-test-supabase" class="btn btn-success">🔌 Testar Conexão Supabase</button>
+              <button type="button" id="btn-download-cloud-config" class="btn btn-warning">💾 Baixar cloud-config.js (P/ GitHub / APK)</button>
+              <button type="button" id="btn-download-state-json" class="btn btn-outline" style="background:#1e293b;">📦 Baixar state.json</button>
+            </div>
+          </form>
+
+          <div style="margin-top:14px; padding:12px; background:#ffffff; border-radius:8px; border:1px solid #bbf7d0; font-size:13px; color:#1e293b; line-height:1.6;">
+            <strong>📋 Passo a Passo Rápido (100% Gratuito):</strong><br>
+            1. Crie uma conta gratuita em <strong>supabase.com</strong> → <em>New Project</em> → abra o menu <strong>SQL Editor</strong> e cole o conteúdo do arquivo <code>supabase_setup.sql</code> (que está na pasta do projeto) e clique em <strong>Run</strong>.<br>
+            2. No Supabase, vá em <strong>Project Settings → API</strong>, copie a <strong>Project URL</strong> e a chave <strong>anon public</strong> e cole nos campos acima.<br>
+            3. Suba esta pasta para um repositório no <strong>GitHub</strong> e ative o <strong>GitHub Pages</strong> (o workflow automático <code>.github/workflows/deploy-pages.yml</code> já publica o painel e o APK gratuitamente!).
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Configurações Gerais do Sistema Vida Moderna News</h2>
+          <form id="form-config">
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="cfg-condominio">Nome do Condomínio Principal</label>
+                <input type="text" id="cfg-condominio" value="Modern Life Residence" required>
+              </div>
+              <div class="form-group">
+                <label for="cfg-telefone">Assinatura / Texto sob a Logo no Player</label>
+                <input type="text" id="cfg-telefone" value="Vida Moderna News" required>
+              </div>
+              <div class="form-group">
+                <label for="cfg-duracao">Tempo de Exibição Cartela/Vídeo (Segundos)</label>
+                <input type="number" id="cfg-duracao" value="15" min="5" max="60" required>
+              </div>
+            </div>
+
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="cfg-assinatura">Tempo de Assinatura no Final (Ideal: 5s, Mín: 3s)</label>
+                <input type="number" id="cfg-assinatura" value="5" min="3" max="10" required>
+              </div>
+              <div class="form-group">
+                <label for="cfg-intervalo-recados">Tempo de Troca dos Recados Independentes (Segundos)</label>
+                <input type="number" id="cfg-intervalo-recados" value="10" min="4" max="60" required>
+              </div>
+            </div>
+
+            <div class="form-grid">
+              <div class="form-group">
+                <label>
+                  <input type="checkbox" id="cfg-rss-ativo" checked style="width:auto; margin-right:6px;">
+                  Exibir Notícias Automáticas na programação
+                </label>
+              </div>
+              <div class="form-group">
+                <label>
+                  <input type="checkbox" id="cfg-intercalar" checked style="width:auto; margin-right:6px;">
+                  Intercalar 1 Cartela Publicitária / 1 Notícia
+                </label>
+              </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary">💾 Salvar Configurações</button>
+          </form>
+        </div>
+
+        <div class="card">
+          <h2>📱 Como Instalar no Aparelho Aquarius STV-Plus (Mesmo em Redes Diferentes)</h2>
+          <p class="subtitle">O aplicativo Android <code>VidaModernaNews.apk</code> sincroniza direto pela internet com o Supabase e o GitHub Pages:</p>
+          <ol style="padding-left: 20px; font-size: 14px; color: #334155; line-height: 1.8;">
+            <li>
+              <strong>Opção A — Já embutir sua chave no APK antes de instalar:</strong>
+              Edite o arquivo <code>public/js/cloud-config.js</code> com sua <em>Supabase URL</em> e <em>Anon Key</em> e clique duas vezes em <code>gerar_apk.ps1</code>. O <code>VidaModernaNews.apk</code> já nascerá configurado para o seu banco na nuvem!
+            </li>
+            <li>
+              <strong>Opção B — Configurar direto na tela do Aquarius STV-Plus:</strong>
+              Com o APK instalado no aparelho, clique na logo <strong>Modern Life Residence</strong> no canto inferior direito (ou aperte <em>Menu</em> no controle remoto) e cole a URL e a chave do Supabase uma única vez.
+            </li>
+          </ol>
+        </div>
+      </section>
+    </main>
+
+    <!-- COLUNA LATERAL: PREVIEW AO VIVO DA TELA 1280x720 -->
+    <aside>
+      <div class="preview-sticky">
+        <div class="card">
+          <h2>
+            <span>📺 Monitor Vida Moderna News</span>
+            <span style="font-size:12px; background:#dcfce7; color:#166534; padding:3px 8px; border-radius:12px;">1280x720px</span>
+          </h2>
+          <p class="subtitle">Veja exatamente como a tela está sendo exibida no aparelho Android:</p>
+
+          <div id="preview-wrapper" class="preview-frame-wrapper">
+            <iframe id="preview-iframe" src="index.html" title="Preview 1280x720 Vida Moderna News"></iframe>
+          </div>
+
+          <div class="dimension-diagram">
+            <strong>Resumo das Dimensões Oficiais:</strong><br>
+            • <strong>Tela Total:</strong> 1280 x 720 px (Proporção 16:9)<br>
+            • <strong>Área Superior (Arte/Vídeo/Notícia):</strong> 1280 x 520 px (72dpi)<br>
+            • <strong>Área Inferior (Recados + Logo Modern Life):</strong> 1280 x 200 px<br>
+            • <strong>Duração Cartela/Vídeo:</strong> 15" (com 3" a 5" de assinatura)<br>
+            • <strong>Filtro de Notícias:</strong> Classificação Familiar [Livre]
+          </div>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <div id="toast" class="toast-notification">Alterações salvas e sincronizadas!</div>
+
+  <script src="js/cloud-config.js"></script>
+  <script src="js/db.js"></script>
+  <script src="js/admin.js"></script>
+</body>
+</html>
