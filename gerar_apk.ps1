@@ -31,13 +31,12 @@ $ManifestPath = Join-Path $RootDir "android-app\app\src\main\AndroidManifest.xml
 & "$BuildTools\aapt2.exe" link `
   -I "$AndroidJar" `
   --manifest "$ManifestPath" `
-  -A "$BuildWork\assets" `
   --java "$BuildWork\gen" `
   -o "$BuildWork\unaligned.apk" `
   "$BuildWork\resources.zip"
 
 # 4. Compila código Java (MainActivity.java, BootReceiver.java e R.java) com target Java 8 para compatibilidade com Aquarius STV-Plus
-Write-Host "[2/5] Compilando classes Java para Aquarius STV-Plus..." -ForegroundColor Cyan
+Write-Host "[2/5] Compila classes Java para Aquarius STV-Plus..." -ForegroundColor Cyan
 $JavaSrcDir = Join-Path $RootDir "android-app\app\src\main\java\br\com\falasindico\player"
 $RJava = Join-Path $BuildWork "gen\br\com\falasindico\player\R.java"
 
@@ -54,8 +53,9 @@ Write-Host "[3/5] Gerando classes.dex (d8 --min-api 21)..." -ForegroundColor Cya
 $ClassFiles = Get-ChildItem "$BuildWork\classes" -Recurse -Filter "*.class" | Select-Object -ExpandProperty FullName
 & "$BuildTools\d8.bat" --min-api 21 --lib "$AndroidJar" --output "$BuildWork\dex" $ClassFiles
 
-# Insere classes.dex dentro do unaligned.apk usando jar.exe
+# Insere classes.dex e a pasta assets/ (com barras normais '/' padrão Android) dentro do unaligned.apk usando jar.exe
 & "$JavaBin\jar.exe" uf "$BuildWork\unaligned.apk" -C "$BuildWork\dex" classes.dex
+& "$JavaBin\jar.exe" uf "$BuildWork\unaligned.apk" -C "$BuildWork" assets
 
 # 6. Alinha o APK com zipalign
 Write-Host "[4/5] Alinhando pacote APK (zipalign)..." -ForegroundColor Cyan
