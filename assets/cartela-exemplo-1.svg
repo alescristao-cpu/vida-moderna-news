@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 520" width="1280" height="520">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#14331b"/>
+      <stop offset="55%" stop-color="#2a5e35"/>
+      <stop offset="100%" stop-color="#1e4627"/>
+    </linearGradient>
+    <linearGradient id="accentGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#f59e0b"/>
+      <stop offset="100%" stop-color="#d97706"/>
+    </linearGradient>
+  </defs>
+  <rect width="1280" height="520" fill="url(#bgGrad)"/>
+  <circle cx="1120" cy="110" r="260" fill="#ffffff" fill-opacity="0.05"/>
+  <circle cx="980" cy="440" r="190" fill="#ffffff" fill-opacity="0.06"/>
+
+  <!-- Tag -->
+  <rect x="70" y="52" width="340" height="44" rx="8" fill="url(#accentGrad)"/>
+  <text x="240" y="81" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-weight="800" font-size="22" fill="#ffffff" letter-spacing="1.5">VIDA MODERNA NEWS</text>
+
+  <!-- Main Headline -->
+  <text x="70" y="165" font-family="'Segoe UI', Arial, sans-serif" font-weight="900" font-size="58" fill="#ffffff">Comunicação inteligente</text>
+  <text x="70" y="232" font-family="'Segoe UI', Arial, sans-serif" font-weight="700" font-size="44" fill="#bbf7d0">no Modern Life Residence!</text>
+
+  <!-- Product / Offer highlights -->
+  <text x="70" y="310" font-family="'Segoe UI', Arial, sans-serif" font-weight="500" font-size="28" fill="#ecfdf5">• Formato Cartela 1280x520px (72dpi) • Vídeos de 15 segundos</text>
+  <text x="70" y="352" font-family="'Segoe UI', Arial, sans-serif" font-weight="500" font-size="28" fill="#ecfdf5">• Informativos, avisos e notícias atualizados automaticamente via Wi-Fi</text>
+
+  <!-- Contact Bar (Signature 5s highlight) -->
+  <rect x="70" y="395" width="1140" height="82" rx="14" fill="#ffffff" fill-opacity="0.96"/>
+  <text x="105" y="447" font-family="'Segoe UI', Arial, sans-serif" font-weight="800" font-size="32" fill="#14331b">Vida Moderna News</text>
+  <text x="540" y="447" font-family="'Segoe UI', Arial, sans-serif" font-weight="700" font-size="28" fill="#2a5e35">Modern Life Residence</text>
+  <text x="920" y="447" font-family="'Segoe UI', Arial, sans-serif" font-weight="600" font-size="24" fill="#334e68">Mídia &amp; Informações</text>
+</svg>

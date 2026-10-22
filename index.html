@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#2a5e35">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Vida Moderna News - Player Android (1280x720)</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="css/player.css">
+</head>
+<body>
+  <div id="viewport-wrapper">
+    <!-- TELA PRINCIPAL: 1280 x 720 px (72dpi) -->
+    <main id="fala-stage" aria-label="Tela Vida Moderna News 1280x720">
+      
+      <!-- ÁREA SUPERIOR DESTINADA À PUBLICIDADE / CARTELAS / VÍDEOS / NOTÍCIAS: 1280 x 520 px -->
+      <section id="media-stage" aria-label="Área de Publicidade e Notícias 1280x520">
+        <!-- Os slides de 1280x520px são injetados dinamicamente pelo player.js -->
+        <div id="media-progress-track">
+          <div id="media-progress-bar"></div>
+        </div>
+      </section>
+
+      <!-- ÁREA INFERIOR: RECADOS INDEPENDENTES DO CONDOMÍNIO + ASSINATURA VIDA MODERNA NEWS (1280 x 200 px) -->
+      <footer id="footer-stage" aria-label="Recados do Condomínio e Assinatura Vida Moderna News">
+        
+        <!-- Quadro de Recados Independentes da Arte -->
+        <div id="notice-card">
+          <div id="notice-header-row">
+            <span id="notice-badge">INFORMAÇÕES DO CONDOMÍNIO</span>
+            <div id="notice-dots" aria-hidden="true"></div>
+          </div>
+          <div id="notice-body">
+            <p id="notice-text">
+              Pedimos a atenção de todos com suas crianças para não lançarem brinquedos e objetos pelas janelas e varandas, evitando acidentes.
+            </p>
+          </div>
+        </div>
+
+        <!-- Assinatura Vida Moderna News + Logo Modern Life Residence (Clique abre menu do aparelho/admin) -->
+        <div id="brand-column" title="Toque para configurar o aparelho ou abrir o Painel Vida Moderna News">
+          <img id="brand-logo" src="assets/logo-modern-life.png" alt="Modern Life Residence - Vida Moderna News">
+          <div id="brand-phone">Vida Moderna News</div>
+          <div id="sync-status-pill">
+            <span id="wifi-dot" class="wifi-dot"></span>
+            <span id="sync-status-text">Auto-Sync</span>
+          </div>
+        </div>
+
+      </footer>
+    </main>
+  </div>
+
+  <!-- MODAL DE CONFIGURAÇÃO DO APARELHO ANDROID & SINCRONIZAÇÃO WI-FI -->
+  <div id="device-modal" class="hidden" role="dialog" aria-modal="true">
+    <div class="device-modal-card">
+      <div class="device-modal-header">
+        <h2>Vida Moderna News — Aparelho Android</h2>
+        <button id="close-device-modal" class="device-modal-close" aria-label="Fechar">&times;</button>
+      </div>
+
+      <div id="device-stats-box" class="device-stats"></div>
+
+      <div class="device-field">
+        <label for="input-supabase-url">☁️ Supabase Project URL (Sincronização via Internet Gratuita)</label>
+        <input type="text" id="input-supabase-url" placeholder="Ex: https://seu-projeto.supabase.co">
+      </div>
+
+      <div class="device-field">
+        <label for="input-supabase-key">🔑 Supabase Anon Public Key</label>
+        <input type="text" id="input-supabase-key" placeholder="Ex: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...">
+      </div>
+
+      <div class="device-field">
+        <label for="input-github-url">🌐 URL do GitHub Pages (Opcional)</label>
+        <input type="text" id="input-github-url" placeholder="Ex: https://seu-usuario.github.io/vida-moderna-news">
+      </div>
+
+      <div class="device-field">
+        <label for="input-server-url">📡 Ou URL de Servidor Local (Opcional)</label>
+        <input type="text" id="input-server-url" placeholder="Ex: http://192.168.1.100:8080">
+      </div>
+
+      <div class="device-field">
+        <label for="input-condominio-filter">Código do Condomínio deste Aparelho (ou TODOS)</label>
+        <input type="text" id="input-condominio-filter" placeholder="TODOS ou MODERN-LIFE">
+      </div>
+
+      <div class="device-actions">
+        <button id="btn-save-device" class="btn-device btn-primary">Salvar no Aparelho</button>
+        <button id="btn-force-sync" class="btn-device btn-success">Sincronizar Nuvem Agora</button>
+      </div>
+      <div class="device-actions" style="margin-top: 10px;">
+        <button id="btn-fullscreen" class="btn-device btn-secondary">Alternar Tela Cheia</button>
+        <a href="admin.html" class="btn-device btn-secondary">Abrir Painel Vida Moderna News</a>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/cloud-config.js"></script>
+  <script src="js/db.js"></script>
+  <script src="js/player.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js').catch(() => {});
+      });
+    }
+  </script>
+</body>
+</html>

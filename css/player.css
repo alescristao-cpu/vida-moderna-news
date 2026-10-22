@@ -1,0 +1,464 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+html, body {
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background-color: #000000;
+  font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ==========================================================================
+   TELA PRINCIPAL DO VIDA MODERNA NEWS: 1280 x 720 px (72 dpi)
+   Escalonada automaticamente para qualquer tela Android mantendo 1280x720
+   ========================================================================== */
+#viewport-wrapper {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #000;
+  position: relative;
+}
+
+#fala-stage {
+  width: 1280px;
+  height: 720px;
+  position: relative;
+  overflow: hidden;
+  background: #ffffff;
+  transform-origin: center center;
+  box-shadow: 0 0 40px rgba(0, 0, 0, 0.9);
+  display: flex;
+  flex-direction: column;
+}
+
+/* ==========================================================================
+   ÁREA SUPERIOR: PUBLICIDADE / CARTELA / VÍDEO / NOTÍCIAS (1280 x 520 px)
+   ========================================================================== */
+#media-stage {
+  width: 1280px;
+  height: 520px;
+  position: relative;
+  overflow: hidden;
+  background-color: #0b131e;
+  flex-shrink: 0;
+}
+
+.media-slide {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1280px;
+  height: 520px;
+  opacity: 0;
+  transition: opacity 0.65s ease-in-out;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.media-slide.active {
+  opacity: 1;
+  z-index: 2;
+}
+
+/* Cartela Estática 1280x520px */
+.media-slide img.cartela-img {
+  width: 1280px;
+  height: 520px;
+  object-fit: fill;
+  display: block;
+}
+
+/* Vídeo 1280x520px (15 segundos) */
+.media-slide video.cartela-video {
+  width: 1280px;
+  height: 520px;
+  object-fit: fill;
+  display: block;
+  background: #000;
+}
+
+/* Layout de Notícia estilo G1 (idêntico à foto de referência) */
+.news-slide-container {
+  width: 1280px;
+  height: 520px;
+  position: relative;
+  overflow: hidden;
+  background: #111;
+}
+
+.news-bg-image {
+  width: 1280px;
+  height: 520px;
+  object-fit: cover;
+  display: block;
+  transform: scale(1.01);
+}
+
+.news-gradient-overlay {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 250px;
+  background: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0) 0%,
+    rgba(0, 0, 0, 0.55) 38%,
+    rgba(0, 0, 0, 0.88) 75%,
+    rgba(0, 0, 0, 0.96) 100%
+  );
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 0 28px 22px 20px;
+}
+
+.news-source-tag {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  min-width: 190px;
+  max-width: 560px;
+  height: 36px;
+  background: #ffffff;
+  border-left: 12px solid #5bb75b;
+  padding: 0 16px 0 12px;
+  margin-bottom: 10px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+}
+
+.news-source-tag span {
+  font-family: 'Segoe UI', Arial, sans-serif;
+  font-weight: 800;
+  font-size: 21px;
+  color: #1f2937;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+}
+
+.news-headline {
+  font-family: 'Segoe UI', Roboto, Arial, sans-serif;
+  font-size: 43px;
+  font-weight: 600;
+  line-height: 1.16;
+  color: #ffffff;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.85);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  max-width: 1225px;
+}
+
+/* Barra discreta de progresso de 15s (com marcação dos últimos 5s de assinatura) */
+#media-progress-track {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 1280px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.14);
+  z-index: 10;
+}
+
+#media-progress-bar {
+  height: 100%;
+  width: 0%;
+  background: #2a5e35;
+  transition: width 0.1s linear;
+}
+
+/* ==========================================================================
+   ÁREA INFERIOR: RECADOS INDEPENDENTES + ASSINATURA VIDA MODERNA NEWS (1280 x 200 px)
+   720px total - 520px publicidade = 200px exatos
+   ========================================================================== */
+#footer-stage {
+  width: 1280px;
+  height: 200px;
+  background: linear-gradient(180deg, #f3f6f9 0%, #e6ecf2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 13px 16px 13px 16px;
+  flex-shrink: 0;
+  position: relative;
+}
+
+/* Card de Recados do Condomínio (Esquerda) */
+#notice-card {
+  width: 1020px;
+  height: 174px;
+  background: #ffffff;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 10px;
+  box-shadow: 0 3px 8px rgba(15, 23, 42, 0.08);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+#notice-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-right: 16px;
+}
+
+#notice-badge {
+  display: inline-block;
+  background: #2a5e35;
+  color: #ffffff;
+  font-size: 16.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  padding: 6px 18px;
+  border-top-left-radius: 8px;
+  border-bottom-right-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+
+#notice-dots {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.notice-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #cbd5e1;
+  transition: all 0.25s ease;
+}
+
+.notice-dot.active {
+  width: 20px;
+  border-radius: 4px;
+  background: #2a5e35;
+}
+
+#notice-body {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  padding: 6px 24px 12px 18px;
+}
+
+#notice-text {
+  font-family: 'Segoe UI', Roboto, Arial, sans-serif;
+  font-size: 32px;
+  font-weight: 500;
+  color: #333333;
+  line-height: 1.26;
+  letter-spacing: -0.2px;
+  transition: opacity 0.35s ease, transform 0.35s ease;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+#notice-text.fade-out {
+  opacity: 0;
+  transform: translateY(4px);
+}
+
+/* Coluna Direita: Logo Modern Life Residence + Vida Moderna News + Status Wi-Fi */
+#brand-column {
+  width: 216px;
+  height: 174px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  cursor: pointer;
+}
+
+#brand-logo {
+  width: 118px;
+  height: 118px;
+  object-fit: contain;
+  display: block;
+  margin-top: -10px;
+  filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.12));
+}
+
+#brand-phone {
+  font-family: 'Segoe UI', Roboto, Arial, sans-serif;
+  font-size: 18px;
+  font-weight: 800;
+  color: #2a5e35;
+  letter-spacing: 0.2px;
+  margin-top: 4px;
+  text-align: center;
+}
+
+/* Indicador discreto de Wi-Fi / Sincronização Automática */
+#sync-status-pill {
+  position: absolute;
+  bottom: -2px;
+  right: 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10.5px;
+  font-weight: 600;
+  color: #64748b;
+  background: rgba(255, 255, 255, 0.85);
+  padding: 2px 8px;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+}
+
+.wifi-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #22c55e;
+}
+
+.wifi-dot.syncing {
+  background: #3b82f6;
+  animation: pulseSync 1s infinite;
+}
+
+.wifi-dot.offline {
+  background: #f59e0b;
+}
+
+@keyframes pulseSync {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.4); opacity: 0.5; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* ==========================================================================
+   MODAL RÁPIDO DE CONFIGURAÇÃO DO APARELHO ANDROID (ACESSO POR TOQUE NO LOGO)
+   ========================================================================== */
+#device-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.78);
+  backdrop-filter: blur(4px);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#device-modal.hidden {
+  display: none;
+}
+
+.device-modal-card {
+  background: #ffffff;
+  width: 520px;
+  max-width: 92vw;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
+  color: #0f172a;
+}
+
+.device-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.device-modal-header h2 {
+  font-size: 20px;
+  color: #2a5e35;
+}
+
+.device-modal-close {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #64748b;
+}
+
+.device-field {
+  margin-bottom: 14px;
+}
+
+.device-field label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #475569;
+  margin-bottom: 5px;
+}
+
+.device-field input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 15px;
+}
+
+.device-stats {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 12px;
+  font-size: 13px;
+  color: #334155;
+  margin-bottom: 16px;
+  line-height: 1.6;
+}
+
+.device-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.btn-device {
+  flex: 1;
+  padding: 11px 14px;
+  border-radius: 8px;
+  border: none;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  text-align: center;
+  text-decoration: none;
+}
+
+.btn-primary {
+  background: #2a5e35;
+  color: #fff;
+}
+
+.btn-secondary {
+  background: #e2e8f0;
+  color: #1e293b;
+}
+
+.btn-success {
+  background: #16a34a;
+  color: #fff;
+}
