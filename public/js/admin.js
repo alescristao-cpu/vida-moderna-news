@@ -8,6 +8,213 @@
 (function () {
   let state = window.falaSync.getLocalState();
 
+  const AUTH_SESSION_KEY = 'vidamoderna_admin_auth_token_v1';
+  const CRYPTO_SALT = 'VIDA_MODERNA_SALT_2026::';
+  // Hash SHA-256 padrão (nunca armazena a senha em texto puro no código!)
+  const DEFAULT_ADMIN_HASH = '27112bd9a4bf958d21cd31cdaa44097e189e0e9e5b81067d88607db785ac28f2';
+
+  // Motor SHA-256 puro (compatível com qualquer navegador, mesmo sem HTTPS) + Web Crypto API
+  function sha256Pure(ascii) {
+    function rightRotate(value, amount) {
+      return (value >>> amount) | (value << (32 - amount));
+    }
+    var mathPow = Math.pow;
+    var maxWord = mathPow(2, 32);
+    var lengthProperty = 'length';
+    var i, j;
+    var result = '';
+    var words = [];
+    var asciiBitLength = ascii[lengthProperty] * 8;
+    var hash = sha256Pure.h = sha256Pure.h || [];
+    var k = sha256Pure.k = sha256Pure.k || [];
+    var primeCounter = k[lengthProperty];
+    var isComposite = {};
+    for (var candidate = 2; primeCounter < 64; candidate++) {
+      if (!isComposite[candidate]) {
+        for (i = 0; i < 313; i += candidate) {
+          isComposite[i] = candidate;
+        }
+        hash[primeCounter] = (mathPow(candidate, 0.5) * maxWord) | 0;
+        k[primeCounter++] = (mathPow(candidate, 1 / 3) * maxWord) | 0;
+      }
+    }
+    ascii += '\x80';
+    while ((ascii[lengthProperty] % 64) - 56) ascii += '\x00';
+    for (i = 0; i < ascii[lengthProperty]; i++) {
+      j = ascii.charCodeAt(i);
+      if (j >> 8) return '';
+      words[i >> 2] |= j << ((3 - (i % 4)) * 8);
+    }
+    words[words[lengthProperty]] = (asciiBitLength / maxWord) | 0;
+    words[words[lengthProperty]] = asciiBitLength;
+    for (j = 0; j < words[lengthProperty];) {
+      var w = words.slice(j, (j += 16));
+      var oldHash = hash;
+      hash = hash.slice(0, 8);
+      for (i = 0; i < 64; i++) {
+        var i2 = i + j;
+        var w15 = w[i - 15], w2 = w[i - 2];
+        var a = hash[0], e = hash[4];
+        var temp1 =
+          hash[7] +
+          (rightRotate(e, 6) ^ rightRotate(e, 11) ^ rightRotate(e, 25)) +
+          ((e & hash[5]) ^ (~e & hash[6])) +
+          k[i] +
+          (w[i] =
+            i < 16
+              ? w[i]
+              : (w[i - 16] +
+                  (rightRotate(w15, 7) ^ rightRotate(w15, 18) ^ (w15 >>> 3)) +
+                  w[i - 7] +
+                  (rightRotate(w2, 17) ^ rightRotate(w2, 19) ^ (w2 >>> 10))) |
+                0);
+        var temp2 =
+          (rightRotate(a, 2) ^ rightRotate(a, 13) ^ rightRotate(a, 22)) +
+          ((a & hash[1]) ^ (a & hash[2]) ^ (hash[1] & hash[2]));
+        hash = [(temp1 + temp2) | 0].concat(hash);
+        hash[4] = (hash[4] + temp1) | 0;
+      }
+      for (i = 0; i < 8; i++) {
+        hash[i] = (hash[i] + oldHash[i]) | 0;
+      }
+    }
+    for (i = 0; i < 8; i++) {
+      for (j = 3; j + 1; j--) {
+        var b = (hash[i] >> (j * 8)) & 255;
+        result += (b < 16 ? 0 : '') + b.toString(16);
+      }
+    }
+    return result;
+  }
+
+  async function computePasswordHash(plainPassword) {
+    const salted = CRYPTO_SALT + String(plainPassword || '').trim();
+    try {
+      if (window.crypto && window.crypto.subtle && typeof TextEncoder !== 'undefined') {
+        const msgBuffer = new TextEncoder().encode(salted);
+        const hashBuffer = await window.crypto.subtle.digest('SHA-256', msgBuffer);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
+      }
+    } catch (e) {}
+    const utf8Str = unescape(encodeURIComponent(salted));
+    return sha256Pure(utf8Str);
+  }
+
+  function getActivePasswordHash() {
+    return (state && state.config && state.config.adminPasswordHash)
+      ? state.config.adminPasswordHash
+      : DEFAULT_ADMIN_HASH;
+  }
+
+  const authOverlayEl = document.getElementById('admin-auth-overlay');
+  const formAdminLogin = document.getElementById('form-admin-login');
+  const inputAdminPassword = document.getElementById('input-admin-password');
+  const authErrorBox = document.getElementById('auth-error-box');
+  const btnLockAdmin = document.getElementById('btn-lock-admin');
+  const formChangePassword = document.getElementById('form-change-password');
+
+  function unlockAdminPanel(hashUsed) {
+    try {
+      sessionStorage.setItem(AUTH_SESSION_KEY, hashUsed);
+    } catch (e) {}
+    document.body.classList.remove('locked-admin');
+    if (authOverlayEl) authOverlayEl.classList.add('hidden');
+    if (authErrorBox) authErrorBox.classList.remove('visible');
+    setTimeout(scalePreviewIframe, 50);
+  }
+
+  function lockAdminPanel() {
+    try {
+      sessionStorage.removeItem(AUTH_SESSION_KEY);
+    } catch (e) {}
+    document.body.classList.add('locked-admin');
+    if (authOverlayEl) authOverlayEl.classList.remove('hidden');
+    if (inputAdminPassword) {
+      inputAdminPassword.value = '';
+      inputAdminPassword.focus();
+    }
+  }
+
+  function checkExistingSession() {
+    try {
+      const savedToken = sessionStorage.getItem(AUTH_SESSION_KEY);
+      if (savedToken && savedToken === getActivePasswordHash()) {
+        unlockAdminPanel(savedToken);
+        return true;
+      }
+    } catch (e) {}
+    lockAdminPanel();
+    return false;
+  }
+
+  if (formAdminLogin) {
+    formAdminLogin.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const typed = inputAdminPassword ? inputAdminPassword.value : '';
+      const computed = await computePasswordHash(typed);
+      const expected = getActivePasswordHash();
+      if (computed === expected) {
+        unlockAdminPanel(expected);
+        showToast('🔓 Painel Administrativo desbloqueado com sucesso!');
+      } else {
+        if (authErrorBox) authErrorBox.classList.add('visible');
+        if (inputAdminPassword) {
+          inputAdminPassword.value = '';
+          inputAdminPassword.focus();
+        }
+      }
+    });
+  }
+
+  if (btnLockAdmin) {
+    btnLockAdmin.addEventListener('click', () => {
+      lockAdminPanel();
+      showToast('🔒 Painel bloqueado com segurança!');
+    });
+  }
+
+  if (formChangePassword) {
+    formChangePassword.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const oldPass = document.getElementById('input-old-password').value;
+      const newPass = document.getElementById('input-new-password').value;
+      const confirmPass = document.getElementById('input-confirm-password').value;
+
+      const oldHash = await computePasswordHash(oldPass);
+      const currentExpected = getActivePasswordHash();
+
+      if (oldHash !== currentExpected) {
+        alert('❌ A Senha Atual informada está incorreta.');
+        return;
+      }
+
+      if (newPass.trim().length < 4) {
+        alert('⚠️ A nova senha deve ter pelo menos 4 caracteres.');
+        return;
+      }
+
+      if (newPass !== confirmPass) {
+        alert('⚠️ A confirmação da nova senha não confere.');
+        return;
+      }
+
+      const newHash = await computePasswordHash(newPass);
+      state.config = {
+        ...state.config,
+        adminPasswordHash: newHash
+      };
+
+      await window.falaSync.pushStateToServer(state, false);
+      try {
+        sessionStorage.setItem(AUTH_SESSION_KEY, newHash);
+      } catch (err) {}
+
+      formChangePassword.reset();
+      showToast('🔐 Nova senha criptografada (SHA-256) salva na nuvem!');
+    });
+  }
+
   const toastEl = document.getElementById('toast');
   function showToast(msg) {
     toastEl.textContent = msg;
@@ -1009,7 +1216,8 @@
     renderNoticias();
   });
 
-  // Inicializa telas e busca o estado mais recente salvo no Supabase
+  // Inicializa telas, verifica bloqueio por senha criptografada e busca o estado mais recente salvo no Supabase
+  checkExistingSession();
   renderRecados();
   renderThemesSelector();
   renderMidias();
@@ -1020,6 +1228,7 @@
   window.falaSync.syncFromServer(false).then((res) => {
     if (res && res.state) {
       state = res.state;
+      checkExistingSession();
       notifyPreviewIframe(state);
       renderRecados();
       renderThemesSelector();

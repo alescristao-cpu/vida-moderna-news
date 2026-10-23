@@ -7,9 +7,35 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
-  <link rel="stylesheet" href="css/admin.css?v=6">
+  <link rel="stylesheet" href="css/admin.css?v=8">
 </head>
-<body>
+<body class="locked-admin">
+  <!-- TELA DE BLOQUEIO COM SENHA CRIPTOGRAFADA (SHA-256) -->
+  <div id="admin-auth-overlay" role="dialog" aria-modal="true">
+    <div class="auth-card">
+      <img src="assets/logo-modern-life.png" alt="Modern Life Residence">
+      <div>
+        <span class="auth-badge-crypto">🔐 CRIPTOGRAFIA SHA-256 ATIVA</span>
+      </div>
+      <h2>Acesso Restrito — Painel Admin</h2>
+      <p>Digite a senha administrativa do <strong>Vida Moderna News</strong> para gerenciar recados, notícias e cartelas.</p>
+
+      <div id="auth-error-box" class="auth-error-msg">
+        ❌ Senha incorreta. Tente novamente.
+      </div>
+
+      <form id="form-admin-login">
+        <div class="form-group" style="text-align:left; margin-bottom:16px;">
+          <label for="input-admin-password">🔑 Senha do Administrador</label>
+          <input type="password" id="input-admin-password" placeholder="Digite sua senha..." autocomplete="current-password" required style="font-size:16px; padding:12px;">
+        </div>
+        <button type="submit" class="btn btn-primary" style="width:100%; justify-content:center; padding:12px; font-size:15px;">
+          🔓 Desbloquear Painel Administrativo
+        </button>
+      </form>
+    </div>
+  </div>
+
   <header class="admin-header">
     <div class="brand-area">
       <img src="assets/logo-modern-life.png" alt="Modern Life Residence - Vida Moderna News">
@@ -21,6 +47,7 @@
     <div class="header-actions">
       <button id="btn-sync-now" class="btn btn-success">🔄 Sincronizar Player na Nuvem</button>
       <a href="index.html" target="_blank" class="btn btn-outline">📺 Abrir Página do Player (1280x720)</a>
+      <button id="btn-lock-admin" type="button" class="btn btn-danger">🔒 Bloquear Painel</button>
     </div>
   </header>
 
@@ -432,19 +459,31 @@
           </form>
         </div>
 
-        <div class="card">
-          <h2>📱 Como Instalar no Aparelho Aquarius STV-Plus (Mesmo em Redes Diferentes)</h2>
-          <p class="subtitle">O aplicativo Android <code>VidaModernaNews.apk</code> sincroniza direto pela internet com o Supabase e o GitHub Pages:</p>
-          <ol style="padding-left: 20px; font-size: 14px; color: #334155; line-height: 1.8;">
-            <li>
-              <strong>Opção A — Já embutir sua chave no APK antes de instalar:</strong>
-              Edite o arquivo <code>public/js/cloud-config.js</code> com sua <em>Supabase URL</em> e <em>Anon Key</em> e clique duas vezes em <code>gerar_apk.ps1</code>. O <code>VidaModernaNews.apk</code> já nascerá configurado para o seu banco na nuvem!
-            </li>
-            <li>
-              <strong>Opção B — Configurar direto na tela do Aquarius STV-Plus:</strong>
-              Com o APK instalado no aparelho, clique na logo <strong>Modern Life Residence</strong> no canto inferior direito (ou aperte <em>Menu</em> no controle remoto) e cole a URL e a chave do Supabase uma única vez.
-            </li>
-          </ol>
+        <div class="card" style="border: 2px solid #0f172a; background: #f8fafc;">
+          <h2>
+            <span>🔐 Segurança — Alterar Senha Criptografada (SHA-256)</span>
+            <span class="family-badge-libre">Hash Criptográfico</span>
+          </h2>
+          <p class="subtitle">
+            Sua senha nunca é salva em texto puro: o sistema gera um <strong>Hash Criptográfico SHA-256 com Salt</strong> e grava apenas o código criptografado no Supabase.
+          </p>
+          <form id="form-change-password">
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="input-old-password">Senha Atual</label>
+                <input type="password" id="input-old-password" placeholder="Digite a senha atual" required>
+              </div>
+              <div class="form-group">
+                <label for="input-new-password">Nova Senha</label>
+                <input type="password" id="input-new-password" minlength="4" placeholder="Digite a nova senha" required>
+              </div>
+              <div class="form-group">
+                <label for="input-confirm-password">Confirmar Nova Senha</label>
+                <input type="password" id="input-confirm-password" minlength="4" placeholder="Repita a nova senha" required>
+              </div>
+            </div>
+            <button type="submit" class="btn btn-primary">🔐 Criptografar & Salvar Nova Senha na Nuvem</button>
+          </form>
         </div>
       </section>
     </main>
@@ -460,7 +499,7 @@
           <p class="subtitle">Veja exatamente como a tela está sendo exibida no aparelho Android:</p>
 
           <div id="preview-wrapper" class="preview-frame-wrapper">
-            <iframe id="preview-iframe" src="index.html?v=7" title="Preview 1280x720 Vida Moderna News"></iframe>
+            <iframe id="preview-iframe" src="index.html?v=8" title="Preview 1280x720 Vida Moderna News"></iframe>
           </div>
 
           <div class="dimension-diagram">
@@ -478,8 +517,8 @@
 
   <div id="toast" class="toast-notification">Alterações salvas e sincronizadas!</div>
 
-  <script src="js/cloud-config.js?v=7"></script>
-  <script src="js/db.js?v=7"></script>
-  <script src="js/admin.js?v=7"></script>
+  <script src="js/cloud-config.js?v=8"></script>
+  <script src="js/db.js?v=8"></script>
+  <script src="js/admin.js?v=8"></script>
 </body>
 </html>
