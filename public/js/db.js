@@ -621,20 +621,18 @@ VidaModernaSyncManager.prototype.processIncomingRemoteState = function (remoteSt
     JSON.stringify(remoteState.noticias) !== JSON.stringify(localState.noticias);
 
   if (hasChanges) {
-    this.notifyStatus('syncing', 'Atualizando (' + sourceLabel + ')...');
     this.saveLocalState(remoteState, true);
     this.notifyListeners(remoteState, 'cloud-sync');
   }
 
   var d = new Date();
-  var nowStr = ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2);
   this.saveDeviceConfig({ lastWifiSync: d.toISOString() });
-  this.notifyStatus('online', sourceLabel + ' (' + nowStr + ')');
+  this.notifyStatus('online', 'Online');
   return hasChanges;
 };
 
 /**
- * Sincronização Automática (Supabase Nuvem como fonte única da verdade) sem usar async/await!
+ * Sincronização sob comando (Supabase Nuvem como fonte única da verdade) sem loop automático!
  */
 VidaModernaSyncManager.prototype.syncFromServer = function (forceRssCheck) {
   var self = this;
@@ -645,64 +643,55 @@ VidaModernaSyncManager.prototype.syncFromServer = function (forceRssCheck) {
     }
 
     if (navigator.onLine === false) {
-      self.notifyStatus('offline', 'Offline (Cache Local)');
+      self.notifyStatus('offline', 'Offline');
       resolve({ synced: false, reason: 'offline' });
       return;
     }
 
     self.isSyncing = true;
     var deviceCfg = self.getDeviceConfig();
-    var localState = self.getLocalState();
-    var now = new Date().getTime();
-    var rssNeedsRefresh = forceRssCheck || !localState.lastRssSyncAt || (now - Number(localState.lastRssSyncAt) > RSS_AUTO_REFRESH_MS);
 
     function finishSync(synced, updated) {
       self.isSyncing = false;
       resolve({ synced: synced, updated: updated, state: self.getLocalState() });
     }
 
-    function stepRssFallback() {
-      if (!rssNeedsRefresh) {
-        var d3 = new Date();
-        var nowStr3 = ('0' + d3.getHours()).slice(-2) + ':' + ('0' + d3.getMinutes()).slice(-2);
-        self.notifyStatus('online', 'Auto-Sync (' + nowStr3 + ')');
+    function stepRssManual() {
+      if (!forceRssCheck) {
+        self.notifyStatus('online', 'Pronto');
         finishSync(false, false);
         return;
       }
       self.fetchPublicRssFallback().then(function (rssUpdated) {
         var d2 = new Date();
-        var nowStr2 = ('0' + d2.getHours()).slice(-2) + ':' + ('0' + d2.getMinutes()).slice(-2);
         self.saveDeviceConfig({ lastWifiSync: d2.toISOString() });
-        self.notifyStatus('online', 'Sincronizado (' + nowStr2 + ')');
+        self.notifyStatus('online', 'Atualizado');
         if (rssUpdated) {
-          self.notifyListeners(self.getLocalState(), 'auto-rss-fallback');
+          self.notifyListeners(self.getLocalState(), 'manual-rss');
         }
         finishSync(true, rssUpdated);
       });
     }
 
-    // 1. Tenta Supabase Nuvem primeiro (Fonte Oficial da Verdade)
+    // Busca no Supabase Nuvem apenas quando chamado (abertura ou comando do usuário)
     if (deviceCfg.supabaseUrl && deviceCfg.supabaseAnonKey) {
       self.fetchFromSupabase(deviceCfg.supabaseUrl, deviceCfg.supabaseAnonKey).then(function (sbState) {
         if (sbState && sbState.config) {
-          var updatedSb = self.processIncomingRemoteState(sbState, 'Supabase Nuvem');
-          if (!sbState.noticias || sbState.noticias.length === 0) {
+          var updatedSb = self.processIncomingRemoteState(sbState, 'Online');
+          if (forceRssCheck) {
             self.fetchPublicRssFallback().then(function () {
-              finishSync(true, updatedSb);
+              finishSync(true, true);
             });
           } else {
             finishSync(true, updatedSb);
           }
         } else {
-          // Não sobrescreve com state.json estático caso a internet oscile
-          var dErr = new Date();
-          var nowErr = ('0' + dErr.getHours()).slice(-2) + ':' + ('0' + dErr.getMinutes()).slice(-2);
-          self.notifyStatus('online', 'Cache Ativo (' + nowErr + ')');
+          self.notifyStatus('online', 'Pronto');
           finishSync(false, false);
         }
       });
     } else {
-      stepRssFallback();
+      stepRssManual();
     }
   });
 };
@@ -820,7 +809,7 @@ VidaModernaSyncManager.prototype.fetchPublicRssFallback = function () {
           analisadas: totalAnalisadas,
           bloqueadas: totalBloqueadas,
           aprovadas: finalNoticias.length,
-          atualizadoEm: new Date().toLocaleTimeString ? new Date().toLocaleTimeString() : 'Automático'
+          atualizadoEm: new Date().toLocaleTimeString ? new Date().toLocaleTimeString() : 'Manual'
         };
         latestState.noticias = finalNoticias;
         latestState.lastRssSyncAt = new Date().getTime();
@@ -944,34 +933,24 @@ VidaModernaSyncManager.prototype.fetchPublicRssFallback = function () {
 VidaModernaSyncManager.prototype.startAutoSyncDaemon = function () {
   var self = this;
 
-  // Se estiver dentro do iframe de preview do Painel Admin, não roda polling concorrente (recebe estado direto do Admin)
+  if (this.autoSyncTimer) {
+    clearInterval(this.autoSyncTimer);
+    this.autoSyncTimer = null;
+  }
+
+  // Se estiver dentro do iframe de preview do Painel Admin, recebe estado direto do Admin
   if (window.self !== window.top) {
-    self.notifyStatus('online', 'Preview Ao Vivo');
+    self.notifyStatus('online', 'Preview');
     return;
   }
 
   window.triggerWifiSync = function () {
-    self.notifyStatus('syncing', 'Wi-Fi Conectado...');
-    self.syncFromServer(true);
+    self.notifyStatus('syncing', 'Atualizando...');
+    self.syncFromServer(false);
   };
 
-  window.addEventListener('online', function () {
-    self.wasOffline = false;
-    self.notifyStatus('syncing', 'Sinal Wi-Fi Detectado...');
-    self.syncFromServer(true);
-  });
-
-  window.addEventListener('offline', function () {
-    self.wasOffline = true;
-    self.notifyStatus('offline', 'Offline (Cache Local)');
-  });
-
+  // Carrega da nuvem apenas 1 vez ao abrir a página; depois só atualiza quando o usuário mandar!
   this.syncFromServer(false);
-
-  if (this.autoSyncTimer) clearInterval(this.autoSyncTimer);
-  this.autoSyncTimer = setInterval(function () {
-    self.syncFromServer(false);
-  }, AUTO_SYNC_INTERVAL_MS);
 };
 
 window.falaSync = new VidaModernaSyncManager();

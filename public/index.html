@@ -71,8 +71,8 @@
           <img id="brand-logo" src="assets/logo-modern-life.png" alt="Modern Life Residence - Vida Moderna News">
           <div id="brand-phone">Vida Moderna News</div>
           <div id="sync-status-pill">
-            <span id="wifi-dot" class="wifi-dot"></span>
-            <span id="sync-status-text">Auto-Sync</span>
+            <span id="wifi-dot" class="wifi-dot online"></span>
+            <span id="sync-status-text">Online</span>
           </div>
         </div>
 
@@ -117,7 +117,7 @@
 
       <div class="device-actions">
         <button id="btn-save-device" class="btn-device btn-primary">Salvar no Aparelho</button>
-        <button id="btn-force-sync" class="btn-device btn-success">Sincronizar Nuvem Agora</button>
+        <button id="btn-force-sync" class="btn-device btn-success">Atualizar Agora da Nuvem</button>
       </div>
       <div class="device-actions" style="margin-top: 10px;">
         <button id="btn-fullscreen" class="btn-device btn-secondary">Alternar Tela Cheia</button>
@@ -126,30 +126,8 @@
     </div>
   </div>
 
-  <script>
-    (function() {
-      try {
-        if (window.caches && window.caches.keys) {
-          window.caches.keys().then(function(keys) {
-            for (var i = 0; i < keys.length; i++) {
-              if (keys[i].indexOf('v6') === -1) {
-                window.caches.delete(keys[i]);
-              }
-            }
-          });
-        }
-        if (navigator.serviceWorker && navigator.serviceWorker.getRegistrations) {
-          navigator.serviceWorker.getRegistrations().then(function(regs) {
-            for (var j = 0; j < regs.length; j++) {
-              regs[j].update();
-            }
-          });
-        }
-      } catch (e) {}
-    })();
-  </script>
-  <script src="js/cloud-config.js?v=6"></script>
-  <script src="js/db.js?v=6"></script>
-  <script src="js/player.js?v=6"></script>
+  <script src="js/cloud-config.js?v=7"></script>
+  <script src="js/db.js?v=7"></script>
+  <script src="js/player.js?v=7"></script>
 </body>
 </html>

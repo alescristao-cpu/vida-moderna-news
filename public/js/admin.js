@@ -307,13 +307,12 @@
       checkbox.value = tema.id;
       checkbox.checked = isSelected;
 
-      checkbox.addEventListener('change', async () => {
+      checkbox.addEventListener('change', () => {
         if (checkbox.checked) {
           label.classList.add('selected');
         } else {
           label.classList.remove('selected');
         }
-        await saveThemesAndTriggerAutoFetch();
       });
 
       const span = document.createElement('span');
@@ -386,17 +385,13 @@
 
     renderFilterStats();
     renderNoticias();
-    btnSaveThemesAndFetch.textContent = '✅ Salvar Temas & Atualizar Notícias Automaticamente';
-    showToast('Notícias atualizadas automaticamente com Filtro Familiar!');
+    btnSaveThemesAndFetch.textContent = '✅ Salvar Temas & Buscar Notícias Agora';
+    showToast('Notícias atualizadas sob seu comando!');
   }
 
   if (btnSaveThemesAndFetch) {
     btnSaveThemesAndFetch.addEventListener('click', saveThemesAndTriggerAutoFetch);
   }
-
-  [selectFiltroFamiliar, inputLimiteNoticias, checkApenasFoto].forEach((el) => {
-    if (el) el.addEventListener('change', saveThemesAndTriggerAutoFetch);
-  });
 
   function renderNoticias() {
     listaNoticiasEl.innerHTML = '';

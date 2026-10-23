@@ -460,7 +460,7 @@
           <p class="subtitle">Veja exatamente como a tela está sendo exibida no aparelho Android:</p>
 
           <div id="preview-wrapper" class="preview-frame-wrapper">
-            <iframe id="preview-iframe" src="index.html?v=6" title="Preview 1280x720 Vida Moderna News"></iframe>
+            <iframe id="preview-iframe" src="index.html?v=7" title="Preview 1280x720 Vida Moderna News"></iframe>
           </div>
 
           <div class="dimension-diagram">
@@ -478,30 +478,8 @@
 
   <div id="toast" class="toast-notification">Alterações salvas e sincronizadas!</div>
 
-  <script>
-    (function() {
-      try {
-        if (window.caches && window.caches.keys) {
-          window.caches.keys().then(function(keys) {
-            for (var i = 0; i < keys.length; i++) {
-              if (keys[i].indexOf('v6') === -1) {
-                window.caches.delete(keys[i]);
-              }
-            }
-          });
-        }
-        if (navigator.serviceWorker && navigator.serviceWorker.getRegistrations) {
-          navigator.serviceWorker.getRegistrations().then(function(regs) {
-            for (var j = 0; j < regs.length; j++) {
-              regs[j].update();
-            }
-          });
-        }
-      } catch (e) {}
-    })();
-  </script>
-  <script src="js/cloud-config.js?v=6"></script>
-  <script src="js/db.js?v=6"></script>
-  <script src="js/admin.js?v=6"></script>
+  <script src="js/cloud-config.js?v=7"></script>
+  <script src="js/db.js?v=7"></script>
+  <script src="js/admin.js?v=7"></script>
 </body>
 </html>
