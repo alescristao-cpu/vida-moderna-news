@@ -43,8 +43,8 @@
 
       <!-- ABA 1: RECADOS DO CONDOMÍNIO (POSTADOS DE FORMA INDEPENDENTE DA ARTE) -->
       <section id="tab-recados" class="tab-panel active">
-        <div class="card">
-          <h2>Postar Novo Recado do Condomínio</h2>
+        <div class="card" id="card-form-recado">
+          <h2 id="heading-form-recado">Postar Novo Recado do Condomínio</h2>
           <p class="subtitle">
             Os recados são exibidos no quadro inferior (1280x200px) de forma <strong>totalmente independente da arte/publicidade</strong> (1280x520px) e sincronizam automaticamente quando o aparelho pega Wi-Fi.
           </p>
@@ -75,13 +75,16 @@
               <textarea id="recado-texto" maxlength="240" placeholder="Ex: Pedimos a atenção de todos com suas crianças para não lançarem brinquedos e objetos pelas janelas e varandas, evitando acidentes." required></textarea>
             </div>
 
-            <button type="submit" class="btn btn-primary">✅ Publicar Recado Independente</button>
+            <div style="display:flex; gap:10px; flex-wrap:wrap;">
+              <button type="submit" id="btn-submit-recado" class="btn btn-primary">✅ Publicar Recado Independente</button>
+              <button type="button" id="btn-cancel-recado" class="btn btn-danger" style="display:none;">✖ Cancelar Edição</button>
+            </div>
           </form>
         </div>
 
         <div class="card">
           <h2>Recados Cadastrados</h2>
-          <p class="subtitle">Ative, desative ou exclua recados a qualquer momento sem alterar as artes de 1280x520px.</p>
+          <p class="subtitle">Edite, ative, desative ou exclua recados a qualquer momento sem alterar as artes de 1280x520px.</p>
           <div id="lista-recados" class="item-list"></div>
         </div>
       </section>
@@ -159,8 +162,8 @@
           </div>
         </div>
 
-        <div class="card">
-          <h2>Adicionar Comunicado ou Notícia Manual (Opcional)</h2>
+        <div class="card" id="card-form-noticia">
+          <h2 id="heading-form-noticia">Adicionar ou Editar Comunicado / Notícia (1280x520px)</h2>
           <form id="form-noticia">
             <div class="form-grid">
               <div class="form-group">
@@ -174,6 +177,8 @@
                   <option value="#5bb75b">Verde Claro (#5bb75b)</option>
                   <option value="#0d74b8">Azul (#0d74b8)</option>
                   <option value="#c4170c">Vermelho (#c4170c)</option>
+                  <option value="#9333ea">Roxo Cultura (#9333ea)</option>
+                  <option value="#d97706">Laranja (#d97706)</option>
                 </select>
               </div>
               <div class="form-group">
@@ -187,21 +192,24 @@
               <input type="text" id="noticia-titulo" placeholder="Digite a manchete..." required>
             </div>
 
-            <button type="submit" class="btn btn-primary">➕ Adicionar Notícia à Grade</button>
+            <div style="display:flex; gap:10px; flex-wrap:wrap;">
+              <button type="submit" id="btn-submit-noticia" class="btn btn-primary">➕ Adicionar Notícia à Grade</button>
+              <button type="button" id="btn-cancel-noticia" class="btn btn-danger" style="display:none;">✖ Cancelar Edição</button>
+            </div>
           </form>
         </div>
 
         <div class="card">
           <h2>Notícias Aprovadas pelo Filtro Familiar (Em Exibição no Player)</h2>
-          <p class="subtitle">Lista atualizada automaticamente de acordo com os temas de interesse selecionados acima.</p>
+          <p class="subtitle">Você pode editar o título, a fonte, a foto, pausar ou remover qualquer notícia abaixo.</p>
           <div id="lista-noticias" class="item-list"></div>
         </div>
       </section>
 
       <!-- ABA 3: CARTELAS E VÍDEOS (1280x520px) -->
       <section id="tab-midias" class="tab-panel">
-        <div class="card">
-          <h2>Adicionar Cartela ou Vídeo Publicitário (1280x520px)</h2>
+        <div class="card" id="card-form-midia">
+          <h2 id="heading-form-midia">Adicionar Cartela ou Vídeo Publicitário (1280x520px)</h2>
           <p class="subtitle">
             Envie imagens (ajustadas automaticamente para <strong>1280x520px @ 72dpi</strong>) ou vídeos de <strong>15 segundos</strong> (com 3" a 5" para assinatura). Os arquivos ficam salvos em cache no aparelho Android ao conectar no Wi-Fi.
           </p>
@@ -227,7 +235,7 @@
 
             <div class="form-grid">
               <div class="form-group">
-                <label for="midia-arquivo">Upload de Arquivo (Imagem ou Vídeo)</label>
+                <label for="midia-arquivo">Upload de Novo Arquivo (Imagem ou Vídeo)</label>
                 <input type="file" id="midia-arquivo" accept="image/*,video/mp4,video/webm">
               </div>
               <div class="form-group">
@@ -251,13 +259,16 @@
               </div>
             </div>
 
-            <button type="submit" class="btn btn-primary">📤 Publicar Cartela / Vídeo (1280x520px)</button>
+            <div style="display:flex; gap:10px; flex-wrap:wrap;">
+              <button type="submit" id="btn-submit-midia" class="btn btn-primary">📤 Publicar Cartela / Vídeo (1280x520px)</button>
+              <button type="button" id="btn-cancel-midia" class="btn btn-danger" style="display:none;">✖ Cancelar Edição</button>
+            </div>
           </form>
         </div>
 
         <div class="card">
           <h2>Grade de Cartelas & Vídeos (1280x520px)</h2>
-          <p class="subtitle">Itens exibidos na parte superior (1280x520px) da tela do elevador.</p>
+          <p class="subtitle">Edite, pause, ative ou exclua itens exibidos na parte superior (1280x520px) da tela do elevador.</p>
           <div id="lista-midias" class="item-list"></div>
         </div>
       </section>

@@ -93,10 +93,48 @@
   }
 
   /**
-   * 1. GESTÃO DE RECADOS INDEPENDENTES DA ARTE
+   * 1. GESTÃO DE RECADOS INDEPENDENTES DA ARTE (COM OPÇÃO DE EDITAR)
    */
   const listaRecadosEl = document.getElementById('lista-recados');
   const formRecado = document.getElementById('form-recado');
+  const headingFormRecado = document.getElementById('heading-form-recado');
+  const btnSubmitRecado = document.getElementById('btn-submit-recado');
+  const btnCancelRecado = document.getElementById('btn-cancel-recado');
+  const cardFormRecado = document.getElementById('card-form-recado');
+  let editingRecadoId = null;
+
+  function cancelEditRecado() {
+    editingRecadoId = null;
+    formRecado.reset();
+    document.getElementById('recado-titulo').value = 'INFORMAÇÕES DO CONDOMÍNIO';
+    document.getElementById('recado-cor').value = '#2a5e35';
+    document.getElementById('recado-condominio').value = 'TODOS';
+    document.getElementById('recado-texto').value = '';
+    if (headingFormRecado) headingFormRecado.textContent = 'Postar Novo Recado do Condomínio';
+    if (btnSubmitRecado) btnSubmitRecado.textContent = '✅ Publicar Recado Independente';
+    if (btnCancelRecado) btnCancelRecado.style.display = 'none';
+    if (cardFormRecado) cardFormRecado.style.borderColor = '';
+  }
+
+  if (btnCancelRecado) {
+    btnCancelRecado.addEventListener('click', cancelEditRecado);
+  }
+
+  function startEditRecado(rec) {
+    editingRecadoId = rec.id;
+    document.getElementById('recado-titulo').value = rec.titulo || 'INFORMAÇÕES DO CONDOMÍNIO';
+    document.getElementById('recado-cor').value = rec.corEtiqueta || '#2a5e35';
+    document.getElementById('recado-condominio').value = rec.condominio || 'TODOS';
+    document.getElementById('recado-texto').value = rec.texto || '';
+    if (headingFormRecado) headingFormRecado.textContent = '✏️ Editando Recado do Condomínio';
+    if (btnSubmitRecado) btnSubmitRecado.textContent = '💾 Salvar Alterações do Recado';
+    if (btnCancelRecado) btnCancelRecado.style.display = 'inline-flex';
+    if (cardFormRecado) {
+      cardFormRecado.style.borderColor = '#2a5e35';
+      cardFormRecado.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+    document.getElementById('recado-texto').focus();
+  }
 
   function renderRecados() {
     listaRecadosEl.innerHTML = '';
@@ -121,6 +159,11 @@
       const actions = document.createElement('div');
       actions.className = 'item-actions';
 
+      const btnEdit = document.createElement('button');
+      btnEdit.className = 'btn btn-sm btn-primary';
+      btnEdit.textContent = '✏️ Editar';
+      btnEdit.onclick = () => startEditRecado(rec);
+
       const btnToggle = document.createElement('button');
       btnToggle.className = 'btn btn-sm ' + (rec.ativo ? 'btn-warning' : 'btn-success');
       btnToggle.textContent = rec.ativo ? 'Pausar' : 'Ativar';
@@ -135,12 +178,14 @@
       btnDel.className = 'btn btn-sm btn-danger';
       btnDel.textContent = 'Excluir';
       btnDel.onclick = async () => {
+        if (editingRecadoId === rec.id) cancelEditRecado();
         state.recados = state.recados.filter((r) => r.id !== rec.id);
         await window.falaSync.pushStateToServer(state);
         renderRecados();
         showToast('Recado removido!');
       };
 
+      actions.appendChild(btnEdit);
       actions.appendChild(btnToggle);
       actions.appendChild(btnDel);
       div.appendChild(content);
@@ -151,12 +196,38 @@
 
   formRecado.addEventListener('submit', async (e) => {
     e.preventDefault();
+    const tituloVal = document.getElementById('recado-titulo').value.trim().toUpperCase();
+    const corVal = document.getElementById('recado-cor').value;
+    const condVal = document.getElementById('recado-condominio').value.trim().toUpperCase() || 'TODOS';
+    const textoVal = document.getElementById('recado-texto').value.trim();
+
+    if (editingRecadoId) {
+      state.recados = (state.recados || []).map((r) => {
+        if (r.id === editingRecadoId) {
+          return {
+            ...r,
+            titulo: tituloVal,
+            corEtiqueta: corVal,
+            condominio: condVal,
+            texto: textoVal,
+            atualizadoEm: new Date().toISOString()
+          };
+        }
+        return r;
+      });
+      await window.falaSync.pushStateToServer(state);
+      cancelEditRecado();
+      renderRecados();
+      showToast('Recado editado e sincronizado na nuvem!');
+      return;
+    }
+
     const novoRecado = {
       id: 'rec-' + Date.now(),
-      titulo: document.getElementById('recado-titulo').value.trim().toUpperCase(),
-      corEtiqueta: document.getElementById('recado-cor').value,
-      condominio: document.getElementById('recado-condominio').value.trim().toUpperCase() || 'TODOS',
-      texto: document.getElementById('recado-texto').value.trim(),
+      titulo: tituloVal,
+      corEtiqueta: corVal,
+      condominio: condVal,
+      texto: textoVal,
       ativo: true,
       criadoEm: new Date().toISOString()
     };
@@ -169,7 +240,7 @@
   });
 
   /**
-   * 2. SELETOR DE TEMAS DE INTERESSE + FILTRO DE CLASSIFICAÇÃO FAMILIAR (BUSCA AUTOMÁTICA)
+   * 2. SELETOR DE TEMAS DE INTERESSE + FILTRO DE CLASSIFICAÇÃO FAMILIAR + EDIÇÃO DE NOTÍCIAS
    */
   const themesGridEl = document.getElementById('themes-selector-grid');
   const inputTemaPersonalizado = document.getElementById('input-tema-personalizado');
@@ -181,6 +252,42 @@
   const btnSaveThemesAndFetch = document.getElementById('btn-save-themes-and-fetch');
   const listaNoticiasEl = document.getElementById('lista-noticias');
   const formNoticia = document.getElementById('form-noticia');
+  const headingFormNoticia = document.getElementById('heading-form-noticia');
+  const btnSubmitNoticia = document.getElementById('btn-submit-noticia');
+  const btnCancelNoticia = document.getElementById('btn-cancel-noticia');
+  const cardFormNoticia = document.getElementById('card-form-noticia');
+  let editingNoticiaId = null;
+
+  function cancelEditNoticia() {
+    editingNoticiaId = null;
+    formNoticia.reset();
+    document.getElementById('noticia-fonte').value = 'VIDA MODERNA NEWS';
+    document.getElementById('noticia-cor').value = '#2a5e35';
+    document.getElementById('noticia-titulo').value = '';
+    if (headingFormNoticia) headingFormNoticia.textContent = 'Adicionar ou Editar Comunicado / Notícia (1280x520px)';
+    if (btnSubmitNoticia) btnSubmitNoticia.textContent = '➕ Adicionar Notícia à Grade';
+    if (btnCancelNoticia) btnCancelNoticia.style.display = 'none';
+    if (cardFormNoticia) cardFormNoticia.style.borderColor = '';
+  }
+
+  if (btnCancelNoticia) {
+    btnCancelNoticia.addEventListener('click', cancelEditNoticia);
+  }
+
+  function startEditNoticia(n) {
+    editingNoticiaId = n.id;
+    document.getElementById('noticia-fonte').value = n.fonte || 'VIDA MODERNA NEWS';
+    document.getElementById('noticia-cor').value = n.corBarra || '#2a5e35';
+    document.getElementById('noticia-titulo').value = n.titulo || '';
+    if (headingFormNoticia) headingFormNoticia.textContent = '✏️ Editando Manchete / Notícia (1280x520px)';
+    if (btnSubmitNoticia) btnSubmitNoticia.textContent = '💾 Salvar Alterações da Notícia';
+    if (btnCancelNoticia) btnCancelNoticia.style.display = 'inline-flex';
+    if (cardFormNoticia) {
+      cardFormNoticia.style.borderColor = '#2a5e35';
+      cardFormNoticia.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+    document.getElementById('noticia-titulo').focus();
+  }
 
   function renderThemesSelector() {
     if (!themesGridEl) return;
@@ -206,7 +313,6 @@
         } else {
           label.classList.remove('selected');
         }
-        // Salva e busca automaticamente ao selecionar ou desmarcar um tema!
         await saveThemesAndTriggerAutoFetch();
       });
 
@@ -320,10 +426,27 @@
       const actions = document.createElement('div');
       actions.className = 'item-actions';
 
+      const btnEdit = document.createElement('button');
+      btnEdit.className = 'btn btn-sm btn-primary';
+      btnEdit.textContent = '✏️ Editar';
+      btnEdit.onclick = () => startEditNoticia(n);
+
+      const btnToggle = document.createElement('button');
+      const isAtivo = n.ativo !== false;
+      btnToggle.className = 'btn btn-sm ' + (isAtivo ? 'btn-warning' : 'btn-success');
+      btnToggle.textContent = isAtivo ? 'Pausar' : 'Ativar';
+      btnToggle.onclick = async () => {
+        n.ativo = !isAtivo;
+        await window.falaSync.pushStateToServer(state, false);
+        renderNoticias();
+        showToast('Status da notícia atualizado!');
+      };
+
       const btnDel = document.createElement('button');
       btnDel.className = 'btn btn-sm btn-danger';
       btnDel.textContent = 'Remover';
       btnDel.onclick = async () => {
+        if (editingNoticiaId === n.id) cancelEditNoticia();
         state.noticias = state.noticias.filter((item) => item.id !== n.id);
         await window.falaSync.pushStateToServer(state, false);
         renderNoticias();
@@ -331,6 +454,8 @@
         showToast('Notícia removida!');
       };
 
+      actions.appendChild(btnEdit);
+      actions.appendChild(btnToggle);
       actions.appendChild(btnDel);
       div.appendChild(img);
       div.appendChild(content);
@@ -342,6 +467,8 @@
   formNoticia.addEventListener('submit', async (e) => {
     e.preventDefault();
     const titulo = document.getElementById('noticia-titulo').value.trim();
+    const fonteVal = document.getElementById('noticia-fonte').value.trim() || 'VIDA MODERNA NEWS';
+    const corVal = document.getElementById('noticia-cor').value;
     const nivel = state.config?.filtroFamiliarNivel || 'rigoroso';
     const customBlk = state.config?.palavrasBloqueadas || '';
 
@@ -351,35 +478,94 @@
     }
 
     const imgFileInput = document.getElementById('noticia-img-file');
-    let imgUrl = 'assets/news-bg-default.svg';
+    let uploadedImgUrl = null;
     if (imgFileInput.files && imgFileInput.files[0]) {
-      imgUrl = await resizeImageFileTo1280x520(imgFileInput.files[0]);
+      uploadedImgUrl = await resizeImageFileTo1280x520(imgFileInput.files[0]);
+    }
+
+    if (editingNoticiaId) {
+      state.noticias = (state.noticias || []).map((n) => {
+        if (n.id === editingNoticiaId) {
+          return {
+            ...n,
+            fonte: fonteVal,
+            corBarra: corVal,
+            titulo: titulo,
+            imagemUrl: uploadedImgUrl || n.imagemUrl || 'assets/news-bg-default.svg'
+          };
+        }
+        return n;
+      });
+      await window.falaSync.pushStateToServer(state, false);
+      cancelEditNoticia();
+      renderNoticias();
+      showToast('Notícia editada e sincronizada na nuvem!');
+      return;
     }
 
     const novaNoticia = {
       id: 'not-' + Date.now(),
-      fonte: document.getElementById('noticia-fonte').value.trim() || 'VIDA MODERNA NEWS',
-      corBarra: document.getElementById('noticia-cor').value,
+      fonte: fonteVal,
+      corBarra: corVal,
       titulo: titulo,
-      imagemUrl: imgUrl,
+      imagemUrl: uploadedImgUrl || 'assets/news-bg-default.svg',
       publicadoEm: new Date().toISOString(),
       ativo: true
     };
 
     state.noticias = [novaNoticia, ...(state.noticias || [])];
     await window.falaSync.pushStateToServer(state, false);
-    formNoticia.reset();
-    document.getElementById('noticia-fonte').value = 'VIDA MODERNA NEWS';
+    cancelEditNoticia();
     renderNoticias();
     renderFilterStats();
     showToast('Notícia adicionada à programação 1280x520px!');
   });
 
   /**
-   * 3. GESTÃO DE CARTELAS E VÍDEOS (1280x520px @ 72dpi)
+   * 3. GESTÃO DE CARTELAS E VÍDEOS (1280x520px @ 72dpi — COM OPÇÃO DE EDITAR)
    */
   const listaMidiasEl = document.getElementById('lista-midias');
   const formMidia = document.getElementById('form-midia');
+  const headingFormMidia = document.getElementById('heading-form-midia');
+  const btnSubmitMidia = document.getElementById('btn-submit-midia');
+  const btnCancelMidia = document.getElementById('btn-cancel-midia');
+  const cardFormMidia = document.getElementById('card-form-midia');
+  let editingMidiaId = null;
+
+  function cancelEditMidia() {
+    editingMidiaId = null;
+    formMidia.reset();
+    document.getElementById('midia-duracao').value = 15;
+    document.getElementById('midia-assinatura').value = 5;
+    document.getElementById('midia-condominio').value = 'TODOS';
+    if (headingFormMidia) headingFormMidia.textContent = 'Adicionar Cartela ou Vídeo Publicitário (1280x520px)';
+    if (btnSubmitMidia) btnSubmitMidia.textContent = '📤 Publicar Cartela / Vídeo (1280x520px)';
+    if (btnCancelMidia) btnCancelMidia.style.display = 'none';
+    if (cardFormMidia) cardFormMidia.style.borderColor = '';
+  }
+
+  if (btnCancelMidia) {
+    btnCancelMidia.addEventListener('click', cancelEditMidia);
+  }
+
+  function startEditMidia(m) {
+    editingMidiaId = m.id;
+    document.getElementById('midia-titulo').value = m.titulo || '';
+    document.getElementById('midia-cliente').value = m.cliente || '';
+    document.getElementById('midia-tipo').value = m.tipo || 'cartela';
+    document.getElementById('midia-url').value = (m.url && !m.url.startsWith('data:')) ? m.url : '';
+    document.getElementById('midia-duracao').value = m.duracao || 15;
+    document.getElementById('midia-assinatura').value = m.assinaturaSegundos || 5;
+    document.getElementById('midia-condominio').value = m.condominio || 'TODOS';
+    if (headingFormMidia) headingFormMidia.textContent = '✏️ Editando Cartela / Vídeo (1280x520px)';
+    if (btnSubmitMidia) btnSubmitMidia.textContent = '💾 Salvar Alterações da Cartela / Vídeo';
+    if (btnCancelMidia) btnCancelMidia.style.display = 'inline-flex';
+    if (cardFormMidia) {
+      cardFormMidia.style.borderColor = '#2a5e35';
+      cardFormMidia.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+    document.getElementById('midia-titulo').focus();
+  }
 
   function renderMidias() {
     listaMidiasEl.innerHTML = '';
@@ -418,6 +604,11 @@
       const actions = document.createElement('div');
       actions.className = 'item-actions';
 
+      const btnEdit = document.createElement('button');
+      btnEdit.className = 'btn btn-sm btn-primary';
+      btnEdit.textContent = '✏️ Editar';
+      btnEdit.onclick = () => startEditMidia(m);
+
       const btnToggle = document.createElement('button');
       btnToggle.className = 'btn btn-sm ' + (m.ativo ? 'btn-warning' : 'btn-success');
       btnToggle.textContent = m.ativo ? 'Pausar' : 'Ativar';
@@ -432,12 +623,14 @@
       btnDel.className = 'btn btn-sm btn-danger';
       btnDel.textContent = 'Excluir';
       btnDel.onclick = async () => {
+        if (editingMidiaId === m.id) cancelEditMidia();
         state.midias = state.midias.filter((item) => item.id !== m.id);
         await window.falaSync.pushStateToServer(state, false);
         renderMidias();
         showToast('Mídia removida da programação!');
       };
 
+      actions.appendChild(btnEdit);
       actions.appendChild(btnToggle);
       actions.appendChild(btnDel);
 
@@ -453,6 +646,11 @@
     const fileInput = document.getElementById('midia-arquivo');
     const urlInput = document.getElementById('midia-url');
     const tipo = document.getElementById('midia-tipo').value;
+    const tituloVal = document.getElementById('midia-titulo').value.trim();
+    const clienteVal = document.getElementById('midia-cliente').value.trim();
+    const duracaoVal = Number(document.getElementById('midia-duracao').value) || 15;
+    const assinaturaVal = Number(document.getElementById('midia-assinatura').value) || 5;
+    const condVal = document.getElementById('midia-condominio').value.trim().toUpperCase() || 'TODOS';
 
     let finalUrl = urlInput.value.trim();
 
@@ -465,6 +663,29 @@
       }
     }
 
+    if (editingMidiaId) {
+      state.midias = (state.midias || []).map((m) => {
+        if (m.id === editingMidiaId) {
+          return {
+            ...m,
+            tipo: tipo,
+            titulo: tituloVal,
+            cliente: clienteVal,
+            url: finalUrl || m.url,
+            duracao: duracaoVal,
+            assinaturaSegundos: assinaturaVal,
+            condominio: condVal
+          };
+        }
+        return m;
+      });
+      await window.falaSync.pushStateToServer(state, false);
+      cancelEditMidia();
+      renderMidias();
+      showToast('Cartela/Vídeo editado e sincronizado na nuvem!');
+      return;
+    }
+
     if (!finalUrl) {
       alert('Selecione um arquivo de imagem/vídeo ou informe uma URL.');
       return;
@@ -473,23 +694,20 @@
     const novaMidia = {
       id: 'mid-' + Date.now(),
       tipo: tipo,
-      titulo: document.getElementById('midia-titulo').value.trim(),
-      cliente: document.getElementById('midia-cliente').value.trim(),
+      titulo: tituloVal,
+      cliente: clienteVal,
       url: finalUrl,
-      duracao: Number(document.getElementById('midia-duracao').value) || 15,
-      assinaturaSegundos: Number(document.getElementById('midia-assinatura').value) || 5,
+      duracao: duracaoVal,
+      assinaturaSegundos: assinaturaVal,
       dimensoes: '1280x520px (72dpi)',
-      condominio: document.getElementById('midia-condominio').value.trim().toUpperCase() || 'TODOS',
+      condominio: condVal,
       ativo: true,
       criadoEm: new Date().toISOString()
     };
 
     state.midias = [...(state.midias || []), novaMidia];
     await window.falaSync.pushStateToServer(state, false);
-    formMidia.reset();
-    document.getElementById('midia-duracao').value = 15;
-    document.getElementById('midia-assinatura').value = 5;
-    document.getElementById('midia-condominio').value = 'TODOS';
+    cancelEditMidia();
     renderMidias();
     showToast('Cartela/Vídeo 1280x520px publicado com sucesso!');
   });
