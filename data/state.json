@@ -1,4 +1,4 @@
-﻿{
+{
     "version":  3,
     "updatedAt":  "2026-10-22T10:52:06.4071640-03:00",
     "lastRssSyncAt":  0,
@@ -45,15 +45,6 @@
                         "ativo":  true,
                         "condominio":  "TODOS",
                         "criadoEm":  "2026-10-22T08:35:00-03:00"
-                    },
-                    {
-                        "id":  "rec-3",
-                        "titulo":  "MANUTENÇÃO PREVENTIVA",
-                        "corEtiqueta":  "#1468b3",
-                        "texto":  "Nesta quinta-feira (das 09h às 11h) será realizada a limpeza periódica dos reservatórios superiores. Recomendamos economia de água durante o período.",
-                        "ativo":  true,
-                        "condominio":  "TODOS",
-                        "criadoEm":  "2026-10-22T08:40:00-03:00"
                     }
                 ],
     "midias":  [

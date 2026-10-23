@@ -274,15 +274,6 @@ var DEFAULT_STATE = {
       ativo: true,
       condominio: 'TODOS',
       criadoEm: '2026-10-22T08:35:00-03:00'
-    },
-    {
-      id: 'rec-3',
-      titulo: 'MANUTENÇÃO PREVENTIVA',
-      corEtiqueta: '#1468b3',
-      texto: 'Nesta quinta-feira (das 09h às 11h) será realizada a limpeza periódica dos reservatórios superiores. Recomendamos economia de água durante o período.',
-      ativo: true,
-      condominio: 'TODOS',
-      criadoEm: '2026-10-22T08:40:00-03:00'
     }
   ],
   midias: [
@@ -339,6 +330,22 @@ var DEFAULT_STATE = {
     }
   ]
 };
+
+function sanitizeLegacyRecados(recadosList) {
+  if (!recadosList || !recadosList.length) return [];
+  var cleaned = [];
+  for (var i = 0; i < recadosList.length; i++) {
+    var r = recadosList[i];
+    if (!r) continue;
+    var t = (r.titulo || '').toUpperCase();
+    var tx = (r.texto || '').toLowerCase();
+    if (r.id === 'rec-3' || t.indexOf('MANUTENÇÃO PREVENTIVA') !== -1 || t.indexOf('MANUTENCAO PREVENTIVA') !== -1 || tx.indexOf('reservatórios superiores') !== -1) {
+      continue;
+    }
+    cleaned.push(r);
+  }
+  return cleaned;
+}
 
 function VidaModernaSyncManager() {
   this.listeners = [];
@@ -431,6 +438,7 @@ VidaModernaSyncManager.prototype.getLocalState = function () {
         if (!parsed.config.filtroFamiliarNivel) {
           parsed.config.filtroFamiliarNivel = 'rigoroso';
         }
+        parsed.recados = sanitizeLegacyRecados(parsed.recados);
         return parsed;
       }
     }
@@ -571,6 +579,7 @@ VidaModernaSyncManager.prototype.pushToSupabase = function (sbUrlOrState, sbKey,
 VidaModernaSyncManager.prototype.processIncomingRemoteState = function (remoteState, sourceLabel) {
   var localState = this.getLocalState();
   remoteState.lastRssSyncAt = new Date().getTime();
+  remoteState.recados = sanitizeLegacyRecados(remoteState.recados);
 
   if (remoteState.noticias && remoteState.noticias.length) {
     var nivel = (remoteState.config && remoteState.config.filtroFamiliarNivel) ? remoteState.config.filtroFamiliarNivel : 'rigoroso';
