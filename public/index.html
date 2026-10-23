@@ -14,7 +14,10 @@
   <link rel="manifest" href="manifest.json">
   <link rel="icon" sizes="192x192" href="assets/logo-modern-life.png">
   <link rel="apple-touch-icon" href="assets/logo-modern-life.png">
-  <link rel="stylesheet" href="css/player.css">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <link rel="stylesheet" href="css/player.css?v=5">
 </head>
 <body>
   <!-- Botão flutuante que some sozinho assim que entra em Modo Apresentação (Tela Cheia sem barra de endereços) -->
@@ -123,8 +126,23 @@
     </div>
   </div>
 
-  <script src="js/cloud-config.js"></script>
-  <script src="js/db.js"></script>
-  <script src="js/player.js"></script>
+  <script>
+    (function() {
+      try {
+        if (window.caches && window.caches.keys) {
+          window.caches.keys().then(function(keys) {
+            for (var i = 0; i < keys.length; i++) {
+              if (keys[i].indexOf('v5') === -1) {
+                window.caches.delete(keys[i]);
+              }
+            }
+          });
+        }
+      } catch (e) {}
+    })();
+  </script>
+  <script src="js/cloud-config.js?v=5"></script>
+  <script src="js/db.js?v=5"></script>
+  <script src="js/player.js?v=5"></script>
 </body>
 </html>

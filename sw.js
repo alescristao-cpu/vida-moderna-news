@@ -1,60 +1,47 @@
-const APP_CACHE = 'vidamoderna-shell-v2';
-const MEDIA_CACHE = 'vidamoderna-media-cache-v1';
+// Service Worker Network-First (Limpa caches antigos para garantir atualização imediata pelo Supabase)
+var APP_CACHE = 'vidamoderna-shell-v5';
 
-const SHELL_FILES = [
-  './',
-  './index.html',
-  './admin.html',
-  './manifest.json',
-  './css/player.css',
-  './css/admin.css',
-  './js/db.js',
-  './js/player.js',
-  './js/admin.js',
-  './assets/logo-modern-life.png',
-  './assets/cartela-exemplo-1.svg',
-  './assets/news-bg-default.svg'
-];
-
-self.addEventListener('install', (event) => {
+self.addEventListener('install', function (event) {
   self.skipWaiting();
+});
+
+self.addEventListener('activate', function (event) {
   event.waitUntil(
-    caches.open(APP_CACHE).then((cache) => cache.addAll(SHELL_FILES).catch(() => {}))
+    caches.keys().then(function (keys) {
+      return Promise.all(
+        keys.map(function (key) {
+          if (key !== APP_CACHE) {
+            return caches.delete(key);
+          }
+        })
+      );
+    }).then(function () {
+      return self.clients.claim();
+    })
   );
 });
 
-self.addEventListener('activate', (event) => {
-  event.waitUntil(self.clients.claim());
-});
-
-self.addEventListener('fetch', (event) => {
-  const req = event.request;
+self.addEventListener('fetch', function (event) {
+  var req = event.request;
   if (req.method !== 'GET') return;
 
-  const url = new URL(req.url);
-
-  if (url.pathname.startsWith('/api/')) {
-    event.respondWith(
-      fetch(req).catch(() => new Response(JSON.stringify({ offline: true }), {
-        headers: { 'Content-Type': 'application/json' }
-      }))
-    );
+  // Nunca faz cache de chamadas do Supabase ou APIs externas
+  if (req.url.indexOf('supabase.co') !== -1 || req.url.indexOf('rss2json') !== -1 || req.url.indexOf('/api/') !== -1 || req.url.indexOf('state.json') !== -1) {
     return;
   }
 
+  // Network-First: tenta buscar sempre a versão mais nova da internet; só usa cache se estiver sem internet
   event.respondWith(
-    caches.match(req).then((cachedResp) => {
-      const networkFetch = fetch(req)
-        .then((netResp) => {
-          if (netResp && netResp.status === 200) {
-            const clone = netResp.clone();
-            caches.open(APP_CACHE).then((cache) => cache.put(req, clone));
-          }
-          return netResp;
-        })
-        .catch(() => cachedResp);
-
-      return cachedResp || networkFetch;
+    fetch(req).then(function (netResp) {
+      if (netResp && netResp.status === 200) {
+        var clone = netResp.clone();
+        caches.open(APP_CACHE).then(function (cache) {
+          cache.put(req, clone);
+        });
+      }
+      return netResp;
+    })['catch'](function () {
+      return caches.match(req);
     })
   );
 });

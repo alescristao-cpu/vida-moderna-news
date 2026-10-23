@@ -470,6 +470,8 @@
 
     if (prevMidiasJson !== nextMidiasJson || playlist.length === 0) {
       playlist = buildTopPlaylist(currentState);
+      currentSlideIndex = -1;
+      showNextSlide();
     }
   }
 

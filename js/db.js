@@ -490,7 +490,7 @@ VidaModernaSyncManager.prototype.fetchFromSupabase = function (sbUrl, sbKey) {
       return;
     }
 
-    var endpoint = cleanUrl + '/rest/v1/vidamoderna_sync?id=eq.main&select=payload&t=' + new Date().getTime();
+    var endpoint = cleanUrl + '/rest/v1/vidamoderna_sync?id=eq.main&id=neq.cb_' + new Date().getTime() + '&select=payload';
 
     if (window.AndroidNative && typeof window.AndroidNative.fetchSupabaseState === 'function') {
       try {
@@ -597,6 +597,7 @@ VidaModernaSyncManager.prototype.processIncomingRemoteState = function (remoteSt
   var hasChanges = !localState ||
     Number(remoteState.version) !== Number(localState.version) ||
     remoteState.updatedAt !== localState.updatedAt ||
+    JSON.stringify(remoteState.config) !== JSON.stringify(localState.config) ||
     JSON.stringify(remoteState.recados) !== JSON.stringify(localState.recados) ||
     JSON.stringify(remoteState.midias) !== JSON.stringify(localState.midias) ||
     JSON.stringify(remoteState.noticias) !== JSON.stringify(localState.noticias);
@@ -675,11 +676,7 @@ VidaModernaSyncManager.prototype.syncFromServer = function (forceRssCheck) {
           if (ghNative && ghNative.indexOf('{') === 0) {
             var ghState = JSON.parse(ghNative);
             var up = self.processIncomingRemoteState(ghState, 'GitHub Nuvem');
-            if (rssNeedsRefresh) {
-              self.fetchPublicRssFallback().then(function () { finishSync(true, up); });
-            } else {
-              finishSync(true, up);
-            }
+            finishSync(true, up);
             return;
           }
         } catch (e) {}
@@ -690,11 +687,7 @@ VidaModernaSyncManager.prototype.syncFromServer = function (forceRssCheck) {
           try {
             var parsedGh = JSON.parse(text);
             var up2 = self.processIncomingRemoteState(parsedGh, 'GitHub Nuvem');
-            if (rssNeedsRefresh) {
-              self.fetchPublicRssFallback().then(function () { finishSync(true, up2); });
-            } else {
-              finishSync(true, up2);
-            }
+            finishSync(true, up2);
             return;
           } catch (e) {}
         }
@@ -707,7 +700,7 @@ VidaModernaSyncManager.prototype.syncFromServer = function (forceRssCheck) {
       self.fetchFromSupabase(deviceCfg.supabaseUrl, deviceCfg.supabaseAnonKey).then(function (sbState) {
         if (sbState && sbState.config) {
           var updatedSb = self.processIncomingRemoteState(sbState, 'Supabase Nuvem');
-          if (rssNeedsRefresh) {
+          if (!sbState.noticias || sbState.noticias.length === 0) {
             self.fetchPublicRssFallback().then(function () {
               finishSync(true, updatedSb);
             });
