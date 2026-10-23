@@ -5,8 +5,8 @@
 
 var FALA_STORAGE_KEY = 'vidamoderna_state_v3';
 var FALA_DEVICE_CFG_KEY = 'vidamoderna_device_cfg_v1';
-var AUTO_SYNC_INTERVAL_MS = 6000;
-var RSS_AUTO_REFRESH_MS = 5 * 60 * 1000;
+var AUTO_SYNC_INTERVAL_MS = 5000;
+var RSS_AUTO_REFRESH_MS = 10 * 60 * 1000;
 
 /**
  * Mini-Promise compatível com ES5 (para navegadores antigos que não possuem window.Promise)
@@ -74,10 +74,16 @@ function es5Async(executor) {
  * Requisição HTTP/HTTPS universal via XMLHttpRequest (funciona desde o Android 2.3 / Chrome 1.0)
  */
 function xhrRequest(method, url, headers, bodyStr, callback) {
+  var called = false;
+  function finish(ok, status, text) {
+    if (called) return;
+    called = true;
+    callback(ok, status, text);
+  }
   try {
     var xhr = new XMLHttpRequest();
     xhr.open(method, url, true);
-    xhr.timeout = 8000;
+    xhr.timeout = 15000;
     if (headers) {
       for (var k in headers) {
         if (Object.prototype.hasOwnProperty.call(headers, k)) {
@@ -88,18 +94,18 @@ function xhrRequest(method, url, headers, bodyStr, callback) {
     xhr.onreadystatechange = function () {
       if (xhr.readyState === 4) {
         var ok = xhr.status >= 200 && xhr.status < 300;
-        callback(ok, xhr.status, xhr.responseText || '');
+        finish(ok, xhr.status, xhr.responseText || '');
       }
     };
     xhr.onerror = function () {
-      callback(false, 0, '');
+      finish(false, 0, '');
     };
     xhr.ontimeout = function () {
-      callback(false, 0, '');
+      finish(false, 0, '');
     };
     xhr.send(bodyStr || null);
   } catch (e) {
-    callback(false, 0, '');
+    finish(false, 0, '');
   }
 }
 
@@ -351,6 +357,8 @@ function VidaModernaSyncManager() {
   this.listeners = [];
   this.statusListeners = [];
   this.isSyncing = false;
+  this.isPushing = false;
+  this.lastLocalPushAt = 0;
   this.wasOffline = false;
   this.autoSyncTimer = null;
   this.themesCatalog = NEWS_THEMES_CATALOG;
@@ -374,6 +382,12 @@ function VidaModernaSyncManager() {
       try {
         selfRef.notifyListeners(JSON.parse(ev.newValue), 'storage');
       } catch (e) {}
+    }
+  });
+
+  window.addEventListener('message', function (ev) {
+    if (ev && ev.data && ev.data.type === 'VIDAMODERNA_STATE' && ev.data.state) {
+      selfRef.notifyListeners(ev.data.state, 'postMessage');
     }
   });
 }
@@ -577,6 +591,10 @@ VidaModernaSyncManager.prototype.pushToSupabase = function (sbUrlOrState, sbKey,
 };
 
 VidaModernaSyncManager.prototype.processIncomingRemoteState = function (remoteState, sourceLabel) {
+  if (this.isPushing || (new Date().getTime() - this.lastLocalPushAt < 4000)) {
+    return false;
+  }
+
   var localState = this.getLocalState();
   remoteState.lastRssSyncAt = new Date().getTime();
   remoteState.recados = sanitizeLegacyRecados(remoteState.recados);
@@ -587,7 +605,7 @@ VidaModernaSyncManager.prototype.processIncomingRemoteState = function (remoteSt
     var filtered = [];
     for (var i = 0; i < remoteState.noticias.length; i++) {
       var n = remoteState.noticias[i];
-      if (isFamilySafeNews(n.titulo, '', nivel, customBlk)) {
+      if (n && (n.custom || n.editada || isFamilySafeNews(n.titulo, '', nivel, customBlk))) {
         filtered.push(n);
       }
     }
@@ -604,7 +622,7 @@ VidaModernaSyncManager.prototype.processIncomingRemoteState = function (remoteSt
 
   if (hasChanges) {
     this.notifyStatus('syncing', 'Atualizando (' + sourceLabel + ')...');
-    this.saveLocalState(remoteState, false);
+    this.saveLocalState(remoteState, true);
     this.notifyListeners(remoteState, 'cloud-sync');
   }
 
@@ -616,12 +634,12 @@ VidaModernaSyncManager.prototype.processIncomingRemoteState = function (remoteSt
 };
 
 /**
- * Sincronização Automática (Supabase -> GitHub Pages -> RSS G1) sem usar async/await!
+ * Sincronização Automática (Supabase Nuvem como fonte única da verdade) sem usar async/await!
  */
 VidaModernaSyncManager.prototype.syncFromServer = function (forceRssCheck) {
   var self = this;
   return es5Async(function (resolve) {
-    if (self.isSyncing) {
+    if (self.isSyncing || self.isPushing) {
       resolve({ synced: false, reason: 'busy' });
       return;
     }
@@ -663,39 +681,7 @@ VidaModernaSyncManager.prototype.syncFromServer = function (forceRssCheck) {
       });
     }
 
-    function stepGithubPages() {
-      var ghUrl = (deviceCfg.githubPagesUrl || '').replace(/\/+$/, '');
-      if (!ghUrl || ghUrl.indexOf('http') !== 0) {
-        stepRssFallback();
-        return;
-      }
-      var ghStateUrl = ghUrl + '/data/state.json?t=' + now;
-      if (window.AndroidNative && typeof window.AndroidNative.fetchUrl === 'function') {
-        try {
-          var ghNative = window.AndroidNative.fetchUrl(ghStateUrl);
-          if (ghNative && ghNative.indexOf('{') === 0) {
-            var ghState = JSON.parse(ghNative);
-            var up = self.processIncomingRemoteState(ghState, 'GitHub Nuvem');
-            finishSync(true, up);
-            return;
-          }
-        } catch (e) {}
-      }
-
-      xhrRequest('GET', ghStateUrl, null, null, function (ok, status, text) {
-        if (ok && text && text.indexOf('{') === 0) {
-          try {
-            var parsedGh = JSON.parse(text);
-            var up2 = self.processIncomingRemoteState(parsedGh, 'GitHub Nuvem');
-            finishSync(true, up2);
-            return;
-          } catch (e) {}
-        }
-        stepRssFallback();
-      });
-    }
-
-    // 1. Tenta Supabase Nuvem primeiro
+    // 1. Tenta Supabase Nuvem primeiro (Fonte Oficial da Verdade)
     if (deviceCfg.supabaseUrl && deviceCfg.supabaseAnonKey) {
       self.fetchFromSupabase(deviceCfg.supabaseUrl, deviceCfg.supabaseAnonKey).then(function (sbState) {
         if (sbState && sbState.config) {
@@ -708,11 +694,15 @@ VidaModernaSyncManager.prototype.syncFromServer = function (forceRssCheck) {
             finishSync(true, updatedSb);
           }
         } else {
-          stepGithubPages();
+          // Não sobrescreve com state.json estático caso a internet oscile
+          var dErr = new Date();
+          var nowErr = ('0' + dErr.getHours()).slice(-2) + ':' + ('0' + dErr.getMinutes()).slice(-2);
+          self.notifyStatus('online', 'Cache Ativo (' + nowErr + ')');
+          finishSync(false, false);
         }
       });
     } else {
-      stepGithubPages();
+      stepRssFallback();
     }
   });
 };
@@ -720,24 +710,35 @@ VidaModernaSyncManager.prototype.syncFromServer = function (forceRssCheck) {
 VidaModernaSyncManager.prototype.pushStateToServer = function (newState, refreshRssNow) {
   var self = this;
   return es5Async(function (resolve) {
-    newState.version = (Number(newState.version) || 1) + 1;
+    self.isPushing = true;
+    self.lastLocalPushAt = new Date().getTime();
+    newState.version = new Date().getTime();
     newState.updatedAt = new Date().toISOString();
+    newState.recados = sanitizeLegacyRecados(newState.recados);
     self.saveLocalState(newState, true);
+    self.notifyListeners(newState, 'local-push');
 
     function sendToCloud(stateToSend) {
       var deviceCfg = self.getDeviceConfig();
       if (deviceCfg.supabaseUrl && deviceCfg.supabaseAnonKey) {
         self.pushToSupabase(deviceCfg.supabaseUrl, deviceCfg.supabaseAnonKey, stateToSend).then(function (sbOk) {
-          resolve({ ok: true, mode: sbOk ? 'supabase-cloud' : 'local', state: stateToSend });
+          self.isPushing = false;
+          self.lastLocalPushAt = new Date().getTime();
+          resolve({ ok: sbOk, mode: sbOk ? 'supabase-cloud' : 'local', state: stateToSend });
         });
       } else {
+        self.isPushing = false;
         resolve({ ok: true, mode: 'local', state: stateToSend });
       }
     }
 
     if (refreshRssNow) {
       self.fetchPublicRssFallback().then(function () {
-        sendToCloud(self.getLocalState());
+        var updatedAfterRss = self.getLocalState();
+        updatedAfterRss.version = new Date().getTime();
+        updatedAfterRss.updatedAt = new Date().toISOString();
+        self.saveLocalState(updatedAfterRss, true);
+        sendToCloud(updatedAfterRss);
       });
     } else {
       sendToCloud(newState);
@@ -748,19 +749,19 @@ VidaModernaSyncManager.prototype.pushStateToServer = function (newState, refresh
 VidaModernaSyncManager.prototype.fetchPublicRssFallback = function () {
   var self = this;
   return es5Async(function (resolve) {
-    var state = self.getLocalState();
-    if (!state.config || !state.config.rssAtivo) {
+    var initialState = self.getLocalState();
+    if (!initialState.config || !initialState.config.rssAtivo) {
       resolve(false);
       return;
     }
 
-    var temas = (state.config.rssTemas && state.config.rssTemas.length > 0)
-      ? state.config.rssTemas
+    var temas = (initialState.config.rssTemas && initialState.config.rssTemas.length > 0)
+      ? initialState.config.rssTemas
       : ['tecnologia', 'ciencia_saude', 'turismo', 'cultura'];
 
-    var filtroNivel = state.config.filtroFamiliarNivel || 'rigoroso';
-    var customBlocked = state.config.palavrasBloqueadas || '';
-    var maxNoticias = Number(state.config.limiteNoticias) || 10;
+    var filtroNivel = initialState.config.filtroFamiliarNivel || 'rigoroso';
+    var customBlocked = initialState.config.palavrasBloqueadas || '';
+    var maxNoticias = Number(initialState.config.limiteNoticias) || 10;
 
     var totalAnalisadas = 0;
     var totalBloqueadas = 0;
@@ -769,7 +770,6 @@ VidaModernaSyncManager.prototype.fetchPublicRssFallback = function () {
 
     function normalizeImgUrlForLegacy(url) {
       if (!url) return 'assets/news-bg-default.svg';
-      // s2-g1.glbimg.com aceita HTTP puro (evita erro de certificado SSL em Android 4.4/5.1/7.1 antigo)
       if (window.location && window.location.protocol !== 'https:' && url.indexOf('https://s2-g1.glbimg.com/') === 0) {
         return url.replace('https://', 'http://');
       }
@@ -777,32 +777,56 @@ VidaModernaSyncManager.prototype.fetchPublicRssFallback = function () {
     }
 
     function finalizeRss() {
+      var latestState = self.getLocalState();
+      var excluidas = latestState.noticiasExcluidas || [];
+      var excluidasMap = {};
+      for (var eIdx = 0; eIdx < excluidas.length; eIdx++) {
+        excluidasMap[excluidas[eIdx]] = true;
+      }
+
       var finalNoticias = [];
       var seen = {};
+
+      // Preserva notícias criadas ou editadas manualmente no Painel Admin
+      var currentList = latestState.noticias || [];
+      for (var cIdx = 0; cIdx < currentList.length; cIdx++) {
+        var cn = currentList[cIdx];
+        if (cn && (cn.custom || cn.editada || (cn.id && cn.id.indexOf('not-') === 0 && !cn.id.indexOf('rss-') === 0))) {
+          if (!excluidasMap[cn.id] && !excluidasMap[cn.titulo]) {
+            seen[cn.titulo] = true;
+            if (cn.tituloOriginal) seen[cn.tituloOriginal] = true;
+            finalNoticias.push(cn);
+          }
+        }
+      }
+
       for (var r = 0; r < 5; r++) {
         for (var f = 0; f < collectedByFeed.length; f++) {
           var list = collectedByFeed[f];
-          if (r < list.length && !seen[list[r].titulo]) {
-            seen[list[r].titulo] = true;
-            finalNoticias.push(list[r]);
-            if (finalNoticias.length >= maxNoticias) break;
+          if (r < list.length) {
+            var candidate = list[r];
+            if (!seen[candidate.titulo] && !excluidasMap[candidate.id] && !excluidasMap[candidate.titulo]) {
+              seen[candidate.titulo] = true;
+              finalNoticias.push(candidate);
+              if (finalNoticias.length >= maxNoticias) break;
+            }
           }
         }
         if (finalNoticias.length >= maxNoticias) break;
       }
 
       if (finalNoticias.length > 0) {
-        state.config.ultimoFiltroStats = {
+        latestState.config.ultimoFiltroStats = {
           analisadas: totalAnalisadas,
           bloqueadas: totalBloqueadas,
           aprovadas: finalNoticias.length,
           atualizadoEm: new Date().toLocaleTimeString ? new Date().toLocaleTimeString() : 'Automático'
         };
-        state.noticias = finalNoticias;
-        state.lastRssSyncAt = new Date().getTime();
-        state.version = (Number(state.version) || 1) + 1;
-        state.updatedAt = new Date().toISOString();
-        self.saveLocalState(state, true);
+        latestState.noticias = finalNoticias;
+        latestState.lastRssSyncAt = new Date().getTime();
+        latestState.version = new Date().getTime();
+        latestState.updatedAt = new Date().toISOString();
+        self.saveLocalState(latestState, true);
         resolve(true);
       } else {
         resolve(false);
@@ -847,7 +871,7 @@ VidaModernaSyncManager.prototype.fetchPublicRssFallback = function () {
               }
 
               var imgUrl = mediaMatch ? mediaMatch[1] : '';
-              if (state.config.apenasComFoto && !imgUrl) continue;
+              if (initialState.config.apenasComFoto && !imgUrl) continue;
 
               feedList.push({
                 id: 'rss-' + temaId + '-' + feedList.length + '-' + new Date().getTime(),
@@ -891,7 +915,7 @@ VidaModernaSyncManager.prototype.fetchPublicRssFallback = function () {
                   if (m && m[1]) img = m[1];
                 }
 
-                if (state.config.apenasComFoto && !img) continue;
+                if (initialState.config.apenasComFoto && !img) continue;
 
                 feedList.push({
                   id: 'rss-' + temaId + '-' + feedList.length + '-' + new Date().getTime(),
@@ -919,6 +943,13 @@ VidaModernaSyncManager.prototype.fetchPublicRssFallback = function () {
 
 VidaModernaSyncManager.prototype.startAutoSyncDaemon = function () {
   var self = this;
+
+  // Se estiver dentro do iframe de preview do Painel Admin, não roda polling concorrente (recebe estado direto do Admin)
+  if (window.self !== window.top) {
+    self.notifyStatus('online', 'Preview Ao Vivo');
+    return;
+  }
+
   window.triggerWifiSync = function () {
     self.notifyStatus('syncing', 'Wi-Fi Conectado...');
     self.syncFromServer(true);
@@ -935,7 +966,7 @@ VidaModernaSyncManager.prototype.startAutoSyncDaemon = function () {
     self.notifyStatus('offline', 'Offline (Cache Local)');
   });
 
-  this.syncFromServer(true);
+  this.syncFromServer(false);
 
   if (this.autoSyncTimer) clearInterval(this.autoSyncTimer);
   this.autoSyncTimer = setInterval(function () {

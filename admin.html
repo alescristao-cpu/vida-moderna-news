@@ -7,7 +7,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
-  <link rel="stylesheet" href="css/admin.css?v=5">
+  <link rel="stylesheet" href="css/admin.css?v=6">
 </head>
 <body>
   <header class="admin-header">
@@ -19,9 +19,8 @@
       </div>
     </div>
     <div class="header-actions">
-      <a href="VidaModernaNews.apk" download="VidaModernaNews.apk" class="btn btn-warning">📲 Baixar APK (Aquarius STV-Plus)</a>
-      <button id="btn-sync-now" class="btn btn-success">🔄 Sincronizar Aparelhos / RSS</button>
-      <a href="index.html" target="_blank" class="btn btn-outline">📺 Abrir Tela Player (1280x720)</a>
+      <button id="btn-sync-now" class="btn btn-success">🔄 Sincronizar Player na Nuvem</button>
+      <a href="index.html" target="_blank" class="btn btn-outline">📺 Abrir Página do Player (1280x720)</a>
     </div>
   </header>
 
@@ -461,7 +460,7 @@
           <p class="subtitle">Veja exatamente como a tela está sendo exibida no aparelho Android:</p>
 
           <div id="preview-wrapper" class="preview-frame-wrapper">
-            <iframe id="preview-iframe" src="index.html?v=5" title="Preview 1280x720 Vida Moderna News"></iframe>
+            <iframe id="preview-iframe" src="index.html?v=6" title="Preview 1280x720 Vida Moderna News"></iframe>
           </div>
 
           <div class="dimension-diagram">
@@ -485,7 +484,7 @@
         if (window.caches && window.caches.keys) {
           window.caches.keys().then(function(keys) {
             for (var i = 0; i < keys.length; i++) {
-              if (keys[i].indexOf('v5') === -1) {
+              if (keys[i].indexOf('v6') === -1) {
                 window.caches.delete(keys[i]);
               }
             }
@@ -501,8 +500,8 @@
       } catch (e) {}
     })();
   </script>
-  <script src="js/cloud-config.js?v=5"></script>
-  <script src="js/db.js?v=5"></script>
-  <script src="js/admin.js?v=5"></script>
+  <script src="js/cloud-config.js?v=6"></script>
+  <script src="js/db.js?v=6"></script>
+  <script src="js/admin.js?v=6"></script>
 </body>
 </html>

@@ -447,11 +447,15 @@
       btnDel.textContent = 'Remover';
       btnDel.onclick = async () => {
         if (editingNoticiaId === n.id) cancelEditNoticia();
+        if (!Array.isArray(state.noticiasExcluidas)) state.noticiasExcluidas = [];
+        if (n.id) state.noticiasExcluidas.push(n.id);
+        if (n.titulo) state.noticiasExcluidas.push(n.titulo);
+        if (n.tituloOriginal) state.noticiasExcluidas.push(n.tituloOriginal);
         state.noticias = state.noticias.filter((item) => item.id !== n.id);
         await window.falaSync.pushStateToServer(state, false);
         renderNoticias();
         renderFilterStats();
-        showToast('Notícia removida!');
+        showToast('Notícia removida e sincronizada no Player!');
       };
 
       actions.appendChild(btnEdit);
@@ -491,6 +495,8 @@
             fonte: fonteVal,
             corBarra: corVal,
             titulo: titulo,
+            tituloOriginal: n.tituloOriginal || n.titulo,
+            editada: true,
             imagemUrl: uploadedImgUrl || n.imagemUrl || 'assets/news-bg-default.svg'
           };
         }
@@ -499,7 +505,7 @@
       await window.falaSync.pushStateToServer(state, false);
       cancelEditNoticia();
       renderNoticias();
-      showToast('Notícia editada e sincronizada na nuvem!');
+      showToast('Notícia editada e sincronizada no Player!');
       return;
     }
 
@@ -508,6 +514,8 @@
       fonte: fonteVal,
       corBarra: corVal,
       titulo: titulo,
+      custom: true,
+      editada: true,
       imagemUrl: uploadedImgUrl || 'assets/news-bg-default.svg',
       publicadoEm: new Date().toISOString(),
       ativo: true
@@ -518,7 +526,7 @@
     cancelEditNoticia();
     renderNoticias();
     renderFilterStats();
-    showToast('Notícia adicionada à programação 1280x520px!');
+    showToast('Notícia adicionada e sincronizada no Player!');
   });
 
   /**
@@ -971,26 +979,42 @@
     showToast('Configurações do Vida Moderna News salvas!');
   });
 
+  function notifyPreviewIframe(currentSt) {
+    try {
+      if (previewIframe && previewIframe.contentWindow) {
+        previewIframe.contentWindow.postMessage({
+          type: 'VIDAMODERNA_STATE',
+          state: currentSt
+        }, '*');
+      }
+    } catch (e) {}
+  }
+
   document.getElementById('btn-sync-now').addEventListener('click', async () => {
-    await window.falaSync.syncFromServer(true);
+    const btn = document.getElementById('btn-sync-now');
+    btn.textContent = '⏳ Sincronizando Player...';
+    await window.falaSync.pushStateToServer(state, false);
     state = window.falaSync.getLocalState();
+    notifyPreviewIframe(state);
     renderRecados();
     renderThemesSelector();
     renderMidias();
     renderNoticias();
     loadConfigForm();
-    showToast('Sincronização automática concluída!');
+    btn.textContent = '🔄 Sincronizar Player na Nuvem';
+    showToast('Página do Player sincronizada na nuvem com sucesso!');
   });
 
   window.falaSync.onStateChange((newState) => {
     state = newState;
+    notifyPreviewIframe(state);
     renderRecados();
     renderThemesSelector();
     renderMidias();
     renderNoticias();
   });
 
-  // Inicializa telas e já dispara sincronização automática de notícias na abertura
+  // Inicializa telas e busca o estado mais recente salvo no Supabase
   renderRecados();
   renderThemesSelector();
   renderMidias();
@@ -998,5 +1022,15 @@
   loadConfigForm();
   renderCartelaGeneratorPreview();
 
-  window.falaSync.syncFromServer(true);
+  window.falaSync.syncFromServer(false).then((res) => {
+    if (res && res.state) {
+      state = res.state;
+      notifyPreviewIframe(state);
+      renderRecados();
+      renderThemesSelector();
+      renderMidias();
+      renderNoticias();
+      loadConfigForm();
+    }
+  });
 })();

@@ -1,5 +1,5 @@
-// Service Worker Network-First (Limpa caches antigos para garantir atualização imediata pelo Supabase)
-var APP_CACHE = 'vidamoderna-shell-v5';
+// Service Worker Network-First (Limpa caches antigos e atualiza abas abertas automaticamente)
+var APP_CACHE = 'vidamoderna-shell-v6';
 
 self.addEventListener('install', function (event) {
   self.skipWaiting();
@@ -17,6 +17,15 @@ self.addEventListener('activate', function (event) {
       );
     }).then(function () {
       return self.clients.claim();
+    }).then(function () {
+      return self.clients.matchAll({ type: 'window' }).then(function (windowClients) {
+        for (var i = 0; i < windowClients.length; i++) {
+          var client = windowClients[i];
+          if (client.url && client.navigate) {
+            client.navigate(client.url);
+          }
+        }
+      });
     })
   );
 });
