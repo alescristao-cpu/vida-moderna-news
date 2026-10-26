@@ -415,9 +415,17 @@
     var recado = activeRecados[currentRecadoIndex];
 
     var applyRecadoContent = function () {
+      var textoStr = recado.texto || '';
       noticeBadgeEl.textContent = recado.titulo || 'INFORMAÇÕES DO CONDOMÍNIO';
       noticeBadgeEl.style.backgroundColor = recado.corEtiqueta || '#2a5e35';
-      noticeTextEl.textContent = recado.texto || '';
+      noticeTextEl.textContent = textoStr;
+      if (textoStr.length > 180) {
+        noticeTextEl.style.fontSize = '21px';
+      } else if (textoStr.length > 135) {
+        noticeTextEl.style.fontSize = '23px';
+      } else {
+        noticeTextEl.style.fontSize = '25px';
+      }
       renderNoticeDots();
       noticeTextEl.className = '';
     };
