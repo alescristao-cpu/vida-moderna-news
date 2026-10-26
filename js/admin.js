@@ -447,16 +447,25 @@
   });
 
   /**
-   * 2. SELETOR DE TEMAS DE INTERESSE + FILTRO DE CLASSIFICAÇÃO FAMILIAR + EDIÇÃO DE NOTÍCIAS
+   * 2. SELETOR DE TEMAS DE INTERESSE + BUSCA DE ASSUNTOS + FILA DE APROVAÇÃO + EDIÇÃO DE NOTÍCIAS
    */
   const themesGridEl = document.getElementById('themes-selector-grid');
+  const selectModoAprovacao = document.getElementById('select-modo-aprovacao');
+  const selectFonteBusca = document.getElementById('select-fonte-busca');
   const inputTemaPersonalizado = document.getElementById('input-tema-personalizado');
+  const btnSearchSubjectApprove = document.getElementById('btn-search-subject-approve');
+  const btnSearchSubjectAuto = document.getElementById('btn-search-subject-auto');
+  const btnFetchThemesToApprove = document.getElementById('btn-fetch-themes-to-approve');
   const inputLimiteNoticias = document.getElementById('input-limite-noticias');
   const selectFiltroFamiliar = document.getElementById('select-filtro-familiar');
   const inputPalavrasBloqueadas = document.getElementById('input-palavras-bloqueadas');
   const checkApenasFoto = document.getElementById('check-apenas-foto');
   const familyFilterStatsEl = document.getElementById('family-filter-stats');
   const btnSaveThemesAndFetch = document.getElementById('btn-save-themes-and-fetch');
+  const listaNoticiasPendentesEl = document.getElementById('lista-noticias-pendentes');
+  const badgeCountPendentes = document.getElementById('badge-count-pendentes');
+  const btnApproveAllNoticias = document.getElementById('btn-approve-all-noticias');
+  const btnClearPendentes = document.getElementById('btn-clear-pendentes');
   const listaNoticiasEl = document.getElementById('lista-noticias');
   const formNoticia = document.getElementById('form-noticia');
   const headingFormNoticia = document.getElementById('heading-form-noticia');
@@ -530,6 +539,7 @@
       themesGridEl.appendChild(label);
     });
 
+    if (selectModoAprovacao) selectModoAprovacao.value = state.config?.modoAprovacaoNoticias || 'manual';
     if (inputTemaPersonalizado) inputTemaPersonalizado.value = state.config?.temaPersonalizado || '';
     if (inputLimiteNoticias) inputLimiteNoticias.value = String(state.config?.limiteNoticias || 10);
     if (selectFiltroFamiliar) selectFiltroFamiliar.value = state.config?.filtroFamiliarNivel || 'rigoroso';
@@ -539,10 +549,93 @@
     renderFilterStats();
   }
 
+  if (selectModoAprovacao) {
+    selectModoAprovacao.addEventListener('change', async () => {
+      state.config = {
+        ...state.config,
+        modoAprovacaoNoticias: selectModoAprovacao.value
+      };
+      await window.falaSync.pushStateToServer(state, false);
+      showToast(
+        selectModoAprovacao.value === 'automatico'
+          ? '⚡ Modo Automático ativado: buscas irão direto para o Player!'
+          : '🛡️ Modo com Aprovação ativado: você escolhe o que vai para o Player!'
+      );
+    });
+  }
+
+  // Chips rápidos de sugestão de assunto
+  document.querySelectorAll('.subject-chip-btn').forEach((chipBtn) => {
+    chipBtn.addEventListener('click', async () => {
+      const assunto = chipBtn.getAttribute('data-assunto') || '';
+      if (!assunto) return;
+      if (inputTemaPersonalizado) inputTemaPersonalizado.value = assunto;
+      const toPending = (selectModoAprovacao ? selectModoAprovacao.value : 'manual') !== 'automatico';
+      await executeSubjectSearch(assunto, toPending);
+    });
+  });
+
+  async function executeSubjectSearch(assuntoOverride, toPendingQueue) {
+    const assunto = (assuntoOverride !== undefined ? assuntoOverride : (inputTemaPersonalizado ? inputTemaPersonalizado.value : '')).trim();
+    if (!assunto) {
+      showToast('Digite ou clique em um assunto para buscar!');
+      if (inputTemaPersonalizado) inputTemaPersonalizado.focus();
+      return;
+    }
+
+    const fontePref = selectFonteBusca ? selectFonteBusca.value : 'todas';
+    const targetBtn = toPendingQueue ? btnSearchSubjectApprove : btnSearchSubjectAuto;
+    const origText = targetBtn ? targetBtn.textContent : '';
+    if (targetBtn) targetBtn.textContent = `⏳ Buscando "${assunto}"...`;
+
+    // Atualiza configs de filtro antes da busca
+    state.config = {
+      ...state.config,
+      modoAprovacaoNoticias: selectModoAprovacao ? selectModoAprovacao.value : 'manual',
+      temaPersonalizado: assunto,
+      limiteNoticias: Number(inputLimiteNoticias?.value) || 10,
+      filtroFamiliarNivel: selectFiltroFamiliar?.value || 'rigoroso',
+      palavrasBloqueadas: inputPalavrasBloqueadas?.value.trim() || '',
+      apenasComFoto: checkApenasFoto ? checkApenasFoto.checked : true
+    };
+    window.falaSync.saveLocalState(state);
+
+    const res = await window.falaSync.searchNewsByAssunto(assunto, fontePref, toPendingQueue);
+    state = window.falaSync.getLocalState();
+
+    // Salva também na nuvem se foi automático ou para persistir a fila pendente
+    await window.falaSync.pushStateToServer(state, false);
+
+    renderFilterStats();
+    renderNoticiasPendentes();
+    renderNoticias();
+    if (targetBtn) targetBtn.textContent = origText;
+
+    if (res && res.items && res.items.length > 0) {
+      if (toPendingQueue) {
+        showToast(`🔍 ${res.items.length} notícia(s) sobre "${assunto}" na fila para você aprovar!`);
+        const cardPend = document.getElementById('card-noticias-pendentes');
+        if (cardPend) cardPend.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } else {
+        showToast(`⚡ ${res.items.length} notícia(s) sobre "${assunto}" publicadas direto no Player!`);
+      }
+    } else {
+      showToast(`Nenhuma notícia nova encontrada para "${assunto}". Tente outro termo ou fonte.`);
+    }
+  }
+
+  if (btnSearchSubjectApprove) {
+    btnSearchSubjectApprove.addEventListener('click', () => executeSubjectSearch(undefined, true));
+  }
+  if (btnSearchSubjectAuto) {
+    btnSearchSubjectAuto.addEventListener('click', () => executeSubjectSearch(undefined, false));
+  }
+
   function renderFilterStats() {
     if (!familyFilterStatsEl) return;
     const stats = state.config?.ultimoFiltroStats || {};
     const temasAtivos = (state.config?.rssTemas || []).length;
+    const pendentesCount = (state.noticiasPendentes || []).length;
     const nivelLabel = state.config?.filtroFamiliarNivel === 'rigoroso'
       ? 'Rigoroso (Livre p/ Família e Crianças)'
       : state.config?.filtroFamiliarNivel === 'moderado'
@@ -554,15 +647,17 @@
       <span>•</span>
       <span><strong>Classificação:</strong> ${nivelLabel}</span>
       <span>•</span>
-      <span><strong>Notícias Analisadas:</strong> ${stats.analisadas || 0}</span>
+      <span><strong>Analisadas:</strong> ${stats.analisadas || 0}</span>
       <span>•</span>
-      <span style="color:#dc2626; font-weight:700;">🚫 Bloqueadas pelo Filtro Familiar: ${stats.bloqueadas || 0}</span>
+      <span style="color:#dc2626; font-weight:700;">🚫 Bloqueadas: ${stats.bloqueadas || 0}</span>
       <span>•</span>
-      <span style="color:#16a34a; font-weight:700;">✅ Aprovadas em Exibição: ${(state.noticias || []).length}</span>
+      <span style="color:#0284c7; font-weight:700;">🕒 Aguardando Aprovação: ${pendentesCount}</span>
+      <span>•</span>
+      <span style="color:#16a34a; font-weight:700;">✅ No Player: ${(state.noticias || []).length}</span>
     `;
   }
 
-  async function saveThemesAndTriggerAutoFetch() {
+  async function saveThemesAndTriggerFetch(toPendingQueue) {
     const checkedBoxes = themesGridEl.querySelectorAll('input[type="checkbox"]:checked');
     const selectedThemes = Array.from(checkedBoxes).map((cb) => cb.value);
 
@@ -571,10 +666,13 @@
       return;
     }
 
-    btnSaveThemesAndFetch.textContent = '⏳ Buscando notícias seguras pelos temas escolhidos...';
+    const btnTarget = toPendingQueue ? btnFetchThemesToApprove : btnSaveThemesAndFetch;
+    const origText = btnTarget ? btnTarget.textContent : '';
+    if (btnTarget) btnTarget.textContent = '⏳ Buscando notícias dos temas selecionados...';
 
     state.config = {
       ...state.config,
+      modoAprovacaoNoticias: selectModoAprovacao ? selectModoAprovacao.value : 'manual',
       rssTemas: selectedThemes,
       temaPersonalizado: inputTemaPersonalizado.value.trim(),
       limiteNoticias: Number(inputLimiteNoticias.value) || 10,
@@ -582,22 +680,161 @@
       palavrasBloqueadas: inputPalavrasBloqueadas.value.trim(),
       apenasComFoto: checkApenasFoto.checked
     };
+    window.falaSync.saveLocalState(state);
 
-    const result = await window.falaSync.pushStateToServer(state, true);
-    if (result && result.state) {
-      state = result.state;
-    } else {
-      state = window.falaSync.getLocalState();
-    }
+    await window.falaSync.fetchPublicRssFallback(toPendingQueue);
+    state = window.falaSync.getLocalState();
+    await window.falaSync.pushStateToServer(state, false);
 
     renderFilterStats();
+    renderNoticiasPendentes();
     renderNoticias();
-    btnSaveThemesAndFetch.textContent = '✅ Salvar Temas & Buscar Notícias Agora';
-    showToast('Notícias atualizadas sob seu comando!');
+    if (btnTarget) btnTarget.textContent = origText;
+
+    if (toPendingQueue) {
+      showToast('🔍 Notícias carregadas na Fila de Aprovação! Escolha quais aprovar.');
+      const cardPend = document.getElementById('card-noticias-pendentes');
+      if (cardPend) cardPend.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else {
+      showToast('⚡ Notícias atualizadas e enviadas direto para o Player!');
+    }
+  }
+
+  if (btnFetchThemesToApprove) {
+    btnFetchThemesToApprove.addEventListener('click', () => saveThemesAndTriggerFetch(true));
   }
 
   if (btnSaveThemesAndFetch) {
-    btnSaveThemesAndFetch.addEventListener('click', saveThemesAndTriggerAutoFetch);
+    btnSaveThemesAndFetch.addEventListener('click', () => saveThemesAndTriggerFetch(false));
+  }
+
+  function renderNoticiasPendentes() {
+    if (!listaNoticiasPendentesEl) return;
+    listaNoticiasPendentesEl.innerHTML = '';
+    const pendentes = Array.isArray(state.noticiasPendentes) ? state.noticiasPendentes : [];
+
+    if (badgeCountPendentes) {
+      badgeCountPendentes.textContent = `${pendentes.length} aguardando`;
+    }
+
+    if (pendentes.length === 0) {
+      listaNoticiasPendentesEl.innerHTML =
+        '<p style="color:#64748b; font-size:13px; margin:0;">Nenhuma notícia aguardando aprovação no momento. Use a <strong>Busca por Assunto</strong> acima ou clique em <strong>"Buscar nos Temas Marcados (Enviar p/ Fila de Aprovação)"</strong> para escolher notícias antes de publicar.</p>';
+      return;
+    }
+
+    pendentes.forEach((n) => {
+      const div = document.createElement('div');
+      div.className = 'list-item';
+      div.style.borderLeft = '4px solid #0284c7';
+      div.style.background = '#fff';
+
+      const img = document.createElement('img');
+      img.className = 'item-thumb';
+      img.src = n.imagemUrl || 'assets/news-bg-default.svg';
+      img.onerror = () => { img.src = 'assets/news-bg-default.svg'; };
+
+      const content = document.createElement('div');
+      content.className = 'item-content';
+      content.innerHTML = `
+        <span class="item-badge" style="background:${n.corBarra || '#0284c7'}">${n.fonte || 'BUSCA'}</span>
+        <span class="item-badge" style="background:#e0f2fe; color:#0369a1;">🕒 Aguardando Sua Aprovação</span>
+        <div class="item-title">${n.titulo}</div>
+      `;
+
+      const actions = document.createElement('div');
+      actions.className = 'item-actions';
+
+      const btnApprove = document.createElement('button');
+      btnApprove.className = 'btn btn-sm btn-success';
+      btnApprove.textContent = '✅ Aprovar p/ Player';
+      btnApprove.onclick = async () => {
+        if (!Array.isArray(state.noticias)) state.noticias = [];
+        const approvedItem = { ...n, ativo: true };
+        state.noticias.unshift(approvedItem);
+        state.noticiasPendentes = (state.noticiasPendentes || []).filter((item) => item.id !== n.id);
+        await window.falaSync.pushStateToServer(state, false);
+        renderNoticiasPendentes();
+        renderNoticias();
+        renderFilterStats();
+        showToast('✅ Notícia aprovada e publicada no Player!');
+      };
+
+      const btnEditApprove = document.createElement('button');
+      btnEditApprove.className = 'btn btn-sm btn-primary';
+      btnEditApprove.textContent = '✏️ Editar e Aprovar';
+      btnEditApprove.onclick = async () => {
+        if (!Array.isArray(state.noticias)) state.noticias = [];
+        const approvedItem = { ...n, ativo: true };
+        state.noticias.unshift(approvedItem);
+        state.noticiasPendentes = (state.noticiasPendentes || []).filter((item) => item.id !== n.id);
+        await window.falaSync.pushStateToServer(state, false);
+        renderNoticiasPendentes();
+        renderNoticias();
+        renderFilterStats();
+        startEditNoticia(approvedItem);
+      };
+
+      const btnReject = document.createElement('button');
+      btnReject.className = 'btn btn-sm btn-danger';
+      btnReject.textContent = '❌ Recusar';
+      btnReject.onclick = async () => {
+        if (!Array.isArray(state.noticiasExcluidas)) state.noticiasExcluidas = [];
+        if (n.id) state.noticiasExcluidas.push(n.id);
+        if (n.titulo) state.noticiasExcluidas.push(n.titulo);
+        state.noticiasPendentes = (state.noticiasPendentes || []).filter((item) => item.id !== n.id);
+        await window.falaSync.pushStateToServer(state, false);
+        renderNoticiasPendentes();
+        renderFilterStats();
+        showToast('Notícia descartada da fila.');
+      };
+
+      actions.appendChild(btnApprove);
+      actions.appendChild(btnEditApprove);
+      actions.appendChild(btnReject);
+      div.appendChild(img);
+      div.appendChild(content);
+      div.appendChild(actions);
+      listaNoticiasPendentesEl.appendChild(div);
+    });
+  }
+
+  if (btnApproveAllNoticias) {
+    btnApproveAllNoticias.addEventListener('click', async () => {
+      const pendentes = Array.isArray(state.noticiasPendentes) ? state.noticiasPendentes : [];
+      if (pendentes.length === 0) {
+        showToast('Não há notícias pendentes na fila.');
+        return;
+      }
+      if (!Array.isArray(state.noticias)) state.noticias = [];
+      const existingTitles = new Set(state.noticias.map((i) => (i.titulo || '').toLowerCase().trim()));
+      let count = 0;
+      pendentes.forEach((n) => {
+        const key = (n.titulo || '').toLowerCase().trim();
+        if (!existingTitles.has(key)) {
+          state.noticias.unshift({ ...n, ativo: true });
+          existingTitles.add(key);
+          count++;
+        }
+      });
+      state.noticiasPendentes = [];
+      await window.falaSync.pushStateToServer(state, false);
+      renderNoticiasPendentes();
+      renderNoticias();
+      renderFilterStats();
+      showToast(`✅ ${count} notícia(s) aprovada(s) e enviada(s) para o Player!`);
+    });
+  }
+
+  if (btnClearPendentes) {
+    btnClearPendentes.addEventListener('click', async () => {
+      if (!state.noticiasPendentes || state.noticiasPendentes.length === 0) return;
+      state.noticiasPendentes = [];
+      await window.falaSync.pushStateToServer(state, false);
+      renderNoticiasPendentes();
+      renderFilterStats();
+      showToast('Fila de aprovação limpa!');
+    });
   }
 
   function renderNoticias() {
@@ -1201,6 +1438,7 @@
     renderRecados();
     renderThemesSelector();
     renderMidias();
+    renderNoticiasPendentes();
     renderNoticias();
     loadConfigForm();
     btn.textContent = '🔄 Sincronizar Player na Nuvem';
@@ -1213,6 +1451,7 @@
     renderRecados();
     renderThemesSelector();
     renderMidias();
+    renderNoticiasPendentes();
     renderNoticias();
   });
 
@@ -1221,6 +1460,7 @@
   renderRecados();
   renderThemesSelector();
   renderMidias();
+  renderNoticiasPendentes();
   renderNoticias();
   loadConfigForm();
   renderCartelaGeneratorPreview();
@@ -1233,6 +1473,7 @@
       renderRecados();
       renderThemesSelector();
       renderMidias();
+      renderNoticiasPendentes();
       renderNoticias();
       loadConfigForm();
     }

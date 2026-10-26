@@ -7,13 +7,13 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
-  <link rel="stylesheet" href="css/admin.css?v=8">
+  <link rel="stylesheet" href="css/admin.css?v=9">
 </head>
 <body class="locked-admin">
   <!-- TELA DE BLOQUEIO COM SENHA CRIPTOGRAFADA (SHA-256) -->
   <div id="admin-auth-overlay" role="dialog" aria-modal="true">
     <div class="auth-card">
-      <img src="assets/logo-modern-life.png" alt="Modern Life Residence">
+      <img src="assets/logo-modern-life.png?v=9" alt="Modern Life Residence" style="width:200px; height:auto; object-fit:contain;">
       <div>
         <span class="auth-badge-crypto">🔐 CRIPTOGRAFIA SHA-256 ATIVA</span>
       </div>
@@ -38,7 +38,7 @@
 
   <header class="admin-header">
     <div class="brand-area">
-      <img src="assets/logo-modern-life.png" alt="Modern Life Residence - Vida Moderna News">
+      <img src="assets/logo-modern-life.png?v=9" alt="Modern Life Residence - Vida Moderna News">
       <div>
         <h1>Vida Moderna News — Central de Gestão & Mídia Indoor</h1>
         <p>Modern Life Residence • Busca Automática por Temas • Filtro Classificação Familiar • Tela 1280x720px</p>
@@ -118,15 +118,15 @@
         </div>
       </section>
 
-      <!-- ABA 2: NOTÍCIAS AUTOMÁTICAS POR TEMAS DE INTERESSE + FILTRO DE CLASSIFICAÇÃO FAMILIAR -->
+      <!-- ABA 2: NOTÍCIAS AUTOMÁTICAS, BUSCA POR ASSUNTO E OPÇÕES PARA APROVAR -->
       <section id="tab-noticias" class="tab-panel">
         <div class="card">
           <h2>
-            <span>🎯 Escolha os Temas de Interesse (Busca 100% Automática)</span>
+            <span>🎯 1. Escolha os Temas de Interesse & Modo de Exibição</span>
             <span class="family-badge-libre">🛡️ Classificação Familiar Ativa (Livre)</span>
           </h2>
           <p class="subtitle">
-            Selecione os assuntos que deseja exibir no elevador. O sistema busca automaticamente as últimas notícias na internet sempre que há Wi-Fi e aplica o <strong>Filtro de Classificação Familiar</strong> antes de exibir.
+            Você pode usar o <strong>Modo Automático</strong> (publica direto no Player) ou o <strong>Modo com Aprovação</strong> (busca as notícias pelos temas ou por assunto e mostra abaixo para você escolher quais aprovar).
           </p>
 
           <!-- Grade de Chips dos Temas de Interesse -->
@@ -134,16 +134,65 @@
 
           <div class="form-grid">
             <div class="form-group">
-              <label for="input-tema-personalizado">🔍 Tema ou Assunto Personalizado adicional (Opcional)</label>
-              <input type="text" id="input-tema-personalizado" placeholder="Ex: Arquitetura, Gastronomia, Esportes, Natal RN...">
+              <label for="select-modo-aprovacao">⚙️ Modo de Atualização das Notícias</label>
+              <select id="select-modo-aprovacao">
+                <option value="manual">✋ Com Aprovação Manual — Mostrar opções encontradas para eu escolher quais aprovar</option>
+                <option value="automatico">⚡ 100% Automático — Publicar direto na tela do Player ao buscar</option>
+              </select>
             </div>
             <div class="form-group">
-              <label for="input-limite-noticias">Quantidade de Notícias na Rotação Automática</label>
+              <label for="input-limite-noticias">Quantidade de Notícias na Rotação do Player</label>
               <select id="input-limite-noticias">
                 <option value="6">6 notícias (mais rápido)</option>
                 <option value="10" selected>10 notícias (equilibrado)</option>
                 <option value="15">15 notícias (maior variedade)</option>
               </select>
+            </div>
+          </div>
+
+          <!-- CENTRAL DE BUSCA POR ASSUNTO / PALAVRA-CHAVE -->
+          <div class="subject-search-box">
+            <strong style="color:#0f172a; font-size:15px;">🔍 2. Busca de Notícias por Assunto (Clique num assunto sugerido ou digite o seu)</strong>
+            <div style="font-size:12.5px; color:#475569; margin-top:2px;">
+              Clique em uma opção abaixo para buscar notícias desse assunto e escolher quais aprovar para o Player:
+            </div>
+
+            <div class="subject-chips-row">
+              <button type="button" class="subject-chip-btn" data-assunto="Gastronomia">🍽️ Gastronomia</button>
+              <button type="button" class="subject-chip-btn" data-assunto="Arquitetura">🏛️ Arquitetura & Decoração</button>
+              <button type="button" class="subject-chip-btn" data-assunto="Saúde">🏥 Saúde & Bem-Estar</button>
+              <button type="button" class="subject-chip-btn" data-assunto="Tecnologia">💻 Tecnologia & Inovação</button>
+              <button type="button" class="subject-chip-btn" data-assunto="Turismo">🌴 Turismo & Viagem</button>
+              <button type="button" class="subject-chip-btn" data-assunto="Economia">📈 Economia & Finanças</button>
+              <button type="button" class="subject-chip-btn" data-assunto="Esportes">⚽ Esportes</button>
+              <button type="button" class="subject-chip-btn" data-assunto="Meio Ambiente">🌱 Meio Ambiente</button>
+              <button type="button" class="subject-chip-btn" data-assunto="Educação">🎓 Educação & Ciência</button>
+              <button type="button" class="subject-chip-btn" data-assunto="Cultura">🎬 Cultura & Cinema</button>
+              <button type="button" class="subject-chip-btn" data-assunto="Rio Grande do Norte">☀️ Natal / RN</button>
+            </div>
+
+            <div class="form-grid" style="margin-bottom:10px;">
+              <div class="form-group" style="margin-bottom:0;">
+                <label for="input-tema-personalizado">🔍 Digite qualquer Assunto ou Palavra-Chave para Buscar</label>
+                <input type="text" id="input-tema-personalizado" placeholder="Ex: Arquitetura, Gastronomia, Condomínio, Esportes, Natal RN...">
+              </div>
+              <div class="form-group" style="margin-bottom:0;">
+                <label for="select-fonte-busca">🌐 Fonte de Busca de Notícias</label>
+                <select id="select-fonte-busca">
+                  <option value="todas">🌐 Todas as Fontes (Agência IBGE Fotos HD + Google News Brasil + G1)</option>
+                  <option value="ibge">🇧🇷 Agência IBGE Notícias (Oficial c/ Fotografias em Alta Resolução)</option>
+                  <option value="gnews">🔎 Google News Brasil (Busca Ampla por Assunto)</option>
+                </select>
+              </div>
+            </div>
+
+            <div style="display:flex; gap:10px; flex-wrap:wrap;">
+              <button type="button" id="btn-search-subject-approve" class="btn btn-warning">
+                🔎 Buscar Assunto & Mostrar Opções para Aprovar
+              </button>
+              <button type="button" id="btn-search-subject-auto" class="btn btn-success">
+                ⚡ Buscar Assunto & Publicar Direto no Player
+              </button>
             </div>
           </div>
 
@@ -180,15 +229,34 @@
             </label>
 
             <div id="family-filter-stats" class="filter-stats-bar">
-              <span><strong>Status:</strong> Busca Automática Ativa</span>
+              <span><strong>Status:</strong> Busca Pronta</span>
             </div>
           </div>
 
           <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            <button type="button" id="btn-fetch-themes-to-approve" class="btn btn-warning">
+              📋 Buscar pelos Temas Selecionados & Mostrar Opções p/ Aprovar
+            </button>
             <button type="button" id="btn-save-themes-and-fetch" class="btn btn-primary">
-              ✅ Salvar Temas & Atualizar Notícias Automaticamente
+              ⚡ Buscar pelos Temas & Publicar Automaticamente no Player
             </button>
           </div>
+        </div>
+
+        <!-- FILA DE OPÇÕES ENCONTRADAS AGUARDANDO APROVAÇÃO -->
+        <div class="card pending-approval-card" id="card-noticias-pendentes">
+          <h2>
+            <span>⏳ 3. Opções Encontradas para Você Aprovar</span>
+            <span class="family-badge-libre" id="badge-count-pendentes" style="background:#d97706;">0 opções</span>
+          </h2>
+          <p class="subtitle" style="color:#78350f;">
+            Revise as notícias encontradas abaixo e clique em <strong>✅ Aprovar p/ o Player</strong> nas que desejar exibir no elevador (ou <strong>✏️ Editar e Aprovar</strong> para ajustar o título antes).
+          </p>
+          <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:14px;">
+            <button type="button" id="btn-approve-all-noticias" class="btn btn-success btn-sm">✅ Aprovar Todas da Lista p/ o Player</button>
+            <button type="button" id="btn-clear-pendentes" class="btn btn-danger btn-sm">🗑️ Limpar Lista de Opções</button>
+          </div>
+          <div id="lista-noticias-pendentes" class="item-list"></div>
         </div>
 
         <div class="card" id="card-form-noticia">
@@ -229,7 +297,7 @@
         </div>
 
         <div class="card">
-          <h2>Notícias Aprovadas pelo Filtro Familiar (Em Exibição no Player)</h2>
+          <h2>✅ 4. Notícias Aprovadas (Em Exibição no Player)</h2>
           <p class="subtitle">Você pode editar o título, a fonte, a foto, pausar ou remover qualquer notícia abaixo.</p>
           <div id="lista-noticias" class="item-list"></div>
         </div>
@@ -499,7 +567,7 @@
           <p class="subtitle">Veja exatamente como a tela está sendo exibida no aparelho Android:</p>
 
           <div id="preview-wrapper" class="preview-frame-wrapper">
-            <iframe id="preview-iframe" src="index.html?v=8" title="Preview 1280x720 Vida Moderna News"></iframe>
+            <iframe id="preview-iframe" src="index.html?v=9" title="Preview 1280x720 Vida Moderna News"></iframe>
           </div>
 
           <div class="dimension-diagram">
@@ -517,8 +585,8 @@
 
   <div id="toast" class="toast-notification">Alterações salvas e sincronizadas!</div>
 
-  <script src="js/cloud-config.js?v=8"></script>
-  <script src="js/db.js?v=8"></script>
-  <script src="js/admin.js?v=8"></script>
+  <script src="js/cloud-config.js?v=9"></script>
+  <script src="js/db.js?v=9"></script>
+  <script src="js/admin.js?v=9"></script>
 </body>
 </html>

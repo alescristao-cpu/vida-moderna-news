@@ -333,10 +333,13 @@ body.hide-cursor * {
 }
 
 #brand-logo {
-  width: 116px;
-  height: 116px;
+  width: 210px;
+  height: auto;
+  max-height: 112px;
+  object-fit: contain;
   display: block;
-  margin: 2px auto 0 auto;
+  margin: 4px auto 0 auto;
+  border-radius: 6px;
   border: 0;
 }
 
@@ -346,7 +349,7 @@ body.hide-cursor * {
   font-weight: 800;
   color: #2a5e35;
   letter-spacing: 0.2px;
-  margin-top: 4px;
+  margin-top: 6px;
   text-align: center;
 }
 
