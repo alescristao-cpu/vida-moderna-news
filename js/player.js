@@ -13,6 +13,7 @@
   var noticeTextEl = document.getElementById('notice-text');
   var noticeDotsEl = document.getElementById('notice-dots');
   var brandPhoneEl = document.getElementById('brand-phone');
+  var brandDateTimeEl = document.getElementById('brand-datetime');
   var brandColumnEl = document.getElementById('brand-column');
 
   var wifiDotEl = document.getElementById('wifi-dot');
@@ -564,6 +565,26 @@
     enterPresentationFullscreen();
     deviceModalEl.className = 'hidden';
   });
+
+  function pad2(num) {
+    return num < 10 ? '0' + num : String(num);
+  }
+
+  function updateBrandDateTime() {
+    if (!brandDateTimeEl) return;
+    var now = new Date();
+    var dias = ['DOM', 'SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SÁB'];
+    var diaSemana = dias[now.getDay()] || '';
+    var dia = pad2(now.getDate());
+    var mes = pad2(now.getMonth() + 1);
+    var ano = now.getFullYear();
+    var horas = pad2(now.getHours());
+    var minutos = pad2(now.getMinutes());
+    brandDateTimeEl.textContent = diaSemana + ', ' + dia + '/' + mes + '/' + ano + ' • ' + horas + ':' + minutos;
+  }
+
+  updateBrandDateTime();
+  setInterval(updateBrandDateTime, 1000);
 
   if (currentState.config && currentState.config.telefoneSuporte) {
     brandPhoneEl.textContent = currentState.config.telefoneSuporte;
