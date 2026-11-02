@@ -357,6 +357,22 @@
               </div>
             </div>
 
+            <div class="form-grid" style="background:#f8fafc; border:1px solid #cbd5e1; border-radius:8px; padding:12px; margin-bottom:14px;">
+              <div class="form-group" style="margin-bottom:0;">
+                <label for="midia-data-inicio">📅 Data Inicial de Exibição (Opcional)</label>
+                <input type="date" id="midia-data-inicio">
+              </div>
+              <div class="form-group" style="margin-bottom:0;">
+                <label for="midia-data-fim">📅 Data Final de Exibição (Opcional)</label>
+                <input type="date" id="midia-data-fim">
+              </div>
+              <div class="form-group" style="margin-bottom:0; display:flex; flex-direction:column; justify-content:end;">
+                <span style="font-size:12px; color:#475569; line-height:1.4;">
+                  💡 <strong>Agendamento Automático:</strong> Se preenchido, o Player só exibe esta cartela entre a Data Inicial e a Data Final. Deixe em branco para exibição contínua.
+                </span>
+              </div>
+            </div>
+
             <div style="display:flex; gap:10px; flex-wrap:wrap;">
               <button type="submit" id="btn-submit-midia" class="btn btn-primary">📤 Publicar Cartela / Vídeo (1280x520px)</button>
               <button type="button" id="btn-cancel-midia" class="btn btn-danger" style="display:none;">✖ Cancelar Edição</button>
@@ -366,7 +382,7 @@
 
         <div class="card">
           <h2>Grade de Cartelas & Vídeos (1280x520px)</h2>
-          <p class="subtitle">Edite, pause, ative ou exclua itens exibidos na parte superior (1280x520px) da tela do elevador.</p>
+          <p class="subtitle">Edite, agende data inicial/final, pause, ative ou exclua itens exibidos na parte superior (1280x520px) da tela do elevador.</p>
           <div id="lista-midias" class="item-list"></div>
         </div>
       </section>
@@ -417,6 +433,22 @@
               <div class="form-group">
                 <label for="gen-endereco">Endereço / Localização</label>
                 <input type="text" id="gen-endereco" value="Modern Life Residence - Administração">
+              </div>
+            </div>
+
+            <div class="form-grid" style="background:#f8fafc; border:1px solid #cbd5e1; border-radius:8px; padding:12px; margin-bottom:14px;">
+              <div class="form-group" style="margin-bottom:0;">
+                <label for="gen-data-inicio">📅 Data Inicial de Exibição (Opcional)</label>
+                <input type="date" id="gen-data-inicio">
+              </div>
+              <div class="form-group" style="margin-bottom:0;">
+                <label for="gen-data-fim">📅 Data Final de Exibição (Opcional)</label>
+                <input type="date" id="gen-data-fim">
+              </div>
+              <div class="form-group" style="margin-bottom:0; display:flex; flex-direction:column; justify-content:end;">
+                <span style="font-size:12px; color:#475569; line-height:1.4;">
+                  💡 Defina o período de vigência da cartela ou deixe em branco para exibir continuamente.
+                </span>
               </div>
             </div>
 
@@ -620,7 +652,7 @@
           <p class="subtitle">Veja exatamente como a tela está sendo exibida no aparelho Android:</p>
 
           <div id="preview-wrapper" class="preview-frame-wrapper">
-            <iframe id="preview-iframe" src="index.html?v=12" title="Preview 1280x720 Vida Moderna News"></iframe>
+            <iframe id="preview-iframe" src="index.html?v=13" title="Preview 1280x720 Vida Moderna News"></iframe>
           </div>
 
           <div class="dimension-diagram">
@@ -638,8 +670,8 @@
 
   <div id="toast" class="toast-notification">Alterações salvas e sincronizadas!</div>
 
-  <script src="js/cloud-config.js?v=12"></script>
-  <script src="js/db.js?v=12"></script>
-  <script src="js/admin.js?v=12"></script>
+  <script src="js/cloud-config.js?v=13"></script>
+  <script src="js/db.js?v=13"></script>
+  <script src="js/admin.js?v=13"></script>
 </body>
 </html>

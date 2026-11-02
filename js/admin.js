@@ -979,12 +979,50 @@
   const cardFormMidia = document.getElementById('card-form-midia');
   let editingMidiaId = null;
 
+  function formatDateBr(isoDateStr) {
+    if (!isoDateStr || typeof isoDateStr !== 'string') return '';
+    const parts = isoDateStr.split('-');
+    if (parts.length !== 3) return isoDateStr;
+    return `${parts[2]}/${parts[1]}/${parts[0]}`;
+  }
+
+  function getTodayIsoStr() {
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = String(now.getMonth() + 1).padStart(2, '0');
+    const d = String(now.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  }
+
+  function getMidiaScheduleBadgeHtml(m) {
+    const ini = (m.dataInicio || '').trim();
+    const fim = (m.dataFim || '').trim();
+    if (!ini && !fim) {
+      return '<span class="item-badge" style="background:#475569;">♾️ Exibição Contínua</span>';
+    }
+    const today = getTodayIsoStr();
+    const iniBr = ini ? formatDateBr(ini) : 'Início livre';
+    const fimBr = fim ? formatDateBr(fim) : 'Sem data final';
+
+    if (ini && today < ini) {
+      return `<span class="item-badge" style="background:#0284c7;">⏳ Agendada (${iniBr} até ${fimBr})</span>`;
+    }
+    if (fim && today > fim) {
+      return `<span class="item-badge" style="background:#dc2626;">⌛ Expirada em ${fimBr}</span>`;
+    }
+    return `<span class="item-badge" style="background:#16a34a;">📅 Vigente (${iniBr} até ${fimBr})</span>`;
+  }
+
   function cancelEditMidia() {
     editingMidiaId = null;
     formMidia.reset();
     document.getElementById('midia-duracao').value = 15;
     document.getElementById('midia-assinatura').value = 5;
     document.getElementById('midia-condominio').value = 'TODOS';
+    const dtIniEl = document.getElementById('midia-data-inicio');
+    const dtFimEl = document.getElementById('midia-data-fim');
+    if (dtIniEl) dtIniEl.value = '';
+    if (dtFimEl) dtFimEl.value = '';
     if (headingFormMidia) headingFormMidia.textContent = 'Adicionar Cartela ou Vídeo Publicitário (1280x520px)';
     if (btnSubmitMidia) btnSubmitMidia.textContent = '📤 Publicar Cartela / Vídeo (1280x520px)';
     if (btnCancelMidia) btnCancelMidia.style.display = 'none';
@@ -1004,6 +1042,10 @@
     document.getElementById('midia-duracao').value = m.duracao || 15;
     document.getElementById('midia-assinatura').value = m.assinaturaSegundos || 5;
     document.getElementById('midia-condominio').value = m.condominio || 'TODOS';
+    const dtIniEl = document.getElementById('midia-data-inicio');
+    const dtFimEl = document.getElementById('midia-data-fim');
+    if (dtIniEl) dtIniEl.value = m.dataInicio || '';
+    if (dtFimEl) dtFimEl.value = m.dataFim || '';
     if (headingFormMidia) headingFormMidia.textContent = '✏️ Editando Cartela / Vídeo (1280x520px)';
     if (btnSubmitMidia) btnSubmitMidia.textContent = '💾 Salvar Alterações da Cartela / Vídeo';
     if (btnCancelMidia) btnCancelMidia.style.display = 'inline-flex';
@@ -1022,9 +1064,12 @@
       return;
     }
 
+    const today = getTodayIsoStr();
+
     midias.forEach((m) => {
+      const isExpired = m.dataFim && today > m.dataFim;
       const div = document.createElement('div');
-      div.className = 'list-item' + (m.ativo ? '' : ' inactive');
+      div.className = 'list-item' + ((m.ativo && !isExpired) ? '' : ' inactive');
 
       let thumbEl;
       if (m.tipo === 'video') {
@@ -1039,11 +1084,14 @@
         thumbEl.alt = m.titulo;
       }
 
+      const scheduleBadgeHtml = getMidiaScheduleBadgeHtml(m);
+
       const content = document.createElement('div');
       content.className = 'item-content';
       content.innerHTML = `
         <span class="item-badge">${m.tipo === 'video' ? 'VÍDEO 1280x520' : 'CARTELA 1280x520 (72dpi)'}</span>
         <span class="item-badge" style="background:#0f766e;">${m.duracao || 15}" (Assinatura: ${m.assinaturaSegundos || 5}")</span>
+        ${scheduleBadgeHtml}
         <div class="item-title">${m.titulo}</div>
         <div class="item-meta">Cliente: ${m.cliente || 'Não informado'} • Condomínio: ${m.condominio || 'TODOS'}</div>
       `;
@@ -1053,7 +1101,7 @@
 
       const btnEdit = document.createElement('button');
       btnEdit.className = 'btn btn-sm btn-primary';
-      btnEdit.textContent = '✏️ Editar';
+      btnEdit.textContent = '✏️ Editar / Datas';
       btnEdit.onclick = () => startEditMidia(m);
 
       const btnToggle = document.createElement('button');
@@ -1098,6 +1146,13 @@
     const duracaoVal = Number(document.getElementById('midia-duracao').value) || 15;
     const assinaturaVal = Number(document.getElementById('midia-assinatura').value) || 5;
     const condVal = document.getElementById('midia-condominio').value.trim().toUpperCase() || 'TODOS';
+    const dataInicioVal = (document.getElementById('midia-data-inicio')?.value || '').trim();
+    const dataFimVal = (document.getElementById('midia-data-fim')?.value || '').trim();
+
+    if (dataInicioVal && dataFimVal && dataFimVal < dataInicioVal) {
+      alert('Atenção: A Data Final não pode ser anterior à Data Inicial!');
+      return;
+    }
 
     let finalUrl = urlInput.value.trim();
 
@@ -1121,7 +1176,9 @@
             url: finalUrl || m.url,
             duracao: duracaoVal,
             assinaturaSegundos: assinaturaVal,
-            condominio: condVal
+            condominio: condVal,
+            dataInicio: dataInicioVal,
+            dataFim: dataFimVal
           };
         }
         return m;
@@ -1129,7 +1186,7 @@
       await window.falaSync.pushStateToServer(state, false);
       cancelEditMidia();
       renderMidias();
-      showToast('Cartela/Vídeo editado e sincronizado na nuvem!');
+      showToast('Cartela/Vídeo e datas atualizados na nuvem!');
       return;
     }
 
@@ -1148,6 +1205,8 @@
       assinaturaSegundos: assinaturaVal,
       dimensoes: '1280x520px (72dpi)',
       condominio: condVal,
+      dataInicio: dataInicioVal,
+      dataFim: dataFimVal,
       ativo: true,
       criadoEm: new Date().toISOString()
     };
@@ -1252,6 +1311,14 @@
 
   formGeradorCartela.addEventListener('submit', async (e) => {
     e.preventDefault();
+    const dataInicioVal = (document.getElementById('gen-data-inicio')?.value || '').trim();
+    const dataFimVal = (document.getElementById('gen-data-fim')?.value || '').trim();
+
+    if (dataInicioVal && dataFimVal && dataFimVal < dataInicioVal) {
+      alert('Atenção: A Data Final não pode ser anterior à Data Inicial!');
+      return;
+    }
+
     renderCartelaGeneratorPreview();
     const dataUrl = canvasCartela.toDataURL('image/png');
     const cliente = document.getElementById('gen-cliente').value.trim();
@@ -1267,6 +1334,8 @@
       assinaturaSegundos: 5,
       dimensoes: '1280x520px (72dpi)',
       condominio: 'TODOS',
+      dataInicio: dataInicioVal,
+      dataFim: dataFimVal,
       ativo: true,
       criadoEm: new Date().toISOString()
     };
@@ -1545,15 +1614,16 @@
       btnCreateCartela.className = 'btn btn-sm btn-warning';
       btnCreateCartela.textContent = '🖼️ Criar Cartela 1280x520';
       btnCreateCartela.onclick = () => {
-        document.getElementById('gen-categoria').value = tema.cartelaCategoria || tema.nome.toUpperCase();
-        document.getElementById('gen-titulo').value = tema.cartelaTitulo || tema.nome;
-        document.getElementById('gen-subtitulo').value = tema.cartelaSubtitulo || tema.recadoTexto;
-        document.getElementById('gen-cor1').value = tema.corSecundaria || '#14532d';
-        document.getElementById('gen-cor2').value = tema.corPrimaria || '#2a5e35';
+        const genCat = document.getElementById('gen-categoria');
+        const genProd = document.getElementById('gen-produto');
+        const genSite = document.getElementById('gen-site');
+        if (genCat) genCat.value = tema.cartelaCategoria || tema.nome.toUpperCase();
+        if (genProd) genProd.value = `${tema.cartelaTitulo || tema.nome} — ${tema.cartelaSubtitulo || ''}`;
+        if (genSite) genSite.value = tema.seloTexto || 'Modern Life Residence';
         renderCartelaGeneratorPreview();
         const tabCriadorBtn = document.querySelector('.tab-btn[data-tab="tab-criador"]');
         if (tabCriadorBtn) tabCriadorBtn.click();
-        showToast(`🎨 Cartela de "${tema.nome}" pronta na prévia! Clique em Publicar Cartela.`);
+        showToast(`🎨 Cartela de "${tema.nome}" pronta na prévia! Defina Data Inicial/Final se desejar e publique.`);
       };
 
       const btnSearchNews = document.createElement('button');

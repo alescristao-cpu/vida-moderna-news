@@ -165,15 +165,37 @@
   window.addEventListener('mousemove', resetCursorTimer);
   resetCursorTimer();
 
+  var lastPlaylistDateStr = '';
+
+  function getTodayIsoString() {
+    var now = new Date();
+    var y = now.getFullYear();
+    var m = now.getMonth() + 1;
+    var d = now.getDate();
+    return y + '-' + (m < 10 ? '0' + m : String(m)) + '-' + (d < 10 ? '0' + d : String(d));
+  }
+
+  function isMidiaWithinDateRange(m, todayStr) {
+    if (!m) return false;
+    var ini = trimStr(m.dataInicio || '');
+    var fim = trimStr(m.dataFim || '');
+    if (ini && todayStr < ini) return false;
+    if (fim && todayStr > fim) return false;
+    return true;
+  }
+
   function buildTopPlaylist(state) {
     var devCfg = window.falaSync.getDeviceConfig();
     var condFilter = trimStr(devCfg.condominioFilter || 'TODOS').toUpperCase();
+    var todayStr = getTodayIsoString();
+    lastPlaylistDateStr = todayStr;
 
     var midiasOrig = (state && state.midias) ? state.midias : [];
     var midiasAtivas = [];
     for (var mIdx = 0; mIdx < midiasOrig.length; mIdx++) {
       var m = midiasOrig[mIdx];
       if (!m || !m.ativo) continue;
+      if (!isMidiaWithinDateRange(m, todayStr)) continue;
       var mCond = trimStr(m.condominio || 'TODOS').toUpperCase();
       if (condFilter === 'TODOS' || mCond === 'TODOS' || mCond === condFilter) {
         midiasAtivas.push(m);
@@ -320,7 +342,8 @@
 
   function showNextSlide() {
     if (slideTimer) clearTimeout(slideTimer);
-    if (!playlist || playlist.length === 0) {
+    var currentTodayStr = getTodayIsoString();
+    if (!playlist || playlist.length === 0 || currentTodayStr !== lastPlaylistDateStr) {
       playlist = buildTopPlaylist(currentState);
     }
 
