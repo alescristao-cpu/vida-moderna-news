@@ -236,6 +236,320 @@ function isFamilySafeNews(title, description, filterLevel, customBlockedCsv) {
   return true;
 }
 
+var SEASONAL_THEMES_CATALOG = {
+  padrao: {
+    id: 'padrao',
+    nome: 'Padrão Modern Life Residence',
+    icone: '🌿',
+    periodo: 'Ano todo',
+    corPrimaria: '#2a5e35',
+    corSecundaria: '#14532d',
+    corDestaque: '#dcfce7',
+    corTextoDestaque: '#166534',
+    footerBg: 'linear-gradient(180deg, #f3f6f9 0%, #e6ecf2 100%)',
+    seloTexto: '',
+    assuntoBusca: 'Arquitetura Decoração Condomínio',
+    recadoTitulo: 'INFORMAÇÕES DO CONDOMÍNIO',
+    recadoTexto: 'Desejamos a todos os moradores do Modern Life Residence uma excelente semana com muita paz, harmonia e boa convivência!',
+    cartelaCategoria: 'MODERN LIFE RESIDENCE',
+    cartelaTitulo: 'Bem-vindo ao Modern Life Residence',
+    cartelaSubtitulo: 'Qualidade de vida, segurança e boa convivência para toda a sua família.'
+  },
+  ano_novo: {
+    id: 'ano_novo',
+    nome: 'Réveillon & Ano Novo',
+    icone: '🥂',
+    periodo: '26/Dez a 10/Jan',
+    corPrimaria: '#b45309',
+    corSecundaria: '#78350f',
+    corDestaque: '#fef3c7',
+    corTextoDestaque: '#92400e',
+    footerBg: 'linear-gradient(180deg, #fffbeb 0%, #fef3c7 100%)',
+    seloTexto: '🥂 FELIZ ANO NOVO • PAZ E PROSPERIDADE',
+    assuntoBusca: 'Ano Novo Réveillon Turismo Boas Energias',
+    recadoTitulo: '🥂 FELIZ ANO NOVO • MODERN LIFE',
+    recadoTexto: 'Que o Novo Ano traga muita saúde, paz, conquistas e momentos felizes para todas as famílias do Modern Life Residence!',
+    cartelaCategoria: '🥂 BOAS FESTAS • MODERN LIFE RESIDENCE',
+    cartelaTitulo: 'Feliz Ano Novo!',
+    cartelaSubtitulo: 'Desejamos um novo ciclo repleto de saúde, união, alegria e prosperidade a todos os moradores.'
+  },
+  verao_ferias: {
+    id: 'verao_ferias',
+    nome: 'Verão & Férias no Condomínio',
+    icone: '☀️',
+    periodo: 'Janeiro',
+    corPrimaria: '#0284c7',
+    corSecundaria: '#0369a1',
+    corDestaque: '#e0f2fe',
+    corTextoDestaque: '#075985',
+    footerBg: 'linear-gradient(180deg, #f0f9ff 0%, #e0f2fe 100%)',
+    seloTexto: '☀️ VERÃO & FÉRIAS • LAZER COM SEGURANÇA',
+    assuntoBusca: 'Verão Turismo Praias Hidratação Saúde',
+    recadoTitulo: '☀️ FÉRIAS & LAZER NO CONDOMÍNIO',
+    recadoTexto: 'Aproveite o verão e as áreas de lazer com sua família! Lembramos da importância de acompanhar as crianças na piscina e nas áreas comuns.',
+    cartelaCategoria: '☀️ TEMPORADA DE VERÃO & FÉRIAS',
+    cartelaTitulo: 'Férias com Alegria e Segurança',
+    cartelaSubtitulo: 'Aproveite a piscina e os espaços de lazer respeitando as normas de convivência do Modern Life Residence.'
+  },
+  carnaval: {
+    id: 'carnaval',
+    nome: 'Carnaval com Alegria e Paz',
+    icone: '🎭',
+    periodo: 'Fevereiro',
+    corPrimaria: '#7e22ce',
+    corSecundaria: '#581c87',
+    corDestaque: '#f3e8ff',
+    corTextoDestaque: '#6b21a8',
+    footerBg: 'linear-gradient(180deg, #faf5ff 0%, #f3e8ff 100%)',
+    seloTexto: '🎭 BOM CARNAVAL • ALEGRIA E BOA CONVIVÊNCIA',
+    assuntoBusca: 'Carnaval Cultura Turismo Viagem',
+    recadoTitulo: '🎭 FERIADO DE CARNAVAL',
+    recadoTexto: 'Desejamos um ótimo feriado de Carnaval a todos! Para quem vai viajar ou descansar no condomínio, contem com nossa atenção à segurança e ao sossego.',
+    cartelaCategoria: '🎭 FERIADO DE CARNAVAL',
+    cartelaTitulo: 'Bom Carnaval a Todos!',
+    cartelaSubtitulo: 'Seja descansando ou festejando, desejamos dias de muita alegria, paz e segurança para sua família.'
+  },
+  dia_mulher: {
+    id: 'dia_mulher',
+    nome: 'Dia Internacional da Mulher',
+    icone: '🌷',
+    periodo: '01 a 12 de Março',
+    corPrimaria: '#be185d',
+    corSecundaria: '#831843',
+    corDestaque: '#fce7f3',
+    corTextoDestaque: '#9d174d',
+    footerBg: 'linear-gradient(180deg, #fdf2f8 0%, #fce7f3 100%)',
+    seloTexto: '🌷 8 DE MARÇO • DIA INTERNACIONAL DA MULHER',
+    assuntoBusca: 'Dia Internacional da Mulher Saúde Bem-Estar',
+    recadoTitulo: '🌷 HOMENAGEM ÀS MULHERES',
+    recadoTexto: 'Nossa homenagem e carinho a todas as moradoras e colaboradoras do Modern Life Residence pelo Dia Internacional da Mulher!',
+    cartelaCategoria: '🌷 8 DE MARÇO • HOMENAGEM ESPECIAL',
+    cartelaTitulo: 'Feliz Dia Internacional da Mulher',
+    cartelaSubtitulo: 'Parabéns a todas as mulheres que transformam nosso condomínio com força, delicadeza e sabedoria.'
+  },
+  pascoa: {
+    id: 'pascoa',
+    nome: 'Feliz Páscoa em Família',
+    icone: '🐰',
+    periodo: 'Março / Abril',
+    corPrimaria: '#92400e',
+    corSecundaria: '#78350f',
+    corDestaque: '#fef3c7',
+    corTextoDestaque: '#78350f',
+    footerBg: 'linear-gradient(180deg, #fffbeb 0%, #fde68a 100%)',
+    seloTexto: '🐰 FELIZ PÁSCOA • UNIÃO, PAZ E RENOVAÇÃO',
+    assuntoBusca: 'Páscoa Gastronomia Chocolate Família',
+    recadoTitulo: '🐰 FELIZ PÁSCOA ÀS FAMÍLIAS',
+    recadoTexto: 'Que o domingo de Páscoa renove o amor, a paz e a esperança no lar de cada família do Modern Life Residence!',
+    cartelaCategoria: '🐰 CELEBRAÇÃO DE PÁSCOA',
+    cartelaTitulo: 'Feliz e Abençoada Páscoa!',
+    cartelaSubtitulo: 'Um tempo de renovação, esperança, doçura e união para todas as famílias do nosso condomínio.'
+  },
+  dia_maes: {
+    id: 'dia_maes',
+    nome: 'Especial Dia das Mães',
+    icone: '💐',
+    periodo: '01 a 15 de Maio',
+    corPrimaria: '#e11d48',
+    corSecundaria: '#9f1239',
+    corDestaque: '#ffe4e6',
+    corTextoDestaque: '#9f1239',
+    footerBg: 'linear-gradient(180deg, #fff1f2 0%, #ffe4e6 100%)',
+    seloTexto: '💐 HOMENAGEM ESPECIAL • FELIZ DIA DAS MÃES',
+    assuntoBusca: 'Dia das Mães Família Gastronomia Homenagem',
+    recadoTitulo: '💐 FELIZ DIA DAS MÃES',
+    recadoTexto: 'A todas as mães do Modern Life Residence, nossa admiração e carinho por todo o amor e dedicação às suas famílias. Feliz Dia das Mães!',
+    cartelaCategoria: '💐 HOMENAGEM DIA DAS MÃES',
+    cartelaTitulo: 'Feliz Dia das Mães!',
+    cartelaSubtitulo: 'Todo o nosso carinho às mães que enchem o Modern Life Residence de amor, cuidado e inspiração.'
+  },
+  sao_joao: {
+    id: 'sao_joao',
+    nome: 'Festas Juninas & São João',
+    icone: '🌽',
+    periodo: 'Junho',
+    corPrimaria: '#c2410c',
+    corSecundaria: '#9a3412',
+    corDestaque: '#ffedd5',
+    corTextoDestaque: '#9a3412',
+    footerBg: 'linear-gradient(180deg, #fff7ed 0%, #fed7aa 100%)',
+    seloTexto: '🌽 VIVA SÃO JOÃO • FESTAS JUNINAS E TRADIÇÃO',
+    assuntoBusca: 'São João Festas Juninas Culinária Nordeste Cultura',
+    recadoTitulo: '🌽 BOAS FESTAS JUNINAS • SÃO JOÃO',
+    recadoTexto: 'Viva São João! Aproveite as delícias e tradições juninas com sua família. Lembramos que não é permitido soltar fogos nas áreas do condomínio.',
+    cartelaCategoria: '🌽 TRADIÇÃO NORDESTINA • SÃO JOÃO',
+    cartelaTitulo: 'Viva São João no Modern Life!',
+    cartelaSubtitulo: 'Mês de alegria, milho verde, canjica, forró e confraternização entre as famílias!'
+  },
+  dia_pais: {
+    id: 'dia_pais',
+    nome: 'Especial Dia dos Pais',
+    icone: '👔',
+    periodo: '01 a 15 de Agosto',
+    corPrimaria: '#1e3a8a',
+    corSecundaria: '#172554',
+    corDestaque: '#dbeafe',
+    corTextoDestaque: '#1e40af',
+    footerBg: 'linear-gradient(180deg, #eff6ff 0%, #dbeafe 100%)',
+    seloTexto: '👔 HOMENAGEM ESPECIAL • FELIZ DIA DOS PAIS',
+    assuntoBusca: 'Dia dos Pais Família Esportes Lazer',
+    recadoTitulo: '👔 FELIZ DIA DOS PAIS',
+    recadoTexto: 'Parabéns a todos os pais do Modern Life Residence pelo exemplo, dedicação e companheirismo com seus filhos e famílias!',
+    cartelaCategoria: '👔 HOMENAGEM DIA DOS PAIS',
+    cartelaTitulo: 'Feliz Dia dos Pais!',
+    cartelaSubtitulo: 'Nossa homenagem a todos os pais que constroem histórias de amor, proteção e parceria todos os dias.'
+  },
+  independencia: {
+    id: 'independencia',
+    nome: 'Semana da Pátria / 7 de Setembro',
+    icone: '🇧🇷',
+    periodo: '01 a 10 de Setembro',
+    corPrimaria: '#15803d',
+    corSecundaria: '#14532d',
+    corDestaque: '#fef08a',
+    corTextoDestaque: '#166534',
+    footerBg: 'linear-gradient(180deg, #f0fdf4 0%, #fef9c3 100%)',
+    seloTexto: '🇧🇷 7 DE SETEMBRO • SEMANA DA PÁTRIA',
+    assuntoBusca: 'Brasil Turismo Cultura História',
+    recadoTitulo: '🇧🇷 FERIADO DE 7 DE SETEMBRO',
+    recadoTexto: 'Desejamos a todos os moradores um excelente feriado da Independência do Brasil com descanso, segurança e harmonia!',
+    cartelaCategoria: '🇧🇷 7 DE SETEMBRO • SEMANA DA PÁTRIA',
+    cartelaTitulo: 'Bom Feriado da Independência!',
+    cartelaSubtitulo: 'Que a cidadania, o respeito e a união estejam sempre presentes em nossa comunidade.'
+  },
+  primavera: {
+    id: 'primavera',
+    nome: 'Estação Primavera & Meio Ambiente',
+    icone: '🌸',
+    periodo: '21 a 30 de Setembro',
+    corPrimaria: '#059669',
+    corSecundaria: '#065f46',
+    corDestaque: '#d1fae5',
+    corTextoDestaque: '#065f46',
+    footerBg: 'linear-gradient(180deg, #ecfdf5 0%, #d1fae5 100%)',
+    seloTexto: '🌸 BEM-VINDA PRIMAVERA • PRESERVE NOSSOS JARDINS',
+    assuntoBusca: 'Primavera Jardinagem Natureza Flores Meio Ambiente',
+    recadoTitulo: '🌸 CHEGADA DA PRIMAVERA',
+    recadoTexto: 'A estação das flores chegou! Colabore com a preservação dos jardins e áreas verdes do Modern Life Residence.',
+    cartelaCategoria: '🌸 ESTAÇÃO DAS FLORES • PRIMAVERA',
+    cartelaTitulo: 'Bem-vinda, Primavera!',
+    cartelaSubtitulo: 'Cuidar das plantas e áreas verdes deixa o nosso Modern Life Residence ainda mais bonito e acolhedor.'
+  },
+  dia_criancas: {
+    id: 'dia_criancas',
+    nome: 'Semana das Crianças',
+    icone: '🧸',
+    periodo: '01 a 12 de Outubro',
+    corPrimaria: '#0284c7',
+    corSecundaria: '#0369a1',
+    corDestaque: '#fef08a',
+    corTextoDestaque: '#0369a1',
+    footerBg: 'linear-gradient(180deg, #f0f9ff 0%, #fef9c3 100%)',
+    seloTexto: '🧸 12 DE OUTUBRO • FELIZ DIA DAS CRIANÇAS',
+    assuntoBusca: 'Dia das Crianças Educação Brincadeiras Família',
+    recadoTitulo: '🧸 FELIZ DIA DAS CRIANÇAS',
+    recadoTexto: 'Que a alegria e a pureza das crianças iluminem sempre o nosso condomínio! Feliz Dia das Crianças a todos os pequenos moradores!',
+    cartelaCategoria: '🧸 12 DE OUTUBRO • MÊS DAS CRIANÇAS',
+    cartelaTitulo: 'Feliz Dia das Crianças!',
+    cartelaSubtitulo: 'Brincar, sorrir e aprender com segurança: nosso carinho especial a todas as crianças do condomínio!'
+  },
+  outubro_rosa: {
+    id: 'outubro_rosa',
+    nome: 'Outubro Rosa (Prevenção)',
+    icone: '🎀',
+    periodo: 'Outubro (13 a 31)',
+    corPrimaria: '#db2777',
+    corSecundaria: '#9d174d',
+    corDestaque: '#fce7f3',
+    corTextoDestaque: '#9d174d',
+    footerBg: 'linear-gradient(180deg, #fdf2f8 0%, #fce7f3 100%)',
+    seloTexto: '🎀 OUTUBRO ROSA • PREVENÇÃO É AMOR À VIDA',
+    assuntoBusca: 'Outubro Rosa Saúde da Mulher Prevenção Bem-Estar',
+    recadoTitulo: '🎀 CAMPANHA OUTUBRO ROSA',
+    recadoTexto: 'O Modern Life Residence apoia o Outubro Rosa! O diagnóstico precoce e o cuidado com a saúde salvam vidas. Cuide-se!',
+    cartelaCategoria: '🎀 CONSCIENTIZAÇÃO • OUTUBRO ROSA',
+    cartelaTitulo: 'Outubro Rosa: Cuide de Você',
+    cartelaSubtitulo: 'Um gesto de autocuidado e prevenção pela saúde e bem-estar de todas as mulheres.'
+  },
+  novembro_azul: {
+    id: 'novembro_azul',
+    nome: 'Novembro Azul (Saúde & Prevenção)',
+    icone: '💙',
+    periodo: 'Novembro',
+    corPrimaria: '#1d4ed8',
+    corSecundaria: '#1e3a8a',
+    corDestaque: '#dbeafe',
+    corTextoDestaque: '#1e40af',
+    footerBg: 'linear-gradient(180deg, #eff6ff 0%, #dbeafe 100%)',
+    seloTexto: '💙 NOVEMBRO AZUL • CUIDAR DA SAÚDE É VIVER MELHOR',
+    assuntoBusca: 'Novembro Azul Saúde Prevenção Qualidade de Vida',
+    recadoTitulo: '💙 CAMPANHA NOVEMBRO AZUL',
+    recadoTexto: 'O Modern Life Residence apoia o Novembro Azul! Manter os exames em dia e cuidar da saúde é uma atitude de coragem pela sua família.',
+    cartelaCategoria: '💙 CONSCIENTIZAÇÃO • NOVEMBRO AZUL',
+    cartelaTitulo: 'Novembro Azul: Prevenção é Vida',
+    cartelaSubtitulo: 'Incentivamos todos os moradores a cuidarem da saúde com hábitos saudáveis e acompanhamento preventivo.'
+  },
+  natal: {
+    id: 'natal',
+    nome: 'Natal & Boas Festas',
+    icone: '🎄',
+    periodo: '01 a 25 de Dezembro',
+    corPrimaria: '#b91c1c',
+    corSecundaria: '#7f1d1d',
+    corDestaque: '#fef3c7',
+    corTextoDestaque: '#991b1b',
+    footerBg: 'linear-gradient(180deg, #fef2f2 0%, #fef3c7 100%)',
+    seloTexto: '🎄 FELIZ NATAL • PAZ, AMOR E UNIÃO NAS FAMÍLIAS',
+    assuntoBusca: 'Natal Ceia Decoração Solidariedade Boas Festas',
+    recadoTitulo: '🎄 FELIZ NATAL • MODERN LIFE',
+    recadoTexto: 'Desejamos um Feliz e Abençoado Natal a todos os moradores e colaboradores do Modern Life Residence, com muita paz, amor e união!',
+    cartelaCategoria: '🎄 ESPECIAL DE NATAL • MODERN LIFE RESIDENCE',
+    cartelaTitulo: 'Feliz Natal e Boas Festas!',
+    cartelaSubtitulo: 'Que o espírito natalino ilumine cada lar do nosso condomínio com amor, fraternidade e esperança.'
+  }
+};
+
+function resolveActiveSeasonalTheme(temaConfigurado) {
+  var key = temaConfigurado || 'padrao';
+  if (key === 'auto_calendario') {
+    var now = new Date();
+    var m = now.getMonth() + 1; // 1..12
+    var d = now.getDate();
+    if ((m === 12 && d >= 26) || (m === 1 && d <= 10)) {
+      key = 'ano_novo';
+    } else if (m === 1) {
+      key = 'verao_ferias';
+    } else if (m === 2) {
+      key = 'carnaval';
+    } else if (m === 3 && d <= 12) {
+      key = 'dia_mulher';
+    } else if (m === 3 || m === 4) {
+      key = 'pascoa';
+    } else if (m === 5 && d <= 15) {
+      key = 'dia_maes';
+    } else if (m === 6) {
+      key = 'sao_joao';
+    } else if (m === 8 && d <= 15) {
+      key = 'dia_pais';
+    } else if (m === 9 && d <= 10) {
+      key = 'independencia';
+    } else if (m === 9 && d >= 21) {
+      key = 'primavera';
+    } else if (m === 10 && d <= 12) {
+      key = 'dia_criancas';
+    } else if (m === 10) {
+      key = 'outubro_rosa';
+    } else if (m === 11) {
+      key = 'novembro_azul';
+    } else if (m === 12) {
+      key = 'natal';
+    } else {
+      key = 'padrao';
+    }
+  }
+  return SEASONAL_THEMES_CATALOG[key] || SEASONAL_THEMES_CATALOG.padrao;
+}
+
 var DEFAULT_STATE = {
   version: 3,
   updatedAt: '2026-10-22T10:52:00-03:00',
@@ -247,6 +561,7 @@ var DEFAULT_STATE = {
     duracaoPadraoSegundos: 15,
     tempoAssinaturaSegundos: 5,
     intervaloRecadosSegundos: 10,
+    temaSazonal: 'padrao',
     rssAtivo: true,
     rssTemas: ['tecnologia', 'ciencia_saude', 'turismo', 'cultura'],
     temaPersonalizado: '',
@@ -362,6 +677,8 @@ function VidaModernaSyncManager() {
   this.wasOffline = false;
   this.autoSyncTimer = null;
   this.themesCatalog = NEWS_THEMES_CATALOG;
+  this.seasonalCatalog = SEASONAL_THEMES_CATALOG;
+  this.resolveSeasonalTheme = resolveActiveSeasonalTheme;
   this.channel = null;
 
   try {

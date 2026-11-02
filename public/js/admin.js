@@ -1418,6 +1418,168 @@
     showToast('Configurações do Vida Moderna News salvas!');
   });
 
+  /**
+   * 6. TEMAS PARA ÉPOCAS DO ANO & DATAS COMEMORATIVAS
+   */
+  const selectTemaSazonal = document.getElementById('select-tema-sazonal');
+  const btnSaveTemaSazonal = document.getElementById('btn-save-tema-sazonal');
+  const btnResetTemaPadrao = document.getElementById('btn-reset-tema-padrao');
+  const badgeTemaSazonalAtivo = document.getElementById('badge-tema-sazonal-ativo');
+  const seasonalCardsGridEl = document.getElementById('seasonal-cards-grid');
+
+  async function activateSeasonalTheme(temaKey) {
+    state.config = {
+      ...state.config,
+      temaSazonal: temaKey
+    };
+    await window.falaSync.pushStateToServer(state, false);
+    notifyPreviewIframe(state);
+    renderSeasonalCatalog();
+    const resolved = window.falaSync.resolveSeasonalTheme(temaKey);
+    showToast(`🎉 Tema "${resolved.icone} ${resolved.nome}" ativado no Player!`);
+  }
+
+  if (btnSaveTemaSazonal) {
+    btnSaveTemaSazonal.addEventListener('click', () => {
+      const val = selectTemaSazonal ? selectTemaSazonal.value : 'padrao';
+      activateSeasonalTheme(val);
+    });
+  }
+
+  if (btnResetTemaPadrao) {
+    btnResetTemaPadrao.addEventListener('click', () => {
+      if (selectTemaSazonal) selectTemaSazonal.value = 'padrao';
+      activateSeasonalTheme('padrao');
+    });
+  }
+
+  function renderSeasonalCatalog() {
+    const currentKey = state.config?.temaSazonal || 'padrao';
+    if (selectTemaSazonal) {
+      selectTemaSazonal.value = currentKey;
+    }
+
+    const resolvedActive = window.falaSync.resolveSeasonalTheme
+      ? window.falaSync.resolveSeasonalTheme(currentKey)
+      : null;
+
+    if (badgeTemaSazonalAtivo && resolvedActive) {
+      const autoSuffix = currentKey === 'auto_calendario' ? ' (Automático pelo Calendário)' : '';
+      badgeTemaSazonalAtivo.textContent = `${resolvedActive.icone} ${resolvedActive.nome}${autoSuffix}`;
+      badgeTemaSazonalAtivo.style.background = resolvedActive.corDestaque || '#dcfce7';
+      badgeTemaSazonalAtivo.style.color = resolvedActive.corTextoDestaque || '#166534';
+    }
+
+    if (!seasonalCardsGridEl) return;
+    seasonalCardsGridEl.innerHTML = '';
+
+    const catalog = window.falaSync.seasonalCatalog || {};
+    Object.values(catalog).forEach((tema) => {
+      if (tema.id === 'padrao') return; // Exibido no botão superior de voltar ao padrão
+      const isAtivo = (resolvedActive && resolvedActive.id === tema.id && currentKey !== 'padrao');
+
+      const card = document.createElement('div');
+      card.style.cssText = `
+        background: #ffffff;
+        border: 2px solid ${isAtivo ? tema.corPrimaria : '#e2e8f0'};
+        border-top: 6px solid ${tema.corPrimaria};
+        border-radius: 10px;
+        padding: 14px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        gap: 10px;
+        box-shadow: 0 2px 6px rgba(15,23,42,0.05);
+      `;
+
+      const headerHtml = `
+        <div>
+          <div style="display:flex; justify-content:space-between; align-items:center; gap:6px; margin-bottom:6px;">
+            <span style="font-size:16px; font-weight:800; color:#0f172a;">${tema.icone} ${tema.nome}</span>
+            <span style="font-size:11px; font-weight:700; padding:2px 8px; border-radius:12px; background:${tema.corDestaque}; color:${tema.corTextoDestaque};">
+              ${tema.periodo}
+            </span>
+          </div>
+          <div style="font-size:11.5px; font-weight:700; color:${tema.corTextoDestaque}; background:${tema.corDestaque}; padding:4px 8px; border-radius:6px; margin-bottom:8px;">
+            Selo no Player: ${tema.seloTexto}
+          </div>
+          <p style="font-size:12.5px; color:#334155; line-height:1.4; margin:0; background:#f8fafc; padding:8px; border-radius:6px; border:1px solid #e2e8f0;">
+            <strong>Recado sugerido:</strong> "${tema.recadoTexto}"
+          </p>
+        </div>
+      `;
+
+      const actionsDiv = document.createElement('div');
+      actionsDiv.style.cssText = 'display:flex; flex-wrap:wrap; gap:6px; margin-top:4px;';
+
+      const btnTheme = document.createElement('button');
+      btnTheme.type = 'button';
+      btnTheme.className = 'btn btn-sm ' + (isAtivo ? 'btn-success' : 'btn-primary');
+      btnTheme.style.background = isAtivo ? '#16a34a' : tema.corPrimaria;
+      btnTheme.textContent = isAtivo ? '✅ Tema Ativo no Player' : '🎨 Ativar Tema Visual';
+      btnTheme.onclick = () => activateSeasonalTheme(tema.id);
+
+      const btnPostRecado = document.createElement('button');
+      btnPostRecado.type = 'button';
+      btnPostRecado.className = 'btn btn-sm btn-success';
+      btnPostRecado.textContent = '📋 Postar Recado da Data';
+      btnPostRecado.onclick = async () => {
+        if (!Array.isArray(state.recados)) state.recados = [];
+        state.recados.unshift({
+          id: 'rec-sazonal-' + Date.now(),
+          titulo: tema.recadoTitulo,
+          texto: tema.recadoTexto,
+          corEtiqueta: tema.corPrimaria,
+          condominio: 'TODOS',
+          ativo: true,
+          criadoEm: new Date().toISOString()
+        });
+        await window.falaSync.pushStateToServer(state, false);
+        notifyPreviewIframe(state);
+        renderRecados();
+        showToast(`📋 Recado de "${tema.nome}" publicado no rodapé do Player!`);
+      };
+
+      const btnCreateCartela = document.createElement('button');
+      btnCreateCartela.type = 'button';
+      btnCreateCartela.className = 'btn btn-sm btn-warning';
+      btnCreateCartela.textContent = '🖼️ Criar Cartela 1280x520';
+      btnCreateCartela.onclick = () => {
+        document.getElementById('gen-categoria').value = tema.cartelaCategoria || tema.nome.toUpperCase();
+        document.getElementById('gen-titulo').value = tema.cartelaTitulo || tema.nome;
+        document.getElementById('gen-subtitulo').value = tema.cartelaSubtitulo || tema.recadoTexto;
+        document.getElementById('gen-cor1').value = tema.corSecundaria || '#14532d';
+        document.getElementById('gen-cor2').value = tema.corPrimaria || '#2a5e35';
+        renderCartelaGeneratorPreview();
+        const tabCriadorBtn = document.querySelector('.tab-btn[data-tab="tab-criador"]');
+        if (tabCriadorBtn) tabCriadorBtn.click();
+        showToast(`🎨 Cartela de "${tema.nome}" pronta na prévia! Clique em Publicar Cartela.`);
+      };
+
+      const btnSearchNews = document.createElement('button');
+      btnSearchNews.type = 'button';
+      btnSearchNews.className = 'btn btn-sm btn-outline';
+      btnSearchNews.style.background = '#334155';
+      btnSearchNews.textContent = '🔍 Buscar Notícias da Data';
+      btnSearchNews.onclick = async () => {
+        const tabNoticiasBtn = document.querySelector('.tab-btn[data-tab="tab-noticias"]');
+        if (tabNoticiasBtn) tabNoticiasBtn.click();
+        if (inputTemaPersonalizado) inputTemaPersonalizado.value = tema.assuntoBusca || tema.nome;
+        const toPending = (selectModoAprovacao ? selectModoAprovacao.value : 'manual') !== 'automatico';
+        await executeSubjectSearch(tema.assuntoBusca || tema.nome, toPending);
+      };
+
+      actionsDiv.appendChild(btnTheme);
+      actionsDiv.appendChild(btnPostRecado);
+      actionsDiv.appendChild(btnCreateCartela);
+      actionsDiv.appendChild(btnSearchNews);
+
+      card.innerHTML = headerHtml;
+      card.appendChild(actionsDiv);
+      seasonalCardsGridEl.appendChild(card);
+    });
+  }
+
   function notifyPreviewIframe(currentSt) {
     try {
       if (previewIframe && previewIframe.contentWindow) {
@@ -1437,6 +1599,7 @@
     notifyPreviewIframe(state);
     renderRecados();
     renderThemesSelector();
+    renderSeasonalCatalog();
     renderMidias();
     renderNoticiasPendentes();
     renderNoticias();
@@ -1450,6 +1613,7 @@
     notifyPreviewIframe(state);
     renderRecados();
     renderThemesSelector();
+    renderSeasonalCatalog();
     renderMidias();
     renderNoticiasPendentes();
     renderNoticias();
@@ -1459,6 +1623,7 @@
   checkExistingSession();
   renderRecados();
   renderThemesSelector();
+  renderSeasonalCatalog();
   renderMidias();
   renderNoticiasPendentes();
   renderNoticias();
@@ -1472,6 +1637,7 @@
       notifyPreviewIframe(state);
       renderRecados();
       renderThemesSelector();
+      renderSeasonalCatalog();
       renderMidias();
       renderNoticiasPendentes();
       renderNoticias();

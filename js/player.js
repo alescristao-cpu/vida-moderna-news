@@ -445,6 +445,46 @@
     }
   }
 
+  var seasonalBadgeEl = document.getElementById('seasonal-badge');
+  var footerStageEl = document.getElementById('footer-stage');
+
+  function applySeasonalVisualTheme(state) {
+    if (!window.falaSync || !window.falaSync.resolveSeasonalTheme) return;
+    var cfg = (state && state.config) ? state.config : {};
+    var theme = window.falaSync.resolveSeasonalTheme(cfg.temaSazonal || 'padrao');
+    if (!theme) return;
+
+    if (seasonalBadgeEl) {
+      if (theme.seloTexto) {
+        seasonalBadgeEl.textContent = theme.seloTexto;
+        seasonalBadgeEl.style.backgroundColor = theme.corDestaque || '#dcfce7';
+        seasonalBadgeEl.style.color = theme.corTextoDestaque || '#166534';
+        seasonalBadgeEl.style.borderColor = theme.corPrimaria || '#2a5e35';
+        seasonalBadgeEl.className = '';
+      } else {
+        seasonalBadgeEl.textContent = '';
+        seasonalBadgeEl.className = 'hidden';
+      }
+    }
+
+    if (footerStageEl && theme.footerBg) {
+      footerStageEl.style.background = theme.footerBg;
+    }
+    if (noticeCardEl) {
+      noticeCardEl.style.borderColor = theme.id === 'padrao' ? '#cbd5e1' : (theme.corPrimaria || '#2a5e35');
+      noticeCardEl.style.borderTopWidth = theme.id === 'padrao' ? '1.5px' : '3px';
+    }
+    if (progressBarEl && theme.corPrimaria) {
+      progressBarEl.style.backgroundColor = theme.corPrimaria;
+    }
+    if (brandPhoneEl && theme.corPrimaria) {
+      brandPhoneEl.style.color = theme.corPrimaria;
+    }
+    if (brandDateTimeEl) {
+      brandDateTimeEl.style.borderColor = theme.id === 'padrao' ? '#cbd5e1' : (theme.corPrimaria || '#cbd5e1');
+    }
+  }
+
   function applyStateUpdate(newState) {
     var prevRecadosJson = JSON.stringify(currentState.recados);
     var nextRecadosJson = JSON.stringify(newState.recados);
@@ -470,6 +510,7 @@
     if (currentState.config && currentState.config.telefoneSuporte) {
       brandPhoneEl.textContent = currentState.config.telefoneSuporte;
     }
+    applySeasonalVisualTheme(currentState);
 
     if (prevRecadosJson !== nextRecadosJson) {
       updateRecadosList(currentState);
@@ -589,6 +630,7 @@
   if (currentState.config && currentState.config.telefoneSuporte) {
     brandPhoneEl.textContent = currentState.config.telefoneSuporte;
   }
+  applySeasonalVisualTheme(currentState);
   playlist = buildTopPlaylist(currentState);
   updateRecadosList(currentState);
   showNextSlide();
