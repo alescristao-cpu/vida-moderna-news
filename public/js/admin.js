@@ -1290,7 +1290,11 @@
       if (elSub) elSub.value = sTheme.cartelaSubtitulo || sTheme.recadoTexto || '';
       if (elCor1) elCor1.value = sTheme.corSecundaria || '#14532d';
       if (elCor2) elCor2.value = sTheme.corPrimaria || '#2a5e35';
-      if (elSite) elSite.value = sTheme.seloTexto || 'Modern Life Residence • Comunicação Interna';
+      if (elSite) {
+        elSite.value =
+          sTheme.cartelaDicaBranca ||
+          '🩺 Cuide da saúde do homem: consulte o urologista regularmente, mantenha os exames em dia e pratique atividades físicas.';
+      }
     } else if (cPreset) {
       if (elTema) elTema.value = temaKey;
       if (elIcone) elIcone.value = cPreset.icone;
@@ -1338,6 +1342,17 @@
       applyThemeToCartelaGenerator(val, isSeasonal);
     });
   }
+
+  document.querySelectorAll('.btn-dica-saude-preset').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const dica = btn.getAttribute('data-dica') || '';
+      const elSite = document.getElementById('gen-site');
+      if (elSite && dica) {
+        elSite.value = dica;
+        renderCartelaGeneratorPreview();
+      }
+    });
+  });
 
   function wrapCanvasText(ctx, text, maxWidth) {
     const words = (text || '').split(/\s+/);
@@ -1443,26 +1458,46 @@
       ctx.fillText(infoStr, 65, 355);
     }
 
-    // 7. Faixa Inferior de Assinatura (1150x92px)
+    // 7. Faixa Branca Inferior (1150x92px)
     ctx.fillStyle = '#ffffff';
     ctx.beginPath();
     ctx.roundRect(65, 386, 1150, 92, 14);
     ctx.fill();
 
-    ctx.fillStyle = c1;
-    ctx.font = '900 35px "Segoe UI", Arial, sans-serif';
-    ctx.fillText(`${icone ? icone + ' ' : ''}${cliente}`, 92, 444);
+    if (layoutModo === 'comercial') {
+      ctx.fillStyle = c1;
+      ctx.font = '900 35px "Segoe UI", Arial, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText(`${icone ? icone + ' ' : ''}${cliente}`, 92, 444);
 
-    ctx.fillStyle = c2;
-    ctx.font = '800 26px "Segoe UI", Arial, sans-serif';
-    ctx.textAlign = 'right';
-    if (layoutModo === 'comercial' && telefone) {
-      ctx.fillText('📞 ' + telefone, 1185, 443);
+      if (telefone) {
+        ctx.fillStyle = c2;
+        ctx.font = '800 26px "Segoe UI", Arial, sans-serif';
+        ctx.textAlign = 'right';
+        ctx.fillText('📞 ' + telefone, 1185, 443);
+      }
+      ctx.textAlign = 'left';
     } else {
-      const rightLabel = site || telefone || 'Vida Moderna News';
-      ctx.fillText(rightLabel.slice(0, 44), 1185, 442);
+      // Modo Temático: Sem nome do prédio nem nome da ação na faixa branca;
+      // Exibe apenas a sugestão de cuidado / dica prática centralizada
+      const dicaTexto = (
+        site ||
+        '🩺 Cuide da saúde do homem: consulte o urologista regularmente, mantenha os exames em dia e pratique atividades físicas.'
+      ).trim();
+      ctx.fillStyle = c1;
+      ctx.textAlign = 'center';
+      ctx.font = '700 24px "Segoe UI", Arial, sans-serif';
+      const dicaLines = wrapCanvasText(ctx, dicaTexto, 1080).slice(0, 2);
+      if (dicaLines.length === 1) {
+        ctx.font = '700 25px "Segoe UI", Arial, sans-serif';
+        ctx.fillText(dicaLines[0], 640, 441);
+      } else {
+        ctx.font = '700 23px "Segoe UI", Arial, sans-serif';
+        ctx.fillText(dicaLines[0], 640, 424);
+        ctx.fillText(dicaLines[1], 640, 456);
+      }
+      ctx.textAlign = 'left';
     }
-    ctx.textAlign = 'left';
   }
 
   [

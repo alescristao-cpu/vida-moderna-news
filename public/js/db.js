@@ -251,9 +251,10 @@ var SEASONAL_THEMES_CATALOG = {
     assuntoBusca: 'Arquitetura Decoração Condomínio',
     recadoTitulo: 'INFORMAÇÕES DO CONDOMÍNIO',
     recadoTexto: 'Desejamos a todos os moradores do Modern Life Residence uma excelente semana com muita paz, harmonia e boa convivência!',
-    cartelaCategoria: 'MODERN LIFE RESIDENCE',
-    cartelaTitulo: 'Bem-vindo ao Modern Life Residence',
-    cartelaSubtitulo: 'Qualidade de vida, segurança e boa convivência para toda a sua família.'
+    cartelaCategoria: 'COMUNICAÇÃO INTERNA',
+    cartelaTitulo: 'Bem-vindo ao Nosso Condomínio',
+    cartelaSubtitulo: 'Qualidade de vida, segurança e boa convivência para toda a sua família.',
+    cartelaDicaBranca: '🌿 Dica de Convivência: Gentileza, respeito aos horários de silêncio e cuidado com as áreas comuns fazem a diferença!'
   },
   ano_novo: {
     id: 'ano_novo',
@@ -269,9 +270,10 @@ var SEASONAL_THEMES_CATALOG = {
     assuntoBusca: 'Ano Novo Réveillon Turismo Boas Energias',
     recadoTitulo: '🥂 FELIZ ANO NOVO • MODERN LIFE',
     recadoTexto: 'Que o Novo Ano traga muita saúde, paz, conquistas e momentos felizes para todas as famílias do Modern Life Residence!',
-    cartelaCategoria: '🥂 BOAS FESTAS • MODERN LIFE RESIDENCE',
+    cartelaCategoria: '🥂 CELEBRAÇÃO DE ANO NOVO',
     cartelaTitulo: 'Feliz Ano Novo!',
-    cartelaSubtitulo: 'Desejamos um novo ciclo repleto de saúde, união, alegria e prosperidade a todos os moradores.'
+    cartelaSubtitulo: 'Desejamos um novo ciclo repleto de saúde, união, alegria e prosperidade a todos os moradores.',
+    cartelaDicaBranca: '✨ Comece o ano cultivando hábitos saudáveis, metas positivas e momentos especiais ao lado de quem você ama!'
   },
   verao_ferias: {
     id: 'verao_ferias',
@@ -289,7 +291,8 @@ var SEASONAL_THEMES_CATALOG = {
     recadoTexto: 'Aproveite o verão e as áreas de lazer com sua família! Lembramos da importância de acompanhar as crianças na piscina e nas áreas comuns.',
     cartelaCategoria: '☀️ TEMPORADA DE VERÃO & FÉRIAS',
     cartelaTitulo: 'Férias com Alegria e Segurança',
-    cartelaSubtitulo: 'Aproveite a piscina e os espaços de lazer respeitando as normas de convivência do Modern Life Residence.'
+    cartelaSubtitulo: 'Aproveite a piscina e os espaços de lazer respeitando as normas de convivência.',
+    cartelaDicaBranca: '💧 Dica de Verão: Beba bastante água, use protetor solar diariamente e supervisione sempre as crianças na piscina.'
   },
   carnaval: {
     id: 'carnaval',
@@ -307,7 +310,8 @@ var SEASONAL_THEMES_CATALOG = {
     recadoTexto: 'Desejamos um ótimo feriado de Carnaval a todos! Para quem vai viajar ou descansar no condomínio, contem com nossa atenção à segurança e ao sossego.',
     cartelaCategoria: '🎭 FERIADO DE CARNAVAL',
     cartelaTitulo: 'Bom Carnaval a Todos!',
-    cartelaSubtitulo: 'Seja descansando ou festejando, desejamos dias de muita alegria, paz e segurança para sua família.'
+    cartelaSubtitulo: 'Seja descansando ou festejando, desejamos dias de muita alegria, paz e segurança para sua família.',
+    cartelaDicaBranca: '🎉 Dica para o Feriado: Hidrate-se bem, cuide da segurança ao viajar e aproveite os dias de descanso com responsabilidade.'
   },
   dia_mulher: {
     id: 'dia_mulher',
@@ -325,7 +329,8 @@ var SEASONAL_THEMES_CATALOG = {
     recadoTexto: 'Nossa homenagem e carinho a todas as moradoras e colaboradoras do Modern Life Residence pelo Dia Internacional da Mulher!',
     cartelaCategoria: '🌷 8 DE MARÇO • HOMENAGEM ESPECIAL',
     cartelaTitulo: 'Feliz Dia Internacional da Mulher',
-    cartelaSubtitulo: 'Parabéns a todas as mulheres que transformam nosso condomínio com força, delicadeza e sabedoria.'
+    cartelaSubtitulo: 'Parabéns a todas as mulheres que transformam nossa comunidade com força, delicadeza e sabedoria.',
+    cartelaDicaBranca: '🌷 Valorizar, respeitar e apoiar as mulheres todos os dias constrói uma sociedade mais justa e acolhedora.'
   },
   pascoa: {
     id: 'pascoa',
@@ -343,7 +348,8 @@ var SEASONAL_THEMES_CATALOG = {
     recadoTexto: 'Que o domingo de Páscoa renove o amor, a paz e a esperança no lar de cada família do Modern Life Residence!',
     cartelaCategoria: '🐰 CELEBRAÇÃO DE PÁSCOA',
     cartelaTitulo: 'Feliz e Abençoada Páscoa!',
-    cartelaSubtitulo: 'Um tempo de renovação, esperança, doçura e união para todas as famílias do nosso condomínio.'
+    cartelaSubtitulo: 'Um tempo de renovação, esperança, doçura e união para todas as famílias.',
+    cartelaDicaBranca: '🕊️ Que a Páscoa fortaleça os laços familiares, o perdão, a gratidão e a partilha em cada lar!'
   },
   dia_maes: {
     id: 'dia_maes',
@@ -361,7 +367,8 @@ var SEASONAL_THEMES_CATALOG = {
     recadoTexto: 'A todas as mães do Modern Life Residence, nossa admiração e carinho por todo o amor e dedicação às suas famílias. Feliz Dia das Mães!',
     cartelaCategoria: '💐 HOMENAGEM DIA DAS MÃES',
     cartelaTitulo: 'Feliz Dia das Mães!',
-    cartelaSubtitulo: 'Todo o nosso carinho às mães que enchem o Modern Life Residence de amor, cuidado e inspiração.'
+    cartelaSubtitulo: 'Todo o nosso carinho às mães que enchem cada lar de amor, cuidado e inspiração.',
+    cartelaDicaBranca: '💐 Demonstre seu amor hoje e sempre com presença, afeto, escuta e gratidão por quem sempre cuidou de você!'
   },
   sao_joao: {
     id: 'sao_joao',
@@ -378,8 +385,9 @@ var SEASONAL_THEMES_CATALOG = {
     recadoTitulo: '🌽 BOAS FESTAS JUNINAS • SÃO JOÃO',
     recadoTexto: 'Viva São João! Aproveite as delícias e tradições juninas com sua família. Lembramos que não é permitido soltar fogos nas áreas do condomínio.',
     cartelaCategoria: '🌽 TRADIÇÃO NORDESTINA • SÃO JOÃO',
-    cartelaTitulo: 'Viva São João no Modern Life!',
-    cartelaSubtitulo: 'Mês de alegria, milho verde, canjica, forró e confraternização entre as famílias!'
+    cartelaTitulo: 'Viva São João!',
+    cartelaSubtitulo: 'Mês de alegria, milho verde, canjica, forró e confraternização entre as famílias!',
+    cartelaDicaBranca: '🪗 Celebre as tradições juninas com segurança: evite fogos de artifício e proteja crianças, idosos e animais de estimação.'
   },
   dia_pais: {
     id: 'dia_pais',
@@ -397,7 +405,8 @@ var SEASONAL_THEMES_CATALOG = {
     recadoTexto: 'Parabéns a todos os pais do Modern Life Residence pelo exemplo, dedicação e companheirismo com seus filhos e famílias!',
     cartelaCategoria: '👔 HOMENAGEM DIA DOS PAIS',
     cartelaTitulo: 'Feliz Dia dos Pais!',
-    cartelaSubtitulo: 'Nossa homenagem a todos os pais que constroem histórias de amor, proteção e parceria todos os dias.'
+    cartelaSubtitulo: 'Nossa homenagem a todos os pais que constroem histórias de amor, proteção e parceria todos os dias.',
+    cartelaDicaBranca: '👔 Ser pai é ensinar pelo exemplo, caminhar junto e dedicar tempo de qualidade aos filhos todos os dias!'
   },
   independencia: {
     id: 'independencia',
@@ -415,7 +424,8 @@ var SEASONAL_THEMES_CATALOG = {
     recadoTexto: 'Desejamos a todos os moradores um excelente feriado da Independência do Brasil com descanso, segurança e harmonia!',
     cartelaCategoria: '🇧🇷 7 DE SETEMBRO • SEMANA DA PÁTRIA',
     cartelaTitulo: 'Bom Feriado da Independência!',
-    cartelaSubtitulo: 'Que a cidadania, o respeito e a união estejam sempre presentes em nossa comunidade.'
+    cartelaSubtitulo: 'Que a cidadania, o respeito e a união estejam sempre presentes em nossa comunidade.',
+    cartelaDicaBranca: '🇧🇷 Cidadania começa no dia a dia com respeito ao próximo, preservação do espaço coletivo e solidariedade.'
   },
   primavera: {
     id: 'primavera',
@@ -433,7 +443,8 @@ var SEASONAL_THEMES_CATALOG = {
     recadoTexto: 'A estação das flores chegou! Colabore com a preservação dos jardins e áreas verdes do Modern Life Residence.',
     cartelaCategoria: '🌸 ESTAÇÃO DAS FLORES • PRIMAVERA',
     cartelaTitulo: 'Bem-vinda, Primavera!',
-    cartelaSubtitulo: 'Cuidar das plantas e áreas verdes deixa o nosso Modern Life Residence ainda mais bonito e acolhedor.'
+    cartelaSubtitulo: 'Cuidar das plantas e áreas verdes deixa nosso ambiente ainda mais bonito e acolhedor.',
+    cartelaDicaBranca: '🌱 Dica Sustentável: Economize água, separe materiais recicláveis e ajude a preservar nossos jardins e canteiros.'
   },
   dia_criancas: {
     id: 'dia_criancas',
@@ -451,7 +462,8 @@ var SEASONAL_THEMES_CATALOG = {
     recadoTexto: 'Que a alegria e a pureza das crianças iluminem sempre o nosso condomínio! Feliz Dia das Crianças a todos os pequenos moradores!',
     cartelaCategoria: '🧸 12 DE OUTUBRO • MÊS DAS CRIANÇAS',
     cartelaTitulo: 'Feliz Dia das Crianças!',
-    cartelaSubtitulo: 'Brincar, sorrir e aprender com segurança: nosso carinho especial a todas as crianças do condomínio!'
+    cartelaSubtitulo: 'Brincar, sorrir e aprender com segurança: nosso carinho especial a todas as crianças!',
+    cartelaDicaBranca: '🧸 Incentive brincadeiras ao ar livre, leitura e convivência segura entre as crianças nas áreas de lazer!'
   },
   outubro_rosa: {
     id: 'outubro_rosa',
@@ -469,7 +481,8 @@ var SEASONAL_THEMES_CATALOG = {
     recadoTexto: 'O Modern Life Residence apoia o Outubro Rosa! O diagnóstico precoce e o cuidado com a saúde salvam vidas. Cuide-se!',
     cartelaCategoria: '🎀 CONSCIENTIZAÇÃO • OUTUBRO ROSA',
     cartelaTitulo: 'Outubro Rosa: Cuide de Você',
-    cartelaSubtitulo: 'Um gesto de autocuidado e prevenção pela saúde e bem-estar de todas as mulheres.'
+    cartelaSubtitulo: 'Um gesto de autocuidado e prevenção pela saúde e bem-estar de todas as mulheres.',
+    cartelaDicaBranca: '🩺 Dica de Saúde da Mulher: Realize seus exames preventivos regularmente, conheça seu corpo e pratique hábitos saudáveis.'
   },
   novembro_azul: {
     id: 'novembro_azul',
@@ -487,7 +500,8 @@ var SEASONAL_THEMES_CATALOG = {
     recadoTexto: 'O Modern Life Residence apoia o Novembro Azul! Manter os exames em dia e cuidar da saúde é uma atitude de coragem pela sua família.',
     cartelaCategoria: '💙 CONSCIENTIZAÇÃO • NOVEMBRO AZUL',
     cartelaTitulo: 'Novembro Azul: Prevenção é Vida',
-    cartelaSubtitulo: 'Incentivamos todos os moradores a cuidarem da saúde com hábitos saudáveis e acompanhamento preventivo.'
+    cartelaSubtitulo: 'Incentivamos todos os moradores a cuidarem da saúde com hábitos saudáveis e acompanhamento preventivo.',
+    cartelaDicaBranca: '🩺 Cuide da saúde do homem: consulte o urologista regularmente, mantenha os exames em dia e pratique atividades físicas.'
   },
   natal: {
     id: 'natal',
@@ -503,9 +517,10 @@ var SEASONAL_THEMES_CATALOG = {
     assuntoBusca: 'Natal Ceia Decoração Solidariedade Boas Festas',
     recadoTitulo: '🎄 FELIZ NATAL • MODERN LIFE',
     recadoTexto: 'Desejamos um Feliz e Abençoado Natal a todos os moradores e colaboradores do Modern Life Residence, com muita paz, amor e união!',
-    cartelaCategoria: '🎄 ESPECIAL DE NATAL • MODERN LIFE RESIDENCE',
+    cartelaCategoria: '🎄 ESPECIAL DE NATAL • BOAS FESTAS',
     cartelaTitulo: 'Feliz Natal e Boas Festas!',
-    cartelaSubtitulo: 'Que o espírito natalino ilumine cada lar do nosso condomínio com amor, fraternidade e esperança.'
+    cartelaSubtitulo: 'Que o espírito natalino ilumine cada lar do nosso condomínio com amor, fraternidade e esperança.',
+    cartelaDicaBranca: '🎄 Que a solidariedade, a paz e a harmonia estejam presentes em todas as famílias neste Natal e durante todo o ano!'
   }
 };
 
