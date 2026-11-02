@@ -7,13 +7,13 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
-  <link rel="stylesheet" href="css/admin.css?v=11">
+  <link rel="stylesheet" href="css/admin.css?v=14">
 </head>
 <body class="locked-admin">
   <!-- TELA DE BLOQUEIO COM SENHA CRIPTOGRAFADA (SHA-256) -->
   <div id="admin-auth-overlay" role="dialog" aria-modal="true">
     <div class="auth-card">
-      <img src="assets/logo-modern-life.png?v=11" alt="Modern Life Residence" style="width:200px; height:auto; object-fit:contain;">
+      <img src="assets/logo-modern-life.png?v=14" alt="Modern Life Residence" style="width:200px; height:auto; object-fit:contain;">
       <div>
         <span class="auth-badge-crypto">🔐 CRIPTOGRAFIA SHA-256 ATIVA</span>
       </div>
@@ -38,7 +38,7 @@
 
   <header class="admin-header">
     <div class="brand-area">
-      <img src="assets/logo-modern-life.png?v=11" alt="Modern Life Residence - Vida Moderna News">
+      <img src="assets/logo-modern-life.png?v=14" alt="Modern Life Residence - Vida Moderna News">
       <div>
         <h1>Vida Moderna News — Central de Gestão & Mídia Indoor</h1>
         <p>Modern Life Residence • Busca Automática por Temas • Filtro Classificação Familiar • Tela 1280x720px</p>
@@ -390,49 +390,101 @@
       <!-- ABA 4: CRIADOR RÁPIDO DE CARTELA 1280x520px (72dpi) -->
       <section id="tab-criador" class="tab-panel">
         <div class="card">
-          <h2>Gerador de Cartela Vida Moderna News (1280x520px • 72dpi)</h2>
+          <h2>Gerador de Cartela por Temas & Datas Comemorativas (1280x520px • 72dpi)</h2>
           <p class="subtitle">
-            Cria automaticamente uma cartela no tamanho exato de <strong>1280x520px (72dpi)</strong> destacando produto oferecido, telefone, site, e-mail e endereço para absorção rápida do térreo ao último andar.
+            Crie cartelas <strong>1280x520px (72dpi)</strong> de acordo com os <strong>Temas de Épocas do Ano e Datas Comemorativas</strong> ou cartelas comerciais/informativas do condomínio.
           </p>
+
+          <!-- Botões Rápidos de Temas para Gerar Cartela com 1 Clique -->
+          <div style="background:#f0fdf4; border:1.5px solid #86efac; border-radius:10px; padding:12px 14px; margin-bottom:16px;">
+            <label style="display:block; font-size:13px; font-weight:800; color:#14532d; margin-bottom:8px;">
+              🎨 Escolha um Tema para Carregar Cores, Ícone e Mensagem na Cartela (1 Clique):
+            </label>
+            <div id="gen-seasonal-chips" style="display:flex; flex-wrap:wrap; gap:6px;"></div>
+          </div>
 
           <form id="form-gerador-cartela">
             <div class="form-grid">
               <div class="form-group">
-                <label for="gen-cliente">Nome do Cliente / Assinatura</label>
-                <input type="text" id="gen-cliente" value="Modern Life Residence" required>
-              </div>
-              <div class="form-group">
-                <label for="gen-categoria">Etiqueta de Destaque</label>
-                <input type="text" id="gen-categoria" value="VIDA MODERNA NEWS" required>
-              </div>
-              <div class="form-group">
-                <label for="gen-tema">Tema Visual</label>
-                <select id="gen-tema">
-                  <option value="green">Verde Modern Life Residence (#2a5e35)</option>
-                  <option value="blue">Azul Corporativo</option>
-                  <option value="dark">Grafite Premium & Dourado</option>
-                  <option value="red">Vermelho Gastronomia & Ofertas</option>
+                <label for="gen-tema">Tema Visual / Data Comemorativa</label>
+                <select id="gen-tema" style="font-weight:700;">
+                  <optgroup label="🎉 Temas de Épocas & Datas Comemorativas">
+                    <option value="natal">🎄 Natal & Boas Festas</option>
+                    <option value="ano_novo">🥂 Réveillon & Ano Novo</option>
+                    <option value="verao_ferias">☀️ Verão & Férias no Condomínio</option>
+                    <option value="carnaval">🎭 Carnaval com Alegria e Paz</option>
+                    <option value="dia_mulher">🌷 Dia Internacional da Mulher</option>
+                    <option value="pascoa">🐰 Feliz Páscoa em Família</option>
+                    <option value="dia_maes">💐 Especial Dia das Mães</option>
+                    <option value="sao_joao">🌽 Festas Juninas & São João</option>
+                    <option value="dia_pais">👔 Especial Dia dos Pais</option>
+                    <option value="independencia">🇧🇷 Semana da Pátria / 7 de Setembro</option>
+                    <option value="primavera">🌸 Estação Primavera & Jardins</option>
+                    <option value="dia_criancas">🧸 Semana das Crianças</option>
+                    <option value="outubro_rosa">🎀 Outubro Rosa (Prevenção)</option>
+                    <option value="novembro_azul">💙 Novembro Azul (Saúde & Prevenção)</option>
+                  </optgroup>
+                  <optgroup label="🏢 Temas Institucionais & Comerciais">
+                    <option value="green" selected>🌿 Verde Modern Life Residence (#2a5e35)</option>
+                    <option value="blue">💼 Azul Corporativo & Serviços</option>
+                    <option value="dark">✨ Grafite Premium & Dourado</option>
+                    <option value="red">🍽️ Vermelho Gastronomia & Ofertas</option>
+                  </optgroup>
                 </select>
               </div>
-            </div>
-
-            <div class="form-group">
-              <label for="gen-produto">Produto / Serviço Principal (Frase de Absorção Rápida)</label>
-              <input type="text" id="gen-produto" value="Anuncie sua marca ou serviço para todos os moradores" required>
+              <div class="form-group">
+                <label for="gen-layout-modo">Estilo da Cartela</label>
+                <select id="gen-layout-modo">
+                  <option value="tematico">🎉 Cartela Temática / Comemorativa (Destaque p/ Mensagem)</option>
+                  <option value="comercial">🏪 Cartela Comercial / Parceiro (Com Telefone e Endereço)</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="gen-icone">Ícone / Símbolo de Destaque na Arte</label>
+                <input type="text" id="gen-icone" value="🌿" maxlength="6" placeholder="Ex: 🎄, 🌽, 💐, 💙">
+              </div>
             </div>
 
             <div class="form-grid">
               <div class="form-group">
-                <label for="gen-telefone">Telefone / WhatsApp</label>
-                <input type="text" id="gen-telefone" value="(84) 99999-0000" required>
+                <label for="gen-categoria">Etiqueta Superior da Cartela</label>
+                <input type="text" id="gen-categoria" value="MODERN LIFE RESIDENCE" required>
               </div>
               <div class="form-group">
-                <label for="gen-site">Site ou Instagram / E-mail</label>
-                <input type="text" id="gen-site" value="Vida Moderna News | Modern Life Residence">
+                <label for="gen-cliente">Assinatura no Rodapé da Cartela</label>
+                <input type="text" id="gen-cliente" value="Modern Life Residence" required>
               </div>
               <div class="form-group">
-                <label for="gen-endereco">Endereço / Localização</label>
-                <input type="text" id="gen-endereco" value="Modern Life Residence - Administração">
+                <label>Cores do Gradiente (Automáticas pelo Tema ou Personalizadas)</label>
+                <div style="display:flex; gap:8px; align-items:center;">
+                  <input type="color" id="gen-cor1" value="#14331b" title="Cor Principal Escura" style="height:38px; padding:2px; cursor:pointer;">
+                  <input type="color" id="gen-cor2" value="#2a5e35" title="Cor Secundária Vibrante" style="height:38px; padding:2px; cursor:pointer;">
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="gen-produto">Título Principal em Destaque (Absorção Rápida)</label>
+              <input type="text" id="gen-produto" value="Bem-vindo ao Modern Life Residence" required>
+            </div>
+
+            <div class="form-group">
+              <label for="gen-subtitulo">Mensagem / Subtítulo Complementar da Cartela</label>
+              <input type="text" id="gen-subtitulo" value="Qualidade de vida, segurança e boa convivência para toda a sua família.">
+            </div>
+
+            <div class="form-grid" id="gen-contato-grid">
+              <div class="form-group">
+                <label for="gen-telefone">Telefone / WhatsApp (Opcional no modo temático)</label>
+                <input type="text" id="gen-telefone" value="Vida Moderna News">
+              </div>
+              <div class="form-group">
+                <label for="gen-site">Selo / Frase de Rodapé ou Instagram</label>
+                <input type="text" id="gen-site" value="Modern Life Residence • Comunicação Interna">
+              </div>
+              <div class="form-group">
+                <label for="gen-endereco">Localização / Complemento (Opcional)</label>
+                <input type="text" id="gen-endereco" value="Administração do Condomínio">
               </div>
             </div>
 
@@ -453,13 +505,13 @@
             </div>
 
             <div style="margin-bottom: 14px;">
-              <label style="display:block; font-size:13px; font-weight:700; margin-bottom:6px;">Prévia da Cartela Gerada (1280x520px):</label>
+              <label style="display:block; font-size:13px; font-weight:700; margin-bottom:6px;">Prévia da Cartela Temática (1280x520px):</label>
               <canvas id="canvas-cartela" width="1280" height="520" style="width:100%; height:auto; border-radius:8px; border:1px solid #cbd5e1;"></canvas>
             </div>
 
             <div style="display:flex; gap:10px; flex-wrap:wrap;">
               <button type="button" id="btn-preview-cartela" class="btn btn-warning">🔄 Atualizar Prévia 1280x520</button>
-              <button type="submit" class="btn btn-primary">✅ Publicar Cartela na Programação (15s)</button>
+              <button type="submit" class="btn btn-primary">✅ Publicar Cartela Temática na Programação (15s)</button>
               <button type="button" id="btn-download-cartela" class="btn btn-success">💾 Baixar PNG (1280x520px)</button>
             </div>
           </form>
@@ -652,7 +704,7 @@
           <p class="subtitle">Veja exatamente como a tela está sendo exibida no aparelho Android:</p>
 
           <div id="preview-wrapper" class="preview-frame-wrapper">
-            <iframe id="preview-iframe" src="index.html?v=13" title="Preview 1280x720 Vida Moderna News"></iframe>
+            <iframe id="preview-iframe" src="index.html?v=14" title="Preview 1280x720 Vida Moderna News"></iframe>
           </div>
 
           <div class="dimension-diagram">
@@ -670,8 +722,8 @@
 
   <div id="toast" class="toast-notification">Alterações salvas e sincronizadas!</div>
 
-  <script src="js/cloud-config.js?v=13"></script>
-  <script src="js/db.js?v=13"></script>
-  <script src="js/admin.js?v=13"></script>
+  <script src="js/cloud-config.js?v=14"></script>
+  <script src="js/db.js?v=14"></script>
+  <script src="js/admin.js?v=14"></script>
 </body>
 </html>

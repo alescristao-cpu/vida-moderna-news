@@ -1219,92 +1219,270 @@
   });
 
   /**
-   * 4. GERADOR RÁPIDO DE CARTELA 1280x520px (72dpi)
+   * 4. GERADOR RÁPIDO DE CARTELA POR TEMAS & DATAS COMEMORATIVAS (1280x520px • 72dpi)
    */
   const canvasCartela = document.getElementById('canvas-cartela');
   const formGeradorCartela = document.getElementById('form-gerador-cartela');
+  const genSeasonalChipsEl = document.getElementById('gen-seasonal-chips');
+  const genTemaSelect = document.getElementById('gen-tema');
+  const genLayoutModoSelect = document.getElementById('gen-layout-modo');
+
+  const commercialPresets = {
+    green: {
+      c1: '#14331b',
+      c2: '#2a5e35',
+      badge: '#f59e0b',
+      icone: '🌿',
+      categoria: 'MODERN LIFE RESIDENCE',
+      titulo: 'Bem-vindo ao Modern Life Residence',
+      subtitulo: 'Qualidade de vida, segurança e boa convivência para toda a sua família.'
+    },
+    blue: {
+      c1: '#06233b',
+      c2: '#0d68a8',
+      badge: '#ff7b00',
+      icone: '💼',
+      categoria: 'COMUNICADO & SERVIÇOS',
+      titulo: 'Anuncie sua marca ou serviço para os moradores',
+      subtitulo: 'Destaque imediato em alta definição no elevador do Modern Life Residence.'
+    },
+    dark: {
+      c1: '#111827',
+      c2: '#1f2937',
+      badge: '#eab308',
+      icone: '✨',
+      categoria: 'AVISO IMPORTANTE',
+      titulo: 'Atenção às Normas de Convivência e Segurança',
+      subtitulo: 'O respeito mútuo valoriza nosso patrimônio e o bem-estar de todas as famílias.'
+    },
+    red: {
+      c1: '#450a0a',
+      c2: '#991b1b',
+      badge: '#f59e0b',
+      icone: '🍽️',
+      categoria: 'GASTRONOMIA & OFERTAS',
+      titulo: 'Sabores Especiais e Delivery no Seu Condomínio',
+      subtitulo: 'Confira as opções de gastronomia e conveniência para sua família.'
+    }
+  };
+
+  function applyThemeToCartelaGenerator(temaKey, forceSwitchToTematico) {
+    const seasonalCat = window.falaSync.seasonalCatalog || {};
+    const sTheme = seasonalCat[temaKey];
+    const cPreset = commercialPresets[temaKey];
+
+    const elTema = document.getElementById('gen-tema');
+    const elModo = document.getElementById('gen-layout-modo');
+    const elIcone = document.getElementById('gen-icone');
+    const elCat = document.getElementById('gen-categoria');
+    const elProd = document.getElementById('gen-produto');
+    const elSub = document.getElementById('gen-subtitulo');
+    const elCor1 = document.getElementById('gen-cor1');
+    const elCor2 = document.getElementById('gen-cor2');
+    const elSite = document.getElementById('gen-site');
+
+    if (sTheme) {
+      if (elTema) elTema.value = temaKey === 'padrao' ? 'green' : temaKey;
+      if (elModo && forceSwitchToTematico !== false) elModo.value = 'tematico';
+      if (elIcone) elIcone.value = sTheme.icone || '🎉';
+      if (elCat) elCat.value = sTheme.cartelaCategoria || sTheme.nome.toUpperCase();
+      if (elProd) elProd.value = sTheme.cartelaTitulo || sTheme.nome;
+      if (elSub) elSub.value = sTheme.cartelaSubtitulo || sTheme.recadoTexto || '';
+      if (elCor1) elCor1.value = sTheme.corSecundaria || '#14532d';
+      if (elCor2) elCor2.value = sTheme.corPrimaria || '#2a5e35';
+      if (elSite) elSite.value = sTheme.seloTexto || 'Modern Life Residence • Comunicação Interna';
+    } else if (cPreset) {
+      if (elTema) elTema.value = temaKey;
+      if (elIcone) elIcone.value = cPreset.icone;
+      if (elCat) elCat.value = cPreset.categoria;
+      if (elProd) elProd.value = cPreset.titulo;
+      if (elSub) elSub.value = cPreset.subtitulo;
+      if (elCor1) elCor1.value = cPreset.c1;
+      if (elCor2) elCor2.value = cPreset.c2;
+    }
+
+    renderCartelaGeneratorPreview();
+  }
+
+  function renderGenSeasonalChips() {
+    if (!genSeasonalChipsEl) return;
+    genSeasonalChipsEl.innerHTML = '';
+    const seasonalCat = window.falaSync.seasonalCatalog || {};
+
+    Object.values(seasonalCat).forEach((tema) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'btn btn-sm';
+      btn.style.cssText = `
+        background: #ffffff;
+        color: #0f172a;
+        border: 1.5px solid ${tema.corPrimaria};
+        font-weight: 700;
+        font-size: 12px;
+        padding: 5px 10px;
+        border-radius: 16px;
+      `;
+      btn.textContent = `${tema.icone} ${tema.nome}`;
+      btn.onclick = () => {
+        applyThemeToCartelaGenerator(tema.id, true);
+        showToast(`🎨 Modelo de cartela "${tema.icone} ${tema.nome}" carregado!`);
+      };
+      genSeasonalChipsEl.appendChild(btn);
+    });
+  }
+
+  if (genTemaSelect) {
+    genTemaSelect.addEventListener('change', () => {
+      const val = genTemaSelect.value;
+      const isSeasonal = Boolean((window.falaSync.seasonalCatalog || {})[val]);
+      applyThemeToCartelaGenerator(val, isSeasonal);
+    });
+  }
+
+  function wrapCanvasText(ctx, text, maxWidth) {
+    const words = (text || '').split(/\s+/);
+    const lines = [];
+    let currentLine = '';
+    words.forEach((word) => {
+      const testLine = currentLine ? `${currentLine} ${word}` : word;
+      if (ctx.measureText(testLine).width <= maxWidth || !currentLine) {
+        currentLine = testLine;
+      } else {
+        lines.push(currentLine);
+        currentLine = word;
+      }
+    });
+    if (currentLine) lines.push(currentLine);
+    return lines;
+  }
 
   function renderCartelaGeneratorPreview() {
     if (!canvasCartela) return;
     const ctx = canvasCartela.getContext('2d');
-    const cliente = document.getElementById('gen-cliente').value || 'Anunciante';
-    const categoria = document.getElementById('gen-categoria').value || 'VIDA MODERNA NEWS';
-    const tema = document.getElementById('gen-tema').value || 'green';
-    const produto = document.getElementById('gen-produto').value || '';
-    const telefone = document.getElementById('gen-telefone').value || '';
-    const site = document.getElementById('gen-site').value || '';
-    const endereco = document.getElementById('gen-endereco').value || '';
+    const cliente = document.getElementById('gen-cliente')?.value || 'Modern Life Residence';
+    const categoria = document.getElementById('gen-categoria')?.value || 'MODERN LIFE RESIDENCE';
+    const layoutModo = document.getElementById('gen-layout-modo')?.value || 'tematico';
+    const icone = document.getElementById('gen-icone')?.value || '🌿';
+    const produto = document.getElementById('gen-produto')?.value || '';
+    const subtitulo = document.getElementById('gen-subtitulo')?.value || '';
+    const telefone = document.getElementById('gen-telefone')?.value || '';
+    const site = document.getElementById('gen-site')?.value || '';
+    const endereco = document.getElementById('gen-endereco')?.value || '';
+    const c1 = document.getElementById('gen-cor1')?.value || '#14331b';
+    const c2 = document.getElementById('gen-cor2')?.value || '#2a5e35';
 
-    const palettes = {
-      green: { c1: '#14331b', c2: '#2a5e35', badge: '#f59e0b' },
-      blue: { c1: '#06233b', c2: '#0d68a8', badge: '#ff7b00' },
-      dark: { c1: '#111827', c2: '#1f2937', badge: '#eab308' },
-      red: { c1: '#450a0a', c2: '#991b1b', badge: '#f59e0b' }
-    };
-    const pal = palettes[tema] || palettes.green;
-
+    // 1. Fundo Gradiente Temático 1280x520
     const grad = ctx.createLinearGradient(0, 0, 1280, 520);
-    grad.addColorStop(0, pal.c1);
-    grad.addColorStop(1, pal.c2);
+    grad.addColorStop(0, c1);
+    grad.addColorStop(1, c2);
     ctx.fillStyle = grad;
     ctx.fillRect(0, 0, 1280, 520);
 
+    // 2. Elementos Decorativos Suaves no Canto Direito
+    ctx.fillStyle = 'rgba(255,255,255,0.07)';
+    ctx.beginPath();
+    ctx.arc(1100, 185, 220, 0, Math.PI * 2);
+    ctx.fill();
+
     ctx.fillStyle = 'rgba(255,255,255,0.05)';
     ctx.beginPath();
-    ctx.arc(1120, 100, 240, 0, Math.PI * 2);
+    ctx.arc(1100, 185, 155, 0, Math.PI * 2);
     ctx.fill();
 
-    ctx.fillStyle = pal.badge;
-    ctx.beginPath();
-    ctx.roundRect(65, 42, Math.min(650, categoria.length * 16 + 48), 44, 8);
-    ctx.fill();
-
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 21px "Segoe UI", Arial, sans-serif';
-    ctx.fillText(categoria.toUpperCase(), 85, 71);
-
-    ctx.fillStyle = '#ffffff';
-    ctx.font = '900 50px "Segoe UI", Arial, sans-serif';
-    const words = produto.split(' ');
-    let line1 = '';
-    let line2 = '';
-    words.forEach((w) => {
-      if ((line1 + w).length < 34) {
-        line1 += (line1 ? ' ' : '') + w;
-      } else {
-        line2 += (line2 ? ' ' : '') + w;
-      }
-    });
-    ctx.fillText(line1, 65, 160);
-    if (line2) {
-      ctx.fillStyle = '#bbf7d0';
-      ctx.fillText(line2, 65, 222);
+    // Ícone Temático em Destaque na Direita
+    if (icone) {
+      ctx.font = '135px "Segoe UI Emoji", "Apple Color Emoji", Arial, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(icone, 1100, 232);
+      ctx.textAlign = 'left';
     }
 
-    ctx.fillStyle = '#f1f5f9';
-    ctx.font = '600 26px "Segoe UI", Arial, sans-serif';
-    if (site) ctx.fillText('🌐 ' + site, 65, 295);
-    if (endereco) ctx.fillText('📍 ' + endereco, 65, 338);
-
-    ctx.fillStyle = '#ffffff';
+    // 3. Etiqueta Superior (Badge)
+    ctx.font = 'bold 20px "Segoe UI", Arial, sans-serif';
+    const catText = categoria.toUpperCase();
+    const catWidth = Math.min(760, Math.max(220, ctx.measureText(catText).width + 44));
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.18)';
     ctx.beginPath();
-    ctx.roundRect(65, 382, 1150, 96, 14);
+    ctx.roundRect(65, 38, catWidth, 44, 22);
     ctx.fill();
 
-    ctx.fillStyle = pal.c1;
-    ctx.font = '900 38px "Segoe UI", Arial, sans-serif';
-    ctx.fillText(cliente, 95, 444);
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.45)';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
 
-    ctx.fillStyle = '#2a5e35';
-    ctx.font = '800 36px "Segoe UI", Arial, sans-serif';
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText(catText, 87, 67);
+
+    // 4. Título Principal (Quebra inteligente em até 2 linhas)
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '900 52px "Segoe UI", Arial, sans-serif';
+    const titleLines = wrapCanvasText(ctx, produto, 860).slice(0, 2);
+    let currentY = 148;
+    titleLines.forEach((ln) => {
+      ctx.fillText(ln, 65, currentY);
+      currentY += 60;
+    });
+
+    // 5. Subtítulo / Mensagem Comemorativa (Quebra inteligente em até 2 linhas)
+    if (subtitulo) {
+      ctx.fillStyle = '#f1f5f9';
+      ctx.font = '500 28px "Segoe UI", Arial, sans-serif';
+      const subLines = wrapCanvasText(ctx, subtitulo, 860).slice(0, 2);
+      currentY += 6;
+      subLines.forEach((sln) => {
+        ctx.fillText(sln, 65, currentY);
+        currentY += 38;
+      });
+    }
+
+    // 6. Se for modo comercial, exibe linha complementar de site/endereço
+    if (layoutModo === 'comercial' && (site || endereco)) {
+      ctx.fillStyle = '#fef08a';
+      ctx.font = '600 23px "Segoe UI", Arial, sans-serif';
+      const infoStr = [site ? `🌐 ${site}` : '', endereco ? `📍 ${endereco}` : ''].filter(Boolean).join('   •   ');
+      ctx.fillText(infoStr, 65, 355);
+    }
+
+    // 7. Faixa Inferior de Assinatura (1150x92px)
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.roundRect(65, 386, 1150, 92, 14);
+    ctx.fill();
+
+    ctx.fillStyle = c1;
+    ctx.font = '900 35px "Segoe UI", Arial, sans-serif';
+    ctx.fillText(`${icone ? icone + ' ' : ''}${cliente}`, 92, 444);
+
+    ctx.fillStyle = c2;
+    ctx.font = '800 26px "Segoe UI", Arial, sans-serif';
     ctx.textAlign = 'right';
-    ctx.fillText('📞 ' + telefone, 1185, 444);
+    if (layoutModo === 'comercial' && telefone) {
+      ctx.fillText('📞 ' + telefone, 1185, 443);
+    } else {
+      const rightLabel = site || telefone || 'Vida Moderna News';
+      ctx.fillText(rightLabel.slice(0, 44), 1185, 442);
+    }
     ctx.textAlign = 'left';
   }
 
-  ['gen-cliente', 'gen-categoria', 'gen-tema', 'gen-produto', 'gen-telefone', 'gen-site', 'gen-endereco'].forEach((id) => {
+  [
+    'gen-cliente',
+    'gen-categoria',
+    'gen-layout-modo',
+    'gen-icone',
+    'gen-cor1',
+    'gen-cor2',
+    'gen-produto',
+    'gen-subtitulo',
+    'gen-telefone',
+    'gen-site',
+    'gen-endereco'
+  ].forEach((id) => {
     const el = document.getElementById(id);
-    if (el) el.addEventListener('input', renderCartelaGeneratorPreview);
+    if (el) {
+      el.addEventListener('input', renderCartelaGeneratorPreview);
+      el.addEventListener('change', renderCartelaGeneratorPreview);
+    }
   });
 
   document.getElementById('btn-preview-cartela').addEventListener('click', renderCartelaGeneratorPreview);
@@ -1327,7 +1505,7 @@
     const novaCartela = {
       id: 'mid-' + Date.now(),
       tipo: 'cartela',
-      titulo: `${cliente} - ${produto.slice(0, 32)}`,
+      titulo: `${ produto.slice(0, 42) } (${ cliente })`,
       cliente: cliente,
       url: dataUrl,
       duracao: 15,
@@ -1342,8 +1520,9 @@
 
     state.midias = [...(state.midias || []), novaCartela];
     await window.falaSync.pushStateToServer(state, false);
+    notifyPreviewIframe(state);
     renderMidias();
-    showToast('Cartela 1280x520px criada e publicada na programação!');
+    showToast('Cartela Temática 1280x520px criada e publicada na programação!');
   });
 
   document.getElementById('btn-download-cartela').addEventListener('click', () => {
@@ -1609,21 +1788,44 @@
         showToast(`📋 Recado de "${tema.nome}" publicado no rodapé do Player!`);
       };
 
+      const btnPublishCartelaDirect = document.createElement('button');
+      btnPublishCartelaDirect.type = 'button';
+      btnPublishCartelaDirect.className = 'btn btn-sm btn-warning';
+      btnPublishCartelaDirect.textContent = '⚡ Publicar Cartela 1280x520';
+      btnPublishCartelaDirect.onclick = async () => {
+        applyThemeToCartelaGenerator(tema.id, true);
+        const dataUrl = canvasCartela.toDataURL('image/png');
+        const novaCartela = {
+          id: 'mid-sazonal-' + Date.now(),
+          tipo: 'cartela',
+          titulo: `${tema.icone} ${tema.cartelaTitulo || tema.nome} (Modern Life Residence)`,
+          cliente: 'Modern Life Residence',
+          url: dataUrl,
+          duracao: 15,
+          assinaturaSegundos: 5,
+          dimensoes: '1280x520px (72dpi)',
+          condominio: 'TODOS',
+          dataInicio: '',
+          dataFim: '',
+          ativo: true,
+          criadoEm: new Date().toISOString()
+        };
+        state.midias = [novaCartela, ...(state.midias || [])];
+        await window.falaSync.pushStateToServer(state, false);
+        notifyPreviewIframe(state);
+        renderMidias();
+        showToast(`🖼️ Cartela de "${tema.nome}" criada e publicada direto no Player!`);
+      };
+
       const btnCreateCartela = document.createElement('button');
       btnCreateCartela.type = 'button';
-      btnCreateCartela.className = 'btn btn-sm btn-warning';
-      btnCreateCartela.textContent = '🖼️ Criar Cartela 1280x520';
+      btnCreateCartela.className = 'btn btn-sm btn-primary';
+      btnCreateCartela.textContent = '🎨 Personalizar Cartela / Datas';
       btnCreateCartela.onclick = () => {
-        const genCat = document.getElementById('gen-categoria');
-        const genProd = document.getElementById('gen-produto');
-        const genSite = document.getElementById('gen-site');
-        if (genCat) genCat.value = tema.cartelaCategoria || tema.nome.toUpperCase();
-        if (genProd) genProd.value = `${tema.cartelaTitulo || tema.nome} — ${tema.cartelaSubtitulo || ''}`;
-        if (genSite) genSite.value = tema.seloTexto || 'Modern Life Residence';
-        renderCartelaGeneratorPreview();
+        applyThemeToCartelaGenerator(tema.id, true);
         const tabCriadorBtn = document.querySelector('.tab-btn[data-tab="tab-criador"]');
         if (tabCriadorBtn) tabCriadorBtn.click();
-        showToast(`🎨 Cartela de "${tema.nome}" pronta na prévia! Defina Data Inicial/Final se desejar e publique.`);
+        showToast(`🎨 Cartela de "${tema.nome}" carregada no Criador! Ajuste o texto ou Data Inicial/Final e publique.`);
       };
 
       const btnSearchNews = document.createElement('button');
@@ -1641,6 +1843,7 @@
 
       actionsDiv.appendChild(btnTheme);
       actionsDiv.appendChild(btnPostRecado);
+      actionsDiv.appendChild(btnPublishCartelaDirect);
       actionsDiv.appendChild(btnCreateCartela);
       actionsDiv.appendChild(btnSearchNews);
 
@@ -1670,6 +1873,7 @@
     renderRecados();
     renderThemesSelector();
     renderSeasonalCatalog();
+    renderGenSeasonalChips();
     renderMidias();
     renderNoticiasPendentes();
     renderNoticias();
@@ -1684,6 +1888,7 @@
     renderRecados();
     renderThemesSelector();
     renderSeasonalCatalog();
+    renderGenSeasonalChips();
     renderMidias();
     renderNoticiasPendentes();
     renderNoticias();
@@ -1694,6 +1899,7 @@
   renderRecados();
   renderThemesSelector();
   renderSeasonalCatalog();
+  renderGenSeasonalChips();
   renderMidias();
   renderNoticiasPendentes();
   renderNoticias();
@@ -1708,6 +1914,7 @@
       renderRecados();
       renderThemesSelector();
       renderSeasonalCatalog();
+      renderGenSeasonalChips();
       renderMidias();
       renderNoticiasPendentes();
       renderNoticias();
