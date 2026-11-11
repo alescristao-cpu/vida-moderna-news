@@ -566,6 +566,58 @@ function resolveActiveSeasonalTheme(temaConfigurado) {
 }
 
 var AMBIENT_MUSIC_CATALOG = {
+  gospel_piano: {
+    id: 'gospel_piano',
+    nome: 'Melodias Gospel: Piano & Adoração Suave',
+    icone: '🕊️',
+    categoria: 'Gospel & Evangélica Instrumental (100% Offline)',
+    cor: '#0369a1',
+    descricao: 'Arranjos suaves de piano inspirados em hinos clássicos ("Grandioso És Tu", "Sublime Graça") e louvores de paz para o condomínio.',
+    tipo: 'synth',
+    preset: 'gospel_piano'
+  },
+  gospel_harpa_violao: {
+    id: 'gospel_harpa_violao',
+    nome: 'Harpa Cristã & Violão Acústico Evangélico',
+    icone: '🙏',
+    categoria: 'Gospel & Evangélica Instrumental (100% Offline)',
+    cor: '#0d9488',
+    descricao: 'Melodias serenas em violão e harpa inspiradas nos hinos tradicionais ("Porque Ele Vive", "Mais Perto Quero Estar").',
+    tipo: 'synth',
+    preset: 'gospel_harpa_violao'
+  },
+  gospel_cordas_paz: {
+    id: 'gospel_cordas_paz',
+    nome: 'Louvor Instrumental & Cordas Celestiais',
+    icone: '✨',
+    categoria: 'Gospel & Evangélica Instrumental (100% Offline)',
+    cor: '#4f46e5',
+    descricao: 'Harmonia orquestral suave com cordas e melodia contemplativa transmitindo paz, fé e comunhão no ambiente.',
+    tipo: 'synth',
+    preset: 'gospel_cordas_paz'
+  },
+  radio_gospel_instrumental: {
+    id: 'radio_gospel_instrumental',
+    nome: 'Rádio Gospel: Hinos Instrumentais 24h',
+    icone: '📻',
+    categoria: 'Rádio Evangélica Online 24h (Internet)',
+    cor: '#0284c7',
+    descricao: 'Transmissão online 24h de hinos cristãos e melodias evangélicas instrumentais em piano, harpa e violão.',
+    tipo: 'stream',
+    streamUrl: 'https://s2.ssl-stream.com/listen/abiding_radio/instrumental.mp3',
+    fallbackPreset: 'gospel_piano'
+  },
+  radio_gospel_louvor: {
+    id: 'radio_gospel_louvor',
+    nome: 'Rádio Evangélica: Louvor & Adoração Suave 24h',
+    icone: '🙌',
+    categoria: 'Rádio Evangélica Online 24h (Internet)',
+    cor: '#2563eb',
+    descricao: 'Programação cristã online 24h com hinos sacros, corais suaves e louvores edificantes para a família.',
+    tipo: 'stream',
+    streamUrl: 'https://s2.ssl-stream.com/listen/abiding_radio/sacred.mp3',
+    fallbackPreset: 'gospel_harpa_violao'
+  },
   piano_lounge: {
     id: 'piano_lounge',
     nome: 'Piano Lounge & Recepção',
@@ -782,6 +834,55 @@ VidaModernaAmbientAudio.prototype.playTone = function (freq, durationSec, delayS
 };
 
 var SYNTH_PROGRESSIONS = {
+  gospel_piano: {
+    stepMs: 3600,
+    wave: 'sine',
+    melodyWave: 'triangle',
+    attack: 0.18,
+    chords: [
+      // "Sublime Graça" (Amazing Grace) & "Grandioso És Tu" (How Great Thou Art) em Dó Maior
+      { notes: [130.81, 196.00, 261.63, 329.63], melody: [392.00, 523.25, 659.25, 523.25] }, // C
+      { notes: [130.81, 196.00, 246.94, 329.63], melody: [659.25, 587.33, 523.25, 440.00] }, // Cmaj7
+      { notes: [174.61, 220.00, 261.63, 349.23], melody: [392.00, 329.63, 392.00, 523.25] }, // Fmaj7
+      { notes: [196.00, 246.94, 293.66, 392.00], melody: [659.25, 587.33, 783.99, 659.25] }, // G
+      { notes: [130.81, 196.00, 261.63, 329.63], melody: [392.00, 523.25, 659.25, 698.46] }, // C ("Então minh'alma...")
+      { notes: [174.61, 220.00, 261.63, 349.23], melody: [587.33, 698.46, 659.25, 587.33] }, // F
+      { notes: [146.83, 220.00, 293.66, 349.23], melody: [523.25, 493.88, 587.33, 493.88] }, // Dm7 -> G
+      { notes: [130.81, 196.00, 261.63, 329.63], melody: [523.25, 392.00, 329.63, 523.25] }  // C
+    ]
+  },
+  gospel_harpa_violao: {
+    stepMs: 3200,
+    wave: 'triangle',
+    melodyWave: 'triangle',
+    attack: 0.08,
+    chords: [
+      // "Porque Ele Vive" (Because He Lives) em Sol Maior
+      { notes: [196.00, 246.94, 293.66, 392.00], melody: [293.66, 392.00, 440.00, 493.88] }, // G
+      { notes: [130.81, 196.00, 261.63, 329.63], melody: [523.25, 659.25, 587.33, 523.25] }, // C
+      { notes: [146.83, 196.00, 246.94, 392.00], melody: [493.88, 392.00, 493.88, 587.33] }, // G/D
+      { notes: [146.83, 220.00, 293.66, 369.99], melody: [440.00, 493.88, 440.00, 392.00] }, // D7
+      { notes: [196.00, 246.94, 293.66, 392.00], melody: [493.88, 587.33, 783.99, 587.33] }, // G
+      { notes: [130.81, 196.00, 261.63, 329.63], melody: [659.25, 783.99, 659.25, 523.25] }, // C
+      { notes: [146.83, 196.00, 246.94, 369.99], melody: [587.33, 493.88, 440.00, 493.88] }, // G/D -> D7
+      { notes: [196.00, 246.94, 293.66, 392.00], melody: [392.00, 493.88, 587.33, 392.00] }  // G
+    ]
+  },
+  gospel_cordas_paz: {
+    stepMs: 4000,
+    wave: 'sine',
+    melodyWave: 'sine',
+    attack: 0.55,
+    chords: [
+      // "Mais Perto Quero Estar" & "Bondoso Amigo" em Fá Maior
+      { notes: [174.61, 220.00, 261.63, 349.23], melody: [440.00, 392.00, 349.23, 349.23] }, // Fmaj7
+      { notes: [116.54, 174.61, 233.08, 293.66], melody: [293.66, 349.23, 466.16, 440.00] }, // Bb
+      { notes: [130.81, 196.00, 261.63, 349.23], melody: [392.00, 440.00, 392.00, 349.23] }, // C7sus4
+      { notes: [174.61, 220.00, 261.63, 349.23], melody: [523.25, 587.33, 523.25, 440.00] }, // Fmaj7
+      { notes: [116.54, 174.61, 233.08, 293.66], melody: [349.23, 293.66, 349.23, 440.00] }, // Bb
+      { notes: [130.81, 174.61, 220.00, 349.23], melody: [392.00, 349.23, 392.00, 440.00] }  // F
+    ]
+  },
   piano_lounge: {
     stepMs: 3600,
     wave: 'sine',
@@ -859,7 +960,7 @@ VidaModernaAmbientAudio.prototype.startSynthLoop = function (presetKey) {
 
     var durSec = (preset.stepMs / 1000) * 1.15;
     for (var i = 0; i < chordObj.notes.length; i++) {
-      var arpDelay = presetKey === 'violao_acustico' ? (i * 0.22) : (i * 0.08);
+      var arpDelay = (presetKey === 'violao_acustico' || presetKey === 'gospel_harpa_violao') ? (i * 0.22) : (i * 0.08);
       self.playTone(chordObj.notes[i], durSec, arpDelay, preset.wave, 0.16, preset.attack);
     }
 
