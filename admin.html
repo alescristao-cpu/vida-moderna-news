@@ -66,6 +66,7 @@
         <button class="tab-btn active" data-tab="tab-recados">📋 Recados do Condomínio (Independente)</button>
         <button class="tab-btn" data-tab="tab-noticias">📰 Notícias Automáticas & Filtro Familiar</button>
         <button class="tab-btn" data-tab="tab-sazonal">🎉 Épocas & Datas Comemorativas</button>
+        <button class="tab-btn" data-tab="tab-musica">🎵 Música Ambiente</button>
         <button class="tab-btn" data-tab="tab-midias">🖼️ Cartelas & Vídeos (1280x520px)</button>
         <button class="tab-btn" data-tab="tab-criador">🎨 Criador Rápido de Cartela 1280x520</button>
         <button class="tab-btn" data-tab="tab-config">☁️ Nuvem (Supabase + GitHub) & Config</button>
@@ -577,6 +578,104 @@
         </div>
       </section>
 
+      <!-- ABA MÚSICA AMBIENTE: TRILHA SONORA RELAXANTE & RÁDIO AMBIENTE -->
+      <section id="tab-musica" class="tab-panel">
+        <div class="card" style="border: 2px solid #1e40af; background: #f8fafc;">
+          <h2>
+            <span>🎵 Música Ambiente para Recepção, Hall e Elevadores</span>
+            <span class="family-badge-libre" id="badge-musica-status">🔇 Desativada</span>
+          </h2>
+          <p class="subtitle">
+            Escolha uma <strong>trilha instrumental relaxante integrada</strong> (funciona 100% mesmo se a internet oscilar), uma <strong>rádio online 24h</strong> de música ambiente ou cadastre suas próprias músicas <code>.mp3</code>. Você também pode definir o horário permitido para não tocar de madrugada!
+          </p>
+
+          <div style="background:#ffffff; border:1.5px solid #cbd5e1; border-radius:10px; padding:16px; margin-bottom:18px;">
+            <div class="form-grid" style="align-items:center;">
+              <div class="form-group" style="margin-bottom:0;">
+                <label style="display:flex; align-items:center; gap:8px; font-size:15px; font-weight:800; color:#1e3a8a; cursor:pointer;">
+                  <input type="checkbox" id="chk-musica-ativa" style="width:20px; height:20px; cursor:pointer;">
+                  🔊 Ativar Música Ambiente no Player (1280x720)
+                </label>
+                <span style="font-size:12px; color:#475569; display:block; margin-top:4px;">
+                  Quando ativada, o Player toca automaticamente a estação escolhida durante o horário permitido.
+                </span>
+              </div>
+
+              <div class="form-group" style="margin-bottom:0;">
+                <label for="select-musica-estilo">🎼 Estação / Estilo Musical Ativo</label>
+                <select id="select-musica-estilo" style="font-weight:700;">
+                  <option value="piano_lounge">🎹 Piano Lounge & Recepção (Instrumental Offline)</option>
+                  <option value="bossa_jazz">🎷 Bossa Nova & Jazz Suave (Instrumental Offline)</option>
+                  <option value="violao_acustico">🎸 Violão & Harpa Acústica (Instrumental Offline)</option>
+                  <option value="spa_zen">🌿 Spa, Zen & Bem-Estar (Instrumental Offline)</option>
+                  <option value="classico_suave">🎻 Clássico & Cordas Suaves (Instrumental Offline)</option>
+                  <option value="radio_lounge">📻 Rádio Online: Lounge & Bossa 24h</option>
+                  <option value="radio_chill">☁️ Rádio Online: Ambient Chillout 24h</option>
+                  <option value="radio_lush">🎶 Rádio Online: Melodias Calmas 24h</option>
+                  <option value="custom_mp3">💿 Minhas Músicas MP3 / Rádio Personalizada</option>
+                </select>
+              </div>
+
+              <div class="form-group" style="margin-bottom:0;">
+                <label for="range-musica-volume">🔉 Volume Ambiente no Player: <strong id="lbl-musica-volume">30%</strong></label>
+                <input type="range" id="range-musica-volume" min="5" max="100" step="5" value="30" style="cursor:pointer;">
+              </div>
+            </div>
+
+            <div class="form-grid" style="margin-top:14px; padding-top:14px; border-top:1px solid #e2e8f0; align-items:end; margin-bottom:0;">
+              <div class="form-group" style="margin-bottom:0;">
+                <label for="input-musica-inicio">☀️ Horário Inicial Permitido (Opcional)</label>
+                <input type="time" id="input-musica-inicio" value="07:00">
+              </div>
+              <div class="form-group" style="margin-bottom:0;">
+                <label for="input-musica-fim">🌙 Horário Final / Silêncio Noturno (Opcional)</label>
+                <input type="time" id="input-musica-fim" value="22:00">
+              </div>
+              <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                <button type="button" id="btn-save-musica" class="btn btn-primary">
+                  💾 Salvar & Sincronizar Música no Player
+                </button>
+                <button type="button" id="btn-preview-musica-admin" class="btn btn-warning">
+                  ▶️ Ouvir Prévia Aqui no Painel
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <h3 style="font-size:15px; color:#0f172a; margin-bottom:10px;">
+            🎶 Catálogo de Estações & Estilos de Música Ambiente (Teste ou Ative com 1 Clique)
+          </h3>
+          <div id="ambient-cards-grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:12px; margin-bottom:20px;"></div>
+
+          <div style="background:#ffffff; border:1.5px solid #cbd5e1; border-radius:10px; padding:16px;">
+            <h3 style="font-size:15px; color:#0f172a; margin-bottom:6px;">
+              💿 Cadastrar Músicas Próprias (.MP3) ou Link de Rádio Online
+            </h3>
+            <p class="subtitle" style="margin-bottom:12px;">
+              Caso queira tocar suas próprias músicas MP3 ou uma rádio específica, adicione abaixo e selecione o estilo <strong>"💿 Minhas Músicas MP3 / Rádio Personalizada"</strong>.
+            </p>
+            <form id="form-add-custom-mp3">
+              <div class="form-grid">
+                <div class="form-group">
+                  <label for="custom-mp3-titulo">Nome da Música ou Rádio</label>
+                  <input type="text" id="custom-mp3-titulo" placeholder="Ex: Instrumental Bossa Nova Recepção" required>
+                </div>
+                <div class="form-group">
+                  <label for="custom-mp3-url">Link Direto (.mp3 ou Stream de Áudio)</label>
+                  <input type="text" id="custom-mp3-url" placeholder="https://exemplo.com/musica-ambiente.mp3">
+                </div>
+                <div class="form-group">
+                  <label for="custom-mp3-file">Ou Enviar Arquivo de Áudio (.mp3)</label>
+                  <input type="file" id="custom-mp3-file" accept="audio/*">
+                </div>
+              </div>
+              <button type="submit" class="btn btn-success">➕ Adicionar à Minha Playlist Ambiente</button>
+            </form>
+            <div id="lista-custom-mp3" class="item-list" style="margin-top:14px;"></div>
+          </div>
+        </div>
+      </section>
+
       <!-- ABA 5: CONFIGURAÇÕES DO SISTEMA, NUVEM (SUPABASE + GITHUB PAGES) & ANDROID -->
       <section id="tab-config" class="tab-panel">
         <div class="card" style="border: 2px solid #16a34a; background: #f0fdf4;">
@@ -711,7 +810,7 @@
           <p class="subtitle">Veja exatamente como a tela está sendo exibida no aparelho Android:</p>
 
           <div id="preview-wrapper" class="preview-frame-wrapper">
-            <iframe id="preview-iframe" src="index.html?v=15" title="Preview 1280x720 Vida Moderna News"></iframe>
+            <iframe id="preview-iframe" src="index.html?v=16" title="Preview 1280x720 Vida Moderna News"></iframe>
           </div>
 
           <div class="dimension-diagram">
@@ -729,8 +828,8 @@
 
   <div id="toast" class="toast-notification">Alterações salvas e sincronizadas!</div>
 
-  <script src="js/cloud-config.js?v=15"></script>
-  <script src="js/db.js?v=15"></script>
-  <script src="js/admin.js?v=15"></script>
+  <script src="js/cloud-config.js?v=16"></script>
+  <script src="js/db.js?v=16"></script>
+  <script src="js/admin.js?v=16"></script>
 </body>
 </html>

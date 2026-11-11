@@ -12,12 +12,12 @@
   <meta name="browsermode" content="application">
   <title>Vida Moderna News - Player Android (1280x720)</title>
   <link rel="manifest" href="manifest.json">
-  <link rel="icon" sizes="192x192" href="assets/logo-modern-life.png?v=14">
-  <link rel="apple-touch-icon" href="assets/logo-modern-life.png?v=14">
+  <link rel="icon" sizes="192x192" href="assets/logo-modern-life.png?v=16">
+  <link rel="apple-touch-icon" href="assets/logo-modern-life.png?v=16">
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
-  <link rel="stylesheet" href="css/player.css?v=14">
+  <link rel="stylesheet" href="css/player.css?v=16">
 </head>
 <body>
   <!-- Botão flutuante que some sozinho assim que entra em Modo Apresentação (Tela Cheia sem barra de endereços) -->
@@ -69,9 +69,12 @@
 
         <!-- Assinatura Vida Moderna News + Logo Modern Life Residence + Data e Horário (Clique abre menu do aparelho/admin) -->
         <div id="brand-column" title="Toque para configurar o aparelho ou abrir o Painel Vida Moderna News">
-          <img id="brand-logo" src="assets/logo-modern-life.png?v=14" alt="Modern Life Residence - Vida Moderna News">
+          <img id="brand-logo" src="assets/logo-modern-life.png?v=16" alt="Modern Life Residence - Vida Moderna News">
           <div id="brand-phone">Vida Moderna News</div>
           <div id="brand-datetime">--/--/---- • --:--</div>
+          <div id="music-status-pill" class="hidden" title="Toque para ativar ou silenciar a música ambiente">
+            <span id="music-status-text">🎵 Ambiente</span>
+          </div>
           <div id="sync-status-pill">
             <span id="wifi-dot" class="wifi-dot online"></span>
             <span id="sync-status-text">Online</span>
@@ -122,14 +125,15 @@
         <button id="btn-force-sync" class="btn-device btn-success">Atualizar Agora da Nuvem</button>
       </div>
       <div class="device-actions" style="margin-top: 10px;">
+        <button id="btn-toggle-music-device" class="btn-device btn-primary" style="background:#1e40af;">🎵 Ativar / Silenciar Música Ambiente</button>
         <button id="btn-fullscreen" class="btn-device btn-secondary">Alternar Tela Cheia</button>
         <a href="admin.html" class="btn-device btn-secondary">Abrir Painel Vida Moderna News</a>
       </div>
     </div>
   </div>
 
-  <script src="js/cloud-config.js?v=15"></script>
-  <script src="js/db.js?v=15"></script>
-  <script src="js/player.js?v=15"></script>
+  <script src="js/cloud-config.js?v=16"></script>
+  <script src="js/db.js?v=16"></script>
+  <script src="js/player.js?v=16"></script>
 </body>
 </html>

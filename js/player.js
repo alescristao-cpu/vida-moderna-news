@@ -508,6 +508,114 @@
     }
   }
 
+  var musicStatusPillEl = document.getElementById('music-status-pill');
+  var musicStatusTextEl = document.getElementById('music-status-text');
+  var btnToggleMusicDevice = document.getElementById('btn-toggle-music-device');
+  var localMuteOverride = false;
+  var lastAppliedMusicSig = '';
+
+  function isWithinMusicSchedule(cfg) {
+    if (!cfg) return true;
+    var ini = trimStr(cfg.musicaHorarioInicio || '');
+    var fim = trimStr(cfg.musicaHorarioFim || '');
+    if (!ini && !fim) return true;
+    var now = new Date();
+    var hh = now.getHours();
+    var mm = now.getMinutes();
+    var curStr = (hh < 10 ? '0' + hh : String(hh)) + ':' + (mm < 10 ? '0' + mm : String(mm));
+    if (ini && curStr < ini) return false;
+    if (fim && curStr > fim) return false;
+    return true;
+  }
+
+  function syncAmbientMusicWithState(forceRestart) {
+    if (!window.falaSync || !window.falaSync.ambientPlayer) return;
+    var amb = window.falaSync.ambientPlayer;
+    var cfg = (currentState && currentState.config) ? currentState.config : {};
+    var isEmbeddedPreview = (window.self !== window.top);
+    var shouldPlay = Boolean(cfg.musicaAtiva) && !localMuteOverride && !isEmbeddedPreview && isWithinMusicSchedule(cfg);
+    var styleId = cfg.musicaEstilo || 'piano_lounge';
+    var vol = (cfg.musicaVolume !== undefined) ? Number(cfg.musicaVolume) : 30;
+    var customList = cfg.musicaCustomList || [];
+
+    var sig = JSON.stringify({
+      p: shouldPlay,
+      s: styleId,
+      c: customList
+    });
+
+    if (musicStatusPillEl) {
+      if (cfg.musicaAtiva) {
+        var catObj = (window.falaSync.ambientCatalog && window.falaSync.ambientCatalog[styleId]) || { icone: '🎵', nome: 'Ambiente' };
+        if (localMuteOverride) {
+          musicStatusPillEl.className = 'muted';
+          if (musicStatusTextEl) musicStatusTextEl.textContent = '🔇 Som Silenciado';
+        } else if (!isWithinMusicSchedule(cfg)) {
+          musicStatusPillEl.className = 'muted';
+          if (musicStatusTextEl) musicStatusTextEl.textContent = '🌙 Horário Silencioso';
+        } else {
+          musicStatusPillEl.className = '';
+          if (musicStatusTextEl) musicStatusTextEl.textContent = catObj.icone + ' Som Ativo';
+        }
+      } else {
+        musicStatusPillEl.className = 'hidden';
+      }
+    }
+
+    if (!shouldPlay) {
+      if (amb.isPlaying) amb.stop();
+      lastAppliedMusicSig = sig;
+      return;
+    }
+
+    amb.setVolume(vol);
+    if (forceRestart || !amb.isPlaying || sig !== lastAppliedMusicSig) {
+      lastAppliedMusicSig = sig;
+      amb.start(styleId, vol, customList);
+    } else if (amb.ctx && amb.ctx.state === 'suspended' && amb.ctx.resume) {
+      try { amb.ctx.resume(); } catch (e) {}
+    }
+  }
+
+  function unlockAmbientAudioOnGesture() {
+    if (!window.falaSync || !window.falaSync.ambientPlayer) return;
+    var cfg = (currentState && currentState.config) ? currentState.config : {};
+    if (cfg.musicaAtiva && !localMuteOverride && window.self === window.top) {
+      var amb = window.falaSync.ambientPlayer;
+      if (amb.ctx && amb.ctx.state === 'suspended' && amb.ctx.resume) {
+        try { amb.ctx.resume(); } catch (e) {}
+      }
+      if (!amb.isPlaying) {
+        syncAmbientMusicWithState(true);
+      }
+    }
+  }
+
+  document.addEventListener('click', unlockAmbientAudioOnGesture);
+
+  if (musicStatusPillEl) {
+    musicStatusPillEl.addEventListener('click', function (ev) {
+      ev.stopPropagation();
+      localMuteOverride = !localMuteOverride;
+      syncAmbientMusicWithState(true);
+    });
+  }
+
+  if (btnToggleMusicDevice) {
+    btnToggleMusicDevice.addEventListener('click', function () {
+      var cfg = (currentState && currentState.config) ? currentState.config : {};
+      if (!cfg.musicaAtiva) {
+        currentState.config.musicaAtiva = true;
+        localMuteOverride = false;
+        window.falaSync.saveLocalState(currentState, true);
+      } else {
+        localMuteOverride = !localMuteOverride;
+      }
+      syncAmbientMusicWithState(true);
+      openDeviceModal();
+    });
+  }
+
   function applyStateUpdate(newState) {
     var prevRecadosJson = JSON.stringify(currentState.recados);
     var nextRecadosJson = JSON.stringify(newState.recados);
@@ -534,6 +642,7 @@
       brandPhoneEl.textContent = currentState.config.telefoneSuporte;
     }
     applySeasonalVisualTheme(currentState);
+    syncAmbientMusicWithState(false);
 
     if (prevRecadosJson !== nextRecadosJson) {
       updateRecadosList(currentState);
@@ -589,6 +698,7 @@
   closeDeviceModalBtn.addEventListener('click', function () { deviceModalEl.className = 'hidden'; });
 
   window.addEventListener('keydown', function (ev) {
+    unlockAmbientAudioOnGesture();
     var isModalOpen = deviceModalEl.className.indexOf('hidden') === -1;
     if (!isModalOpen) {
       if (ev.keyCode === 82 || ev.key === 'ContextMenu' || ev.key === 'F1') {
@@ -634,6 +744,7 @@
     return num < 10 ? '0' + num : String(num);
   }
 
+  var lastCheckedMinuteStr = '';
   function updateBrandDateTime() {
     if (!brandDateTimeEl) return;
     var now = new Date();
@@ -644,7 +755,15 @@
     var ano = now.getFullYear();
     var horas = pad2(now.getHours());
     var minutos = pad2(now.getMinutes());
-    brandDateTimeEl.textContent = diaSemana + ', ' + dia + '/' + mes + '/' + ano + ' • ' + horas + ':' + minutos;
+    var curMin = horas + ':' + minutos;
+    brandDateTimeEl.textContent = diaSemana + ', ' + dia + '/' + mes + '/' + ano + ' • ' + curMin;
+
+    if (curMin !== lastCheckedMinuteStr) {
+      lastCheckedMinuteStr = curMin;
+      if (currentState && currentState.config && currentState.config.musicaAtiva) {
+        syncAmbientMusicWithState(false);
+      }
+    }
   }
 
   updateBrandDateTime();
@@ -654,6 +773,7 @@
     brandPhoneEl.textContent = currentState.config.telefoneSuporte;
   }
   applySeasonalVisualTheme(currentState);
+  syncAmbientMusicWithState(false);
   playlist = buildTopPlaylist(currentState);
   updateRecadosList(currentState);
   showNextSlide();

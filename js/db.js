@@ -565,6 +565,401 @@ function resolveActiveSeasonalTheme(temaConfigurado) {
   return SEASONAL_THEMES_CATALOG[key] || SEASONAL_THEMES_CATALOG.padrao;
 }
 
+var AMBIENT_MUSIC_CATALOG = {
+  piano_lounge: {
+    id: 'piano_lounge',
+    nome: 'Piano Lounge & Recepção',
+    icone: '🎹',
+    categoria: 'Instrumental Integrado (100% Offline)',
+    cor: '#1e40af',
+    descricao: 'Acordes suaves de piano elétrico e melodia relaxante ideal para recepção, hall e elevadores.',
+    tipo: 'synth',
+    preset: 'piano_lounge'
+  },
+  bossa_jazz: {
+    id: 'bossa_jazz',
+    nome: 'Bossa Nova & Jazz Suave',
+    icone: '🎷',
+    categoria: 'Instrumental Integrado (100% Offline)',
+    cor: '#b45309',
+    descricao: 'Harmonia acolhedora com cadência leve de Bossa Nova e Jazz Lounge para ambientes elegantes.',
+    tipo: 'synth',
+    preset: 'bossa_jazz'
+  },
+  violao_acustico: {
+    id: 'violao_acustico',
+    nome: 'Violão & Harpa Acústica',
+    icone: '🎸',
+    categoria: 'Instrumental Integrado (100% Offline)',
+    cor: '#15803d',
+    descricao: 'Dedilhado acústico sereno e aconchegante para uma atmosfera tranquila no condomínio.',
+    tipo: 'synth',
+    preset: 'violao_acustico'
+  },
+  spa_zen: {
+    id: 'spa_zen',
+    nome: 'Spa, Zen & Bem-Estar',
+    icone: '🌿',
+    categoria: 'Instrumental Integrado (100% Offline)',
+    cor: '#0f766e',
+    descricao: 'Texturas sonoras relaxantes e acordes flutuantes que transmitem paz e tranquilidade.',
+    tipo: 'synth',
+    preset: 'spa_zen'
+  },
+  classico_suave: {
+    id: 'classico_suave',
+    nome: 'Clássico & Cordas Suaves',
+    icone: '🎻',
+    categoria: 'Instrumental Integrado (100% Offline)',
+    cor: '#6d28d9',
+    descricao: 'Arranjo suave inspirado em música clássica de câmara para um ambiente sofisticado.',
+    tipo: 'synth',
+    preset: 'classico_suave'
+  },
+  radio_lounge: {
+    id: 'radio_lounge',
+    nome: 'Rádio Online: Lounge & Bossa 24h',
+    icone: '📻',
+    categoria: 'Rádio Online 24h (Internet)',
+    cor: '#0284c7',
+    descricao: 'Transmissão contínua 24h de música Lounge, Bossa e Instrumental via internet.',
+    tipo: 'stream',
+    streamUrl: 'https://ice1.somafm.com/illstreet-128-mp3',
+    fallbackPreset: 'bossa_jazz'
+  },
+  radio_chill: {
+    id: 'radio_chill',
+    nome: 'Rádio Online: Ambient Chillout 24h',
+    icone: '☁️',
+    categoria: 'Rádio Online 24h (Internet)',
+    cor: '#4f46e5',
+    descricao: 'Rádio online 24h de música ambiente downtempo e instrumental relaxante.',
+    tipo: 'stream',
+    streamUrl: 'https://ice1.somafm.com/groovesalad-128-mp3',
+    fallbackPreset: 'piano_lounge'
+  },
+  radio_lush: {
+    id: 'radio_lush',
+    nome: 'Rádio Online: Melodias Calmas 24h',
+    icone: '🎶',
+    categoria: 'Rádio Online 24h (Internet)',
+    cor: '#be185d',
+    descricao: 'Seleção suave de músicas calmas e relaxantes via streaming online 24h.',
+    tipo: 'stream',
+    streamUrl: 'https://ice1.somafm.com/lush-128-mp3',
+    fallbackPreset: 'spa_zen'
+  },
+  custom_mp3: {
+    id: 'custom_mp3',
+    nome: 'Minhas Músicas MP3 / Rádio Personalizada',
+    icone: '💿',
+    categoria: 'Playlist Personalizada do Condomínio',
+    cor: '#2a5e35',
+    descricao: 'Toca em sequência as músicas MP3 ou links de rádio que você cadastrar na lista abaixo.',
+    tipo: 'custom',
+    fallbackPreset: 'piano_lounge'
+  }
+};
+
+function VidaModernaAmbientAudio() {
+  this.ctx = null;
+  this.masterGain = null;
+  this.filterNode = null;
+  this.isPlaying = false;
+  this.currentStyleId = 'piano_lounge';
+  this.volumePct = 30;
+  this.synthTimer = null;
+  this.stepIndex = 0;
+  this.audioEl = null;
+  this.customTracks = [];
+  this.customTrackIdx = 0;
+  this.statusCallback = null;
+}
+
+VidaModernaAmbientAudio.prototype.onStatusChange = function (cb) {
+  this.statusCallback = cb;
+};
+
+VidaModernaAmbientAudio.prototype.notifyStatus = function (playing, label) {
+  if (this.statusCallback) {
+    try { this.statusCallback(playing, label); } catch (e) {}
+  }
+};
+
+VidaModernaAmbientAudio.prototype.ensureContext = function () {
+  if (!this.ctx) {
+    var AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtx) return null;
+    this.ctx = new AudioCtx();
+    this.filterNode = this.ctx.createBiquadFilter();
+    this.filterNode.type = 'lowpass';
+    this.filterNode.frequency.value = 1150;
+    this.filterNode.Q.value = 0.7;
+
+    this.masterGain = this.ctx.createGain();
+    this.masterGain.gain.value = (this.volumePct / 100) * 0.28;
+
+    this.filterNode.connect(this.masterGain);
+    this.masterGain.connect(this.ctx.destination);
+  }
+  if (this.ctx && this.ctx.state === 'suspended' && this.ctx.resume) {
+    try { this.ctx.resume(); } catch (e) {}
+  }
+  return this.ctx;
+};
+
+VidaModernaAmbientAudio.prototype.ensureAudioElement = function () {
+  if (!this.audioEl) {
+    this.audioEl = document.createElement('audio');
+    this.audioEl.preload = 'auto';
+    this.audioEl.style.display = 'none';
+    if (document.body) {
+      document.body.appendChild(this.audioEl);
+    }
+    var self = this;
+    this.audioEl.onended = function () {
+      if (self.isPlaying && self.currentStyleId === 'custom_mp3') {
+        self.customTrackIdx = (self.customTrackIdx + 1) % Math.max(1, self.customTracks.length);
+        self.playCustomTrack();
+      }
+    };
+    this.audioEl.onerror = function () {
+      if (!self.isPlaying) return;
+      var st = AMBIENT_MUSIC_CATALOG[self.currentStyleId];
+      if (self.currentStyleId === 'custom_mp3' && self.customTracks.length > 1) {
+        self.customTrackIdx = (self.customTrackIdx + 1) % self.customTracks.length;
+        setTimeout(function () {
+          if (self.isPlaying) self.playCustomTrack();
+        }, 1200);
+      } else {
+        self.startSynthLoop((st && st.fallbackPreset) ? st.fallbackPreset : 'piano_lounge');
+      }
+    };
+  }
+  this.audioEl.volume = Math.max(0, Math.min(1, this.volumePct / 100));
+  return this.audioEl;
+};
+
+VidaModernaAmbientAudio.prototype.setVolume = function (pct) {
+  var v = Number(pct);
+  if (isNaN(v)) v = 30;
+  this.volumePct = Math.max(0, Math.min(100, v));
+  if (this.masterGain && this.ctx) {
+    try {
+      this.masterGain.gain.setTargetAtTime((this.volumePct / 100) * 0.28, this.ctx.currentTime, 0.08);
+    } catch (e) {
+      this.masterGain.gain.value = (this.volumePct / 100) * 0.28;
+    }
+  }
+  if (this.audioEl) {
+    this.audioEl.volume = Math.max(0, Math.min(1, this.volumePct / 100));
+  }
+};
+
+VidaModernaAmbientAudio.prototype.playTone = function (freq, durationSec, delaySec, waveType, gainMult, attackSec) {
+  var ctx = this.ensureContext();
+  if (!ctx || !this.filterNode) return;
+  try {
+    var now = ctx.currentTime + (delaySec || 0);
+    var osc = ctx.createOscillator();
+    var noteGain = ctx.createGain();
+
+    osc.type = waveType || 'sine';
+    osc.frequency.setValueAtTime(freq, now);
+
+    var peak = (gainMult || 0.22);
+    var atk = attackSec || 0.18;
+    noteGain.gain.setValueAtTime(0.0001, now);
+    noteGain.gain.linearRampToValueAtTime(peak, now + atk);
+    noteGain.gain.exponentialRampToValueAtTime(0.0001, now + durationSec);
+
+    osc.connect(noteGain);
+    noteGain.connect(this.filterNode);
+
+    osc.start(now);
+    osc.stop(now + durationSec + 0.05);
+  } catch (e) {}
+};
+
+var SYNTH_PROGRESSIONS = {
+  piano_lounge: {
+    stepMs: 3600,
+    wave: 'sine',
+    melodyWave: 'triangle',
+    attack: 0.16,
+    chords: [
+      { notes: [130.81, 196.00, 246.94, 293.66, 329.63], melody: [523.25, 493.88, 392.00, 440.00] }, // Cmaj9
+      { notes: [110.00, 164.81, 220.00, 246.94, 261.63], melody: [440.00, 392.00, 329.63, 392.00] }, // Am9
+      { notes: [146.83, 220.00, 261.63, 329.63, 349.23], melody: [440.00, 523.25, 493.88, 440.00] }, // Dm9
+      { notes: [98.00, 196.00, 246.94, 293.66, 329.63], melody: [392.00, 440.00, 493.88, 392.00] }   // G13
+    ]
+  },
+  bossa_jazz: {
+    stepMs: 3200,
+    wave: 'triangle',
+    melodyWave: 'sine',
+    attack: 0.12,
+    chords: [
+      { notes: [174.61, 220.00, 261.63, 329.63, 392.00], melody: [523.25, 440.00, 392.00, 349.23] }, // Fmaj9
+      { notes: [164.81, 246.94, 293.66, 349.23, 392.00], melody: [493.88, 392.00, 329.63, 392.00] }, // Em7
+      { notes: [146.83, 220.00, 261.63, 329.63, 349.23], melody: [440.00, 349.23, 329.63, 293.66] }, // Dm9
+      { notes: [130.81, 196.00, 246.94, 293.66, 329.63], melody: [392.00, 440.00, 523.25, 493.88] }  // Cmaj9
+    ]
+  },
+  violao_acustico: {
+    stepMs: 3000,
+    wave: 'triangle',
+    melodyWave: 'triangle',
+    attack: 0.06,
+    chords: [
+      { notes: [196.00, 246.94, 293.66, 392.00], melody: [587.33, 493.88, 392.00, 440.00] }, // G
+      { notes: [164.81, 246.94, 329.63, 392.00], melody: [493.88, 440.00, 392.00, 329.63] }, // Em7
+      { notes: [130.81, 196.00, 261.63, 329.63], melody: [523.25, 392.00, 329.63, 392.00] }, // Cadd9
+      { notes: [146.83, 220.00, 293.66, 369.99], melody: [440.00, 369.99, 293.66, 329.63] }  // D
+    ]
+  },
+  spa_zen: {
+    stepMs: 4800,
+    wave: 'sine',
+    melodyWave: 'sine',
+    attack: 0.85,
+    chords: [
+      { notes: [130.81, 196.00, 261.63, 329.63, 392.00], melody: [523.25, 659.25, 587.33] },
+      { notes: [174.61, 261.63, 329.63, 440.00], melody: [523.25, 440.00, 392.00] },
+      { notes: [110.00, 220.00, 261.63, 329.63, 392.00], melody: [440.00, 523.25, 392.00] },
+      { notes: [146.83, 220.00, 293.66, 392.00], melody: [493.88, 440.00, 392.00] }
+    ]
+  },
+  classico_suave: {
+    stepMs: 3800,
+    wave: 'triangle',
+    melodyWave: 'sine',
+    attack: 0.45,
+    chords: [
+      { notes: [130.81, 196.00, 261.63, 329.63], melody: [523.25, 493.88, 523.25, 659.25] }, // C
+      { notes: [98.00, 196.00, 246.94, 293.66], melody: [587.33, 493.88, 440.00, 392.00] },  // G
+      { notes: [110.00, 164.81, 220.00, 261.63], melody: [440.00, 392.00, 440.00, 523.25] }, // Am
+      { notes: [174.61, 220.00, 261.63, 349.23], melody: [440.00, 392.00, 349.23, 329.63] }  // F
+    ]
+  }
+};
+
+VidaModernaAmbientAudio.prototype.startSynthLoop = function (presetKey) {
+  if (this.synthTimer) {
+    clearInterval(this.synthTimer);
+    this.synthTimer = null;
+  }
+  var preset = SYNTH_PROGRESSIONS[presetKey] || SYNTH_PROGRESSIONS.piano_lounge;
+  var self = this;
+
+  function triggerStep() {
+    if (!self.isPlaying) return;
+    var chordObj = preset.chords[self.stepIndex % preset.chords.length];
+    self.stepIndex++;
+
+    var durSec = (preset.stepMs / 1000) * 1.15;
+    for (var i = 0; i < chordObj.notes.length; i++) {
+      var arpDelay = presetKey === 'violao_acustico' ? (i * 0.22) : (i * 0.08);
+      self.playTone(chordObj.notes[i], durSec, arpDelay, preset.wave, 0.16, preset.attack);
+    }
+
+    if (chordObj.melody && chordObj.melody.length) {
+      var mCount = chordObj.melody.length;
+      var stepSec = (preset.stepMs / 1000) / mCount;
+      for (var m = 0; m < mCount; m++) {
+        self.playTone(chordObj.melody[m], stepSec * 1.25, m * stepSec + 0.15, preset.melodyWave, 0.12, preset.attack * 0.8);
+      }
+    }
+  }
+
+  triggerStep();
+  this.synthTimer = setInterval(triggerStep, preset.stepMs);
+};
+
+VidaModernaAmbientAudio.prototype.playCustomTrack = function () {
+  if (!this.customTracks || !this.customTracks.length) {
+    this.startSynthLoop('piano_lounge');
+    return;
+  }
+  var track = this.customTracks[this.customTrackIdx % this.customTracks.length];
+  if (!track || !track.url) {
+    this.startSynthLoop('piano_lounge');
+    return;
+  }
+  var audio = this.ensureAudioElement();
+  try {
+    if (audio.src !== track.url) {
+      audio.src = track.url;
+    }
+    var p = audio.play();
+    if (p && p['catch']) {
+      var self = this;
+      p['catch'](function () {
+        self.startSynthLoop('piano_lounge');
+      });
+    }
+  } catch (e) {
+    this.startSynthLoop('piano_lounge');
+  }
+};
+
+VidaModernaAmbientAudio.prototype.start = function (styleId, volumePct, customTracksList) {
+  this.stop();
+  this.currentStyleId = styleId || 'piano_lounge';
+  this.setVolume(volumePct !== undefined ? volumePct : this.volumePct);
+
+  var activeCustom = [];
+  if (customTracksList && customTracksList.length) {
+    for (var i = 0; i < customTracksList.length; i++) {
+      if (customTracksList[i] && customTracksList[i].url && customTracksList[i].ativo !== false) {
+        activeCustom.push(customTracksList[i]);
+      }
+    }
+  }
+  this.customTracks = activeCustom;
+  this.isPlaying = true;
+
+  var styleObj = AMBIENT_MUSIC_CATALOG[this.currentStyleId] || AMBIENT_MUSIC_CATALOG.piano_lounge;
+  this.notifyStatus(true, styleObj.icone + ' ' + styleObj.nome);
+
+  if (styleObj.tipo === 'stream' && styleObj.streamUrl) {
+    var audio = this.ensureAudioElement();
+    try {
+      audio.src = styleObj.streamUrl;
+      var p = audio.play();
+      if (p && p['catch']) {
+        var self = this;
+        p['catch'](function () {
+          if (self.isPlaying) {
+            self.startSynthLoop(styleObj.fallbackPreset || 'piano_lounge');
+          }
+        });
+      }
+    } catch (e) {
+      this.startSynthLoop(styleObj.fallbackPreset || 'piano_lounge');
+    }
+  } else if (styleObj.tipo === 'custom') {
+    this.playCustomTrack();
+  } else {
+    this.startSynthLoop(styleObj.preset || 'piano_lounge');
+  }
+};
+
+VidaModernaAmbientAudio.prototype.stop = function () {
+  this.isPlaying = false;
+  if (this.synthTimer) {
+    clearInterval(this.synthTimer);
+    this.synthTimer = null;
+  }
+  if (this.audioEl) {
+    try {
+      this.audioEl.pause();
+      this.audioEl.removeAttribute('src');
+    } catch (e) {}
+  }
+  this.notifyStatus(false, 'Música Ambiente Desativada');
+};
+
 var DEFAULT_STATE = {
   version: 3,
   updatedAt: '2026-10-22T10:52:00-03:00',
@@ -577,6 +972,12 @@ var DEFAULT_STATE = {
     tempoAssinaturaSegundos: 5,
     intervaloRecadosSegundos: 10,
     temaSazonal: 'padrao',
+    musicaAtiva: false,
+    musicaEstilo: 'piano_lounge',
+    musicaVolume: 30,
+    musicaHorarioInicio: '07:00',
+    musicaHorarioFim: '22:00',
+    musicaCustomList: [],
     rssAtivo: true,
     rssTemas: ['tecnologia', 'ciencia_saude', 'turismo', 'cultura'],
     temaPersonalizado: '',
@@ -694,6 +1095,8 @@ function VidaModernaSyncManager() {
   this.themesCatalog = NEWS_THEMES_CATALOG;
   this.seasonalCatalog = SEASONAL_THEMES_CATALOG;
   this.resolveSeasonalTheme = resolveActiveSeasonalTheme;
+  this.ambientCatalog = AMBIENT_MUSIC_CATALOG;
+  this.ambientPlayer = new VidaModernaAmbientAudio();
   this.channel = null;
 
   try {

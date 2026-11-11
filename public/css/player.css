@@ -390,6 +390,33 @@ body.hide-cursor * {
   white-space: nowrap;
 }
 
+/* Indicador discreto de Música Ambiente */
+#music-status-pill {
+  position: absolute;
+  bottom: 0px;
+  left: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #1e40af;
+  background: #eff6ff;
+  padding: 1px 7px;
+  border-radius: 12px;
+  border: 1px solid #93c5fd;
+  white-space: nowrap;
+  cursor: pointer;
+  z-index: 5;
+}
+
+#music-status-pill.hidden {
+  display: none !important;
+}
+
+#music-status-pill.muted {
+  color: #64748b;
+  background: rgba(255, 255, 255, 0.9);
+  border-color: #cbd5e1;
+}
+
 /* Indicador discreto de Wi-Fi / Sincronização Automática */
 #sync-status-pill {
   position: absolute;

@@ -1888,6 +1888,333 @@
     });
   }
 
+  /**
+   * 7. MÚSICA AMBIENTE & PLAYLIST PERSONALIZADA
+   */
+  const badgeMusicaStatus = document.getElementById('badge-musica-status');
+  const chkMusicaAtiva = document.getElementById('chk-musica-ativa');
+  const selectMusicaEstilo = document.getElementById('select-musica-estilo');
+  const rangeMusicaVolume = document.getElementById('range-musica-volume');
+  const lblMusicaVolume = document.getElementById('lbl-musica-volume');
+  const inputMusicaInicio = document.getElementById('input-musica-inicio');
+  const inputMusicaFim = document.getElementById('input-musica-fim');
+  const btnSaveMusica = document.getElementById('btn-save-musica');
+  const btnPreviewMusicaAdmin = document.getElementById('btn-preview-musica-admin');
+  const ambientCardsGridEl = document.getElementById('ambient-cards-grid');
+  const formAddCustomMp3 = document.getElementById('form-add-custom-mp3');
+  const listaCustomMp3El = document.getElementById('lista-custom-mp3');
+  let adminPreviewingStyleId = null;
+
+  function updateAdminPreviewButtonUI() {
+    if (!btnPreviewMusicaAdmin) return;
+    const amb = window.falaSync.ambientPlayer;
+    if (amb && amb.isPlaying) {
+      btnPreviewMusicaAdmin.textContent = '⏹️ Parar Prévia Sonora no Painel';
+      btnPreviewMusicaAdmin.className = 'btn btn-danger';
+    } else {
+      btnPreviewMusicaAdmin.textContent = '▶️ Ouvir Prévia Aqui no Painel';
+      btnPreviewMusicaAdmin.className = 'btn btn-warning';
+      adminPreviewingStyleId = null;
+    }
+  }
+
+  async function saveMusicConfigToCloud(overridePatch, toastMsg) {
+    const cfg = state.config || {};
+    state.config = {
+      ...cfg,
+      musicaAtiva: chkMusicaAtiva ? chkMusicaAtiva.checked : Boolean(cfg.musicaAtiva),
+      musicaEstilo: selectMusicaEstilo ? selectMusicaEstilo.value : (cfg.musicaEstilo || 'piano_lounge'),
+      musicaVolume: rangeMusicaVolume ? Number(rangeMusicaVolume.value) : (cfg.musicaVolume || 30),
+      musicaHorarioInicio: inputMusicaInicio ? inputMusicaInicio.value : (cfg.musicaHorarioInicio || ''),
+      musicaHorarioFim: inputMusicaFim ? inputMusicaFim.value : (cfg.musicaHorarioFim || ''),
+      ...(overridePatch || {})
+    };
+    await window.falaSync.pushStateToServer(state, false);
+    notifyPreviewIframe(state);
+    renderAmbientMusicSection();
+    showToast(toastMsg || '🎵 Configurações de Música Ambiente salvas e enviadas ao Player!');
+  }
+
+  if (rangeMusicaVolume) {
+    rangeMusicaVolume.addEventListener('input', () => {
+      const v = Number(rangeMusicaVolume.value) || 30;
+      if (lblMusicaVolume) lblMusicaVolume.textContent = `${v}%`;
+      if (window.falaSync.ambientPlayer) {
+        window.falaSync.ambientPlayer.setVolume(v);
+      }
+    });
+  }
+
+  if (chkMusicaAtiva) {
+    chkMusicaAtiva.addEventListener('change', () => {
+      const activeText = chkMusicaAtiva.checked
+        ? '🔊 Música Ambiente ATIVADA no Player!'
+        : '🔇 Música Ambiente DESATIVADA no Player.';
+      saveMusicConfigToCloud({ musicaAtiva: chkMusicaAtiva.checked }, activeText);
+    });
+  }
+
+  if (btnSaveMusica) {
+    btnSaveMusica.addEventListener('click', () => {
+      saveMusicConfigToCloud();
+    });
+  }
+
+  if (btnPreviewMusicaAdmin) {
+    btnPreviewMusicaAdmin.addEventListener('click', () => {
+      const amb = window.falaSync.ambientPlayer;
+      if (!amb) return;
+      if (amb.isPlaying) {
+        amb.stop();
+        adminPreviewingStyleId = null;
+        updateAdminPreviewButtonUI();
+        renderAmbientMusicSection();
+      } else {
+        const stId = selectMusicaEstilo ? selectMusicaEstilo.value : (state.config?.musicaEstilo || 'piano_lounge');
+        const vol = rangeMusicaVolume ? Number(rangeMusicaVolume.value) : (state.config?.musicaVolume || 30);
+        adminPreviewingStyleId = stId;
+        amb.start(stId, vol, state.config?.musicaCustomList || []);
+        updateAdminPreviewButtonUI();
+        renderAmbientMusicSection();
+      }
+    });
+  }
+
+  if (formAddCustomMp3) {
+    formAddCustomMp3.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const tituloEl = document.getElementById('custom-mp3-titulo');
+      const urlEl = document.getElementById('custom-mp3-url');
+      const fileEl = document.getElementById('custom-mp3-file');
+
+      const titulo = (tituloEl?.value || '').trim();
+      let finalUrl = (urlEl?.value || '').trim();
+
+      if (fileEl && fileEl.files && fileEl.files[0]) {
+        const f = fileEl.files[0];
+        if (f.size > 4 * 1024 * 1024) {
+          alert('Para sincronização rápida na nuvem, escolha um arquivo MP3 de até 4 MB ou informe o link direto da música/rádio.');
+          return;
+        }
+        finalUrl = await fileToDataUrl(f);
+      }
+
+      if (!finalUrl) {
+        alert('Informe um link direto (.mp3 / stream de rádio) ou selecione um arquivo de áudio do seu computador!');
+        return;
+      }
+
+      const currentList = Array.isArray(state.config?.musicaCustomList) ? state.config.musicaCustomList : [];
+      const newTrack = {
+        id: 'mp3-' + Date.now(),
+        titulo: titulo || 'Música Ambiente Condomínio',
+        url: finalUrl,
+        ativo: true,
+        criadoEm: new Date().toISOString()
+      };
+
+      const nextList = [...currentList, newTrack];
+      if (tituloEl) tituloEl.value = '';
+      if (urlEl) urlEl.value = '';
+      if (fileEl) fileEl.value = '';
+
+      await saveMusicConfigToCloud(
+        {
+          musicaCustomList: nextList,
+          musicaEstilo: 'custom_mp3',
+          musicaAtiva: true
+        },
+        `🎵 Música "${newTrack.titulo}" adicionada e ativada na playlist ambiente!`
+      );
+    });
+  }
+
+  function renderCustomMp3List() {
+    if (!listaCustomMp3El) return;
+    const list = Array.isArray(state.config?.musicaCustomList) ? state.config.musicaCustomList : [];
+    listaCustomMp3El.innerHTML = '';
+
+    if (list.length === 0) {
+      listaCustomMp3El.innerHTML = `
+        <div style="padding:12px; background:#f8fafc; border:1px dashed #cbd5e1; border-radius:8px; color:#64748b; font-size:13px;">
+          Nenhuma música personalizada cadastrada ainda. Você pode usar qualquer uma das 8 estações prontas acima ou adicionar seus próprios links/arquivos MP3 aqui.
+        </div>
+      `;
+      return;
+    }
+
+    list.forEach((item, idx) => {
+      const row = document.createElement('div');
+      row.className = 'list-item';
+      const isDataUrl = (item.url || '').startsWith('data:');
+      row.innerHTML = `
+        <div class="list-item-content">
+          <div class="list-item-meta">
+            <span class="badge-pill" style="background:#1e40af">🎵 FAIXA #${idx + 1}</span>
+            <span class="badge-pill" style="background:${item.ativo !== false ? '#16a34a' : '#94a3b8'}">
+              ${item.ativo !== false ? 'Ativa' : 'Pausada'}
+            </span>
+            <span style="font-size:11px; color:#64748b;">
+              ${isDataUrl ? 'Arquivo MP3 Enviado' : item.url.slice(0, 60)}
+            </span>
+          </div>
+          <div class="list-item-text" style="font-weight:700; font-size:15px;">${item.titulo}</div>
+        </div>
+        <div class="list-item-actions">
+          <button type="button" class="btn btn-warning btn-sm" data-listen-mp3="${item.id}">▶️ Ouvir</button>
+          <button type="button" class="btn btn-outline btn-sm" data-toggle-mp3="${item.id}">
+            ${item.ativo !== false ? 'Pausar' : 'Ativar'}
+          </button>
+          <button type="button" class="btn btn-danger btn-sm" data-del-mp3="${item.id}">Excluir</button>
+        </div>
+      `;
+      listaCustomMp3El.appendChild(row);
+    });
+
+    listaCustomMp3El.querySelectorAll('[data-listen-mp3]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const id = btn.getAttribute('data-listen-mp3');
+        const found = (state.config?.musicaCustomList || []).find((x) => x.id === id);
+        if (found && window.falaSync.ambientPlayer) {
+          const vol = rangeMusicaVolume ? Number(rangeMusicaVolume.value) : (state.config?.musicaVolume || 30);
+          adminPreviewingStyleId = 'custom_mp3';
+          window.falaSync.ambientPlayer.start('custom_mp3', vol, [found]);
+          updateAdminPreviewButtonUI();
+          showToast(`▶️ Ouvindo prévia de "${found.titulo}"...`);
+        }
+      });
+    });
+
+    listaCustomMp3El.querySelectorAll('[data-toggle-mp3]').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const id = btn.getAttribute('data-toggle-mp3');
+        const nextList = (state.config?.musicaCustomList || []).map((x) =>
+          x.id === id ? { ...x, ativo: x.ativo === false } : x
+        );
+        await saveMusicConfigToCloud({ musicaCustomList: nextList }, 'Playlist personalizada atualizada!');
+      });
+    });
+
+    listaCustomMp3El.querySelectorAll('[data-del-mp3]').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const id = btn.getAttribute('data-del-mp3');
+        const nextList = (state.config?.musicaCustomList || []).filter((x) => x.id !== id);
+        await saveMusicConfigToCloud({ musicaCustomList: nextList }, 'Faixa removida da playlist.');
+      });
+    });
+  }
+
+  function renderAmbientMusicSection() {
+    const cfg = state.config || {};
+    const isAtiva = Boolean(cfg.musicaAtiva);
+    const currentStyle = cfg.musicaEstilo || 'piano_lounge';
+    const currentVol = cfg.musicaVolume !== undefined ? Number(cfg.musicaVolume) : 30;
+    const hIni = cfg.musicaHorarioInicio !== undefined ? cfg.musicaHorarioInicio : '07:00';
+    const hFim = cfg.musicaHorarioFim !== undefined ? cfg.musicaHorarioFim : '22:00';
+
+    if (chkMusicaAtiva) chkMusicaAtiva.checked = isAtiva;
+    if (selectMusicaEstilo) selectMusicaEstilo.value = currentStyle;
+    if (rangeMusicaVolume) rangeMusicaVolume.value = String(currentVol);
+    if (lblMusicaVolume) lblMusicaVolume.textContent = `${currentVol}%`;
+    if (inputMusicaInicio) inputMusicaInicio.value = hIni;
+    if (inputMusicaFim) inputMusicaFim.value = hFim;
+
+    const catalog = window.falaSync.ambientCatalog || {};
+    const activeObj = catalog[currentStyle] || catalog.piano_lounge || { icone: '🎹', nome: 'Piano Lounge' };
+
+    if (badgeMusicaStatus) {
+      if (isAtiva) {
+        badgeMusicaStatus.textContent = `🔊 Ativa: ${activeObj.icone} ${activeObj.nome} (${currentVol}%)`;
+        badgeMusicaStatus.style.background = '#dcfce7';
+        badgeMusicaStatus.style.color = '#166534';
+      } else {
+        badgeMusicaStatus.textContent = '🔇 Música Ambiente Desativada';
+        badgeMusicaStatus.style.background = '#f1f5f9';
+        badgeMusicaStatus.style.color = '#475569';
+      }
+    }
+
+    updateAdminPreviewButtonUI();
+    renderCustomMp3List();
+
+    if (!ambientCardsGridEl) return;
+    ambientCardsGridEl.innerHTML = '';
+
+    Object.values(catalog).forEach((item) => {
+      const isSelected = currentStyle === item.id;
+      const isPreviewingThis = window.falaSync.ambientPlayer?.isPlaying && adminPreviewingStyleId === item.id;
+
+      const card = document.createElement('div');
+      card.style.cssText = `
+        background: #ffffff;
+        border: 2px solid ${isSelected ? item.cor : '#e2e8f0'};
+        border-top: 5px solid ${item.cor};
+        border-radius: 10px;
+        padding: 13px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        gap: 10px;
+        box-shadow: 0 2px 5px rgba(15,23,42,0.04);
+      `;
+
+      card.innerHTML = `
+        <div>
+          <div style="display:flex; justify-content:space-between; align-items:center; gap:6px; margin-bottom:5px;">
+            <span style="font-size:15px; font-weight:800; color:#0f172a;">${item.icone} ${item.nome}</span>
+          </div>
+          <div style="font-size:11px; font-weight:700; color:${item.cor}; background:#f8fafc; border:1px solid #e2e8f0; display:inline-block; padding:2px 8px; border-radius:10px; margin-bottom:6px;">
+            ${item.categoria}
+          </div>
+          <p style="font-size:12.5px; color:#475569; line-height:1.4; margin:0;">
+            ${item.descricao}
+          </p>
+        </div>
+      `;
+
+      const btnRow = document.createElement('div');
+      btnRow.style.cssText = 'display:flex; gap:6px; flex-wrap:wrap; margin-top:4px;';
+
+      const btnSelect = document.createElement('button');
+      btnSelect.type = 'button';
+      btnSelect.className = 'btn btn-sm ' + (isSelected && isAtiva ? 'btn-success' : 'btn-primary');
+      btnSelect.style.background = isSelected && isAtiva ? '#16a34a' : item.cor;
+      btnSelect.textContent = isSelected && isAtiva ? '✅ Tocando no Player' : '🔊 Ativar no Player';
+      btnSelect.onclick = () => {
+        if (selectMusicaEstilo) selectMusicaEstilo.value = item.id;
+        if (chkMusicaAtiva) chkMusicaAtiva.checked = true;
+        saveMusicConfigToCloud(
+          { musicaEstilo: item.id, musicaAtiva: true },
+          `🎵 Estação "${item.icone} ${item.nome}" ativada no Player!`
+        );
+      };
+
+      const btnTest = document.createElement('button');
+      btnTest.type = 'button';
+      btnTest.className = 'btn btn-sm ' + (isPreviewingThis ? 'btn-danger' : 'btn-warning');
+      btnTest.textContent = isPreviewingThis ? '⏹️ Parar Teste' : '▶️ Ouvir Aqui';
+      btnTest.onclick = () => {
+        const amb = window.falaSync.ambientPlayer;
+        if (!amb) return;
+        if (isPreviewingThis) {
+          amb.stop();
+          adminPreviewingStyleId = null;
+        } else {
+          const vol = rangeMusicaVolume ? Number(rangeMusicaVolume.value) : (state.config?.musicaVolume || 30);
+          adminPreviewingStyleId = item.id;
+          amb.start(item.id, vol, state.config?.musicaCustomList || []);
+        }
+        updateAdminPreviewButtonUI();
+        renderAmbientMusicSection();
+      };
+
+      btnRow.appendChild(btnSelect);
+      btnRow.appendChild(btnTest);
+      card.appendChild(btnRow);
+      ambientCardsGridEl.appendChild(card);
+    });
+  }
+
   function notifyPreviewIframe(currentSt) {
     try {
       if (previewIframe && previewIframe.contentWindow) {
@@ -1908,6 +2235,7 @@
     renderRecados();
     renderThemesSelector();
     renderSeasonalCatalog();
+    renderAmbientMusicSection();
     renderGenSeasonalChips();
     renderMidias();
     renderNoticiasPendentes();
@@ -1923,6 +2251,7 @@
     renderRecados();
     renderThemesSelector();
     renderSeasonalCatalog();
+    renderAmbientMusicSection();
     renderGenSeasonalChips();
     renderMidias();
     renderNoticiasPendentes();
@@ -1934,6 +2263,7 @@
   renderRecados();
   renderThemesSelector();
   renderSeasonalCatalog();
+  renderAmbientMusicSection();
   renderGenSeasonalChips();
   renderMidias();
   renderNoticiasPendentes();
@@ -1949,6 +2279,7 @@
       renderRecados();
       renderThemesSelector();
       renderSeasonalCatalog();
+      renderAmbientMusicSection();
       renderGenSeasonalChips();
       renderMidias();
       renderNoticiasPendentes();
